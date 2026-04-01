@@ -15,9 +15,9 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.AimlApiService = exports.TripoService = void 0;
-var TripoService_1 = require("./trippo/TripoService");
+var TripoService_1 = require("./integrations/trippo/TripoService");
 Object.defineProperty(exports, "TripoService", { enumerable: true, get: function () { return TripoService_1.TripoService; } });
-__exportStar(require("./trippo/types"), exports);
-var AimlApiService_1 = require("./aimlapi/AimlApiService");
+__exportStar(require("./integrations/trippo/types"), exports);
+var AimlApiService_1 = require("./integrations/aimlapi/AimlApiService");
 Object.defineProperty(exports, "AimlApiService", { enumerable: true, get: function () { return AimlApiService_1.AimlApiService; } });
-__exportStar(require("./aimlapi/types"), exports);
+__exportStar(require("./integrations/aimlapi/types"), exports);

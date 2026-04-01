@@ -1,7 +1,7 @@
 import "dotenv/config";
 import axios from "axios";
 import path from "path";
-import { mkdir, writeFile } from "fs/promises";
+import { copyFile, mkdir, writeFile } from "fs/promises";
 import { TripoService } from "../integrations/trippo/TripoService";
 import { readLocalFile, resolvePath } from "../cli/fileHelpers";
 import type { AnimationType, CreateTaskRequest, Task } from "../integrations/trippo/types";
@@ -75,11 +75,18 @@ const RIG_PLANS: RigPlan[] = [
 
 async function main() {
   const imagePath = process.argv[2] ?? "output/red-goth-pony.png";
-  const outGlb = process.argv[3] ?? "output/red-goth-pony-animated.glb";
-  const metaPath = process.argv[4] ?? "output/red-goth-pony-tripo-meta.json";
 
   const tripo = new TripoService();
   const { data: buf, absolutePath } = await readLocalFile(imagePath);
+  const imageName = path.parse(absolutePath).name;
+  const generationDir = resolvePath(path.join("output", imageName));
+  await mkdir(generationDir, { recursive: true });
+  const storedImagePath = path.join(generationDir, path.basename(absolutePath));
+  if (resolvePath(absolutePath) !== resolvePath(storedImagePath)) {
+    await copyFile(absolutePath, storedImagePath);
+  }
+  const outGlb = process.argv[3] ?? path.join(generationDir, `${imageName}-animated.glb`);
+  const metaPath = process.argv[4] ?? path.join(generationDir, `${imageName}-tripo-meta.json`);
   const upload = await tripo.uploadFile(buf, path.basename(absolutePath), path.extname(absolutePath).toLowerCase() === ".png" ? "image/png" : "image/jpeg");
   if (upload.code !== 0) throw new Error(String((upload as { message?: string }).message ?? "upload failed"));
   const token = uploadToken(upload.data as Record<string, unknown>);
@@ -143,7 +150,7 @@ async function main() {
 
   const savedGlb = await downloadFile(finalUrl, outGlb);
   const meta = {
-    imagePath,
+    imagePath: storedImagePath,
     meshTaskId: meshId,
     meshModelUrl: meshUrl,
     prerigTaskId: preRes.data.task_id,
@@ -155,7 +162,7 @@ async function main() {
     animations,
   };
   await writeFile(resolvePath(metaPath), JSON.stringify(meta, null, 2), "utf8");
-  console.log(JSON.stringify({ ok: true, animatedGlb: savedGlb, meta: metaPath, rigPlan: rigLabel }, null, 2));
+  console.log(JSON.stringify({ ok: true, image: storedImagePath, animatedGlb: savedGlb, meta: metaPath, rigPlan: rigLabel }, null, 2));
 }
 
 main().catch((e) => {

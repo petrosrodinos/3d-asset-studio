@@ -2,7 +2,7 @@ import { AxiosInstance } from "axios";
 import FormData from "form-data";
 import { Readable } from "stream";
 import { createAimlHttpClient } from "./client";
-import { requireEnv } from "../env";
+import { requireEnv } from "../../env";
 import {
   ApiKeyItem,
   BatchRequestItem,

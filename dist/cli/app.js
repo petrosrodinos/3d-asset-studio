@@ -5,8 +5,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.startCli = startCli;
 const readline_1 = __importDefault(require("readline"));
-const AimlApiService_1 = require("../aimlapi/AimlApiService");
-const TripoService_1 = require("../trippo/TripoService");
+const AimlApiService_1 = require("../integrations/aimlapi/AimlApiService");
+const TripoService_1 = require("../integrations/trippo/TripoService");
 const env_1 = require("../env");
 const agent_1 = require("./agent");
 const commandRegistry_1 = require("./commandRegistry");

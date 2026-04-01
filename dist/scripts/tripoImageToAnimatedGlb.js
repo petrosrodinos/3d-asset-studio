@@ -7,7 +7,7 @@ require("dotenv/config");
 const axios_1 = __importDefault(require("axios"));
 const path_1 = __importDefault(require("path"));
 const promises_1 = require("fs/promises");
-const TripoService_1 = require("../trippo/TripoService");
+const TripoService_1 = require("../integrations/trippo/TripoService");
 const fileHelpers_1 = require("../cli/fileHelpers");
 function uploadToken(data) {
     const t = data.file_token ?? data.image_token;
@@ -70,10 +70,17 @@ const RIG_PLANS = [
 ];
 async function main() {
     const imagePath = process.argv[2] ?? "output/red-goth-pony.png";
-    const outGlb = process.argv[3] ?? "output/red-goth-pony-animated.glb";
-    const metaPath = process.argv[4] ?? "output/red-goth-pony-tripo-meta.json";
     const tripo = new TripoService_1.TripoService();
     const { data: buf, absolutePath } = await (0, fileHelpers_1.readLocalFile)(imagePath);
+    const imageName = path_1.default.parse(absolutePath).name;
+    const generationDir = (0, fileHelpers_1.resolvePath)(path_1.default.join("output", imageName));
+    await (0, promises_1.mkdir)(generationDir, { recursive: true });
+    const storedImagePath = path_1.default.join(generationDir, path_1.default.basename(absolutePath));
+    if ((0, fileHelpers_1.resolvePath)(absolutePath) !== (0, fileHelpers_1.resolvePath)(storedImagePath)) {
+        await (0, promises_1.copyFile)(absolutePath, storedImagePath);
+    }
+    const outGlb = process.argv[3] ?? path_1.default.join(generationDir, `${imageName}-animated.glb`);
+    const metaPath = process.argv[4] ?? path_1.default.join(generationDir, `${imageName}-tripo-meta.json`);
     const upload = await tripo.uploadFile(buf, path_1.default.basename(absolutePath), path_1.default.extname(absolutePath).toLowerCase() === ".png" ? "image/png" : "image/jpeg");
     if (upload.code !== 0)
         throw new Error(String(upload.message ?? "upload failed"));
@@ -136,7 +143,7 @@ async function main() {
         throw new Error("Retarget task succeeded but no model URL");
     const savedGlb = await downloadFile(finalUrl, outGlb);
     const meta = {
-        imagePath,
+        imagePath: storedImagePath,
         meshTaskId: meshId,
         meshModelUrl: meshUrl,
         prerigTaskId: preRes.data.task_id,
@@ -148,7 +155,7 @@ async function main() {
         animations,
     };
     await (0, promises_1.writeFile)((0, fileHelpers_1.resolvePath)(metaPath), JSON.stringify(meta, null, 2), "utf8");
-    console.log(JSON.stringify({ ok: true, animatedGlb: savedGlb, meta: metaPath, rigPlan: rigLabel }, null, 2));
+    console.log(JSON.stringify({ ok: true, image: storedImagePath, animatedGlb: savedGlb, meta: metaPath, rigPlan: rigLabel }, null, 2));
 }
 main().catch((e) => {
     console.error(e instanceof Error ? e.message : e);
