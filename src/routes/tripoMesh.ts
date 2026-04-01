@@ -157,4 +157,77 @@ router.post("/mesh-from-image-url", async (req, res) => {
   }
 });
 
+/** Queue `animate_prerigcheck` — client polls GET /api/tripo/task/:id */
+router.post("/prerig-check", async (req, res) => {
+  try {
+    const meshTaskId = req.body?.meshTaskId;
+    if (!meshTaskId || typeof meshTaskId !== "string") {
+      res.status(400).json({ error: "meshTaskId is required" });
+      return;
+    }
+    const tripo = getTripo();
+    const out = await tripo.createTask({
+      type: "animate_prerigcheck",
+      original_model_task_id: meshTaskId.trim(),
+    } as never);
+    const prerigTaskId = (out.data as Record<string, unknown>).task_id as string;
+    if (!prerigTaskId) throw new Error("Tripo did not return prerig task_id");
+    res.json({ prerigTaskId });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+/** Queue `animate_rig` from mesh task — client polls until success; use returned rigTaskId for retarget */
+router.post("/start-rig", async (req, res) => {
+  try {
+    const meshTaskId = req.body?.meshTaskId;
+    if (!meshTaskId || typeof meshTaskId !== "string") {
+      res.status(400).json({ error: "meshTaskId is required" });
+      return;
+    }
+    const tripo = getTripo();
+    const out = await tripo.createTask({
+      type: "animate_rig",
+      original_model_task_id: meshTaskId.trim(),
+      out_format: "glb",
+    } as never);
+    const rigTaskId = (out.data as Record<string, unknown>).task_id as string;
+    if (!rigTaskId) throw new Error("Tripo did not return rig task_id");
+    res.json({ rigTaskId });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
+/** Queue `animate_retarget` from rig task — client polls until success */
+router.post("/start-retarget", async (req, res) => {
+  try {
+    const rigTaskId = req.body?.rigTaskId;
+    const animation = req.body?.animation;
+    if (!rigTaskId || typeof rigTaskId !== "string") {
+      res.status(400).json({ error: "rigTaskId is required" });
+      return;
+    }
+    if (!animation || typeof animation !== "string") {
+      res.status(400).json({ error: "animation is required" });
+      return;
+    }
+    const tripo = getTripo();
+    const out = await tripo.createTask({
+      type: "animate_retarget",
+      original_model_task_id: rigTaskId.trim(),
+      out_format: "glb",
+      animation: animation as never,
+      bake_animation: true,
+      export_with_geometry: true,
+    } as never);
+    const retargetTaskId = (out.data as Record<string, unknown>).task_id as string;
+    if (!retargetTaskId) throw new Error("Tripo did not return retarget task_id");
+    res.json({ retargetTaskId });
+  } catch (err) {
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
+  }
+});
+
 export default router;

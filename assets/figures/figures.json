@@ -55,7 +55,6 @@
             "images": [
               {
                 "url": "https://cdn.aimlapi.com/flamingo/files/b/0a9487ed/dj7YxUmfj8DOmtNQGQIHF.jpg",
-                "selectedModel3dId": "15c72c37-ea1f-4c0d-b550-c635bde457fb",
                 "models3d": [
                   {
                     "id": "30b33adb-ae52-41e6-9124-3f2c19fac403",
@@ -68,10 +67,29 @@
                     "id": "15c72c37-ea1f-4c0d-b550-c635bde457fb",
                     "createdAt": "2026-04-01T17:16:36.304Z",
                     "status": "success",
-                    "animations": [],
+                    "animations": [
+                      {
+                        "id": "8e479fe1-fd2f-48d6-a43a-8649a064a316",
+                        "createdAt": "2026-04-01T18:08:27.449Z",
+                        "status": "success",
+                        "animationKey": "preset:shoot",
+                        "retargetTaskId": "9d22ca2b-4feb-41ea-87d4-88dcf2e7dbd9",
+                        "glbUrl": "https://tripo-data.rg1.data.tripo3d.com/tcli_36171dc1c2a54010bf133178663646c7/20260401/9d22ca2b-4feb-41ea-87d4-88dcf2e7dbd9/tripo_retarget_9d22ca2b-4feb-41ea-87d4-88dcf2e7dbd9.glb?Key-Pair-Id=K1676C64NMVM2J&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfMzYxNzFkYzFjMmE1NDAxMGJmMTMzMTc4NjYzNjQ2YzcvMjAyNjA0MDEvOWQyMmNhMmItNGZlYi00MWVhLTg3ZDQtODhkY2YyZTdkYmQ5L3RyaXBvX3JldGFyZ2V0XzlkMjJjYTJiLTRmZWItNDFlYS04N2Q0LTg4ZGNmMmU3ZGJkOS5nbGIiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NzUwODgwMDB9fX1dfQ__&Signature=pZjl2tPm3QhxbxqNt34Ai4Dw2m4vHfJ-YJuWLMRZEPRWnWgjmdOSPhU-ZeGFfucWNuBVROvsINPm0rk17h2JGu-uYpsLd~PsoupNOeuIzaeg~SGjyXsz84go8mQhI66q6AJGTStQc3rEtbKXsiIdUOq8plGa4WOdB3HfIrpbG59csTBU6F9OJH8tNX0A2tNyNcxDFr-K~bFiwAvtj8bobLBulUEugsNze2sh93uy4pSP-pag70ptpcoeNaJ5XEt0Q9K0KFIh~20P5UxTI4HQ5QPl97dg1MfD4n3xMpfH2Vb-gtxSeiBBJAiAkeB0qasxmcEkXZobax6Ddp2pZ0D~vg__"
+                      },
+                      {
+                        "id": "0f8379df-2ab2-48c5-8d97-34e8d5d79929",
+                        "createdAt": "2026-04-01T18:17:28.615Z",
+                        "status": "success",
+                        "animationKey": "preset:hurt",
+                        "retargetTaskId": "97faa8cd-48cb-4091-b0cb-89f1eafcfc9e",
+                        "glbUrl": "https://tripo-data.rg1.data.tripo3d.com/tcli_36171dc1c2a54010bf133178663646c7/20260401/97faa8cd-48cb-4091-b0cb-89f1eafcfc9e/tripo_retarget_97faa8cd-48cb-4091-b0cb-89f1eafcfc9e.glb?Key-Pair-Id=K1676C64NMVM2J&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfMzYxNzFkYzFjMmE1NDAxMGJmMTMzMTc4NjYzNjQ2YzcvMjAyNjA0MDEvOTdmYWE4Y2QtNDhjYi00MDkxLWIwY2ItODlmMWVhZmNmYzllL3RyaXBvX3JldGFyZ2V0Xzk3ZmFhOGNkLTQ4Y2ItNDA5MS1iMGNiLTg5ZjFlYWZjZmM5ZS5nbGIiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE3NzUwODgwMDB9fX1dfQ__&Signature=oOZKnuWysCkSeA8PB~LM1s1Gc4WbtwWxDbgDJFw46Nt-SbFB-yGnFfKO5Jt5YQAWQHRwME7-No~jBE8vggd7i~ulymK293g6ps4zRJYt5eAVMwZW6Picc5lJhvekIunuP77YIdCXvSAaA-TRPap5PfP7pzbGL2HzP-X92~FVEaDWezpMulW~1~2iJAUASV0Qq5pL8RdaVLluAktZQFMMOoLj7Y-BoieNFPccgw0OTnCd2~3hW86~fXTEUGO3b3k1VZdcTc6Ir2-ciZQYxgZ9nhBuu7~fsFwt94wf0O27jdK8bsMgiNHWeKYEi-65AaxAnX0YZukbbMe9Pryb78tmBA__"
+                      }
+                    ],
                     "meshTaskId": "747e94f9-fa2a-4929-836b-40076b865c46",
                     "pbrModelUrl": "https://tripo-data.rg1.data.tripo3d.com/tcli_36171dc1c2a54010bf133178663646c7/20260401/747e94f9-fa2a-4929-836b-40076b865c46/tripo_pbr_model_747e94f9-fa2a-4929-836b-40076b865c46.glb?Key-Pair-Id=K1676C64NMVM2J&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfMzYxNzFkYzFjMmE1NDAxMGJmMTMzMTc4NjYzNjQ2YzcvMjAyNjA0MDEvNzQ3ZTk0ZjktZmEyYS00OTI5LTgzNmItNDAwNzZiODY1YzQ2L3RyaXBvX3Bicl9tb2RlbF83NDdlOTRmOS1mYTJhLTQ5MjktODM2Yi00MDA3NmI4NjVjNDYuZ2xiIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzc1MDg4MDAwfX19XX0_&Signature=Dvx8soZGxsVFE-kgcb3SbrHgk~ExT3F1WNhnKsRhHyPj~66d7VWKXpF0F~csMVsrToCs9DGeHhdRCINQZy0EyFLDZXf5lvTREZzwKimbDl9qjiRlPfozt9AbCQpt8sVWpKvSoyPhvFUc48DymOfsxkB~~NXBuzfF7K5fc8jDUsqLb3L4dzeO9WvR4ETZ1H1gMjeHhZpMuLPFz~dr-ZSK-wNlYe1sj4B7SHSCMgynITFpW-aPCN68gR4U8VSUHq3c31tBgmC2FPxYgypUuQQbY4ibczSumvEuTmiY6bL3nv7s6x3CGZIV3je2-2CpeiRCEr2-DqszS9spPAGIIhZOSg__",
-                    "modelUrl": "https://tripo-data.rg1.data.tripo3d.com/tcli_36171dc1c2a54010bf133178663646c7/20260401/747e94f9-fa2a-4929-836b-40076b865c46/tripo_pbr_model_747e94f9-fa2a-4929-836b-40076b865c46.glb?Key-Pair-Id=K1676C64NMVM2J&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfMzYxNzFkYzFjMmE1NDAxMGJmMTMzMTc4NjYzNjQ2YzcvMjAyNjA0MDEvNzQ3ZTk0ZjktZmEyYS00OTI5LTgzNmItNDAwNzZiODY1YzQ2L3RyaXBvX3Bicl9tb2RlbF83NDdlOTRmOS1mYTJhLTQ5MjktODM2Yi00MDA3NmI4NjVjNDYuZ2xiIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzc1MDg4MDAwfX19XX0_&Signature=Dvx8soZGxsVFE-kgcb3SbrHgk~ExT3F1WNhnKsRhHyPj~66d7VWKXpF0F~csMVsrToCs9DGeHhdRCINQZy0EyFLDZXf5lvTREZzwKimbDl9qjiRlPfozt9AbCQpt8sVWpKvSoyPhvFUc48DymOfsxkB~~NXBuzfF7K5fc8jDUsqLb3L4dzeO9WvR4ETZ1H1gMjeHhZpMuLPFz~dr-ZSK-wNlYe1sj4B7SHSCMgynITFpW-aPCN68gR4U8VSUHq3c31tBgmC2FPxYgypUuQQbY4ibczSumvEuTmiY6bL3nv7s6x3CGZIV3je2-2CpeiRCEr2-DqszS9spPAGIIhZOSg__"
+                    "modelUrl": "https://tripo-data.rg1.data.tripo3d.com/tcli_36171dc1c2a54010bf133178663646c7/20260401/747e94f9-fa2a-4929-836b-40076b865c46/tripo_pbr_model_747e94f9-fa2a-4929-836b-40076b865c46.glb?Key-Pair-Id=K1676C64NMVM2J&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfMzYxNzFkYzFjMmE1NDAxMGJmMTMzMTc4NjYzNjQ2YzcvMjAyNjA0MDEvNzQ3ZTk0ZjktZmEyYS00OTI5LTgzNmItNDAwNzZiODY1YzQ2L3RyaXBvX3Bicl9tb2RlbF83NDdlOTRmOS1mYTJhLTQ5MjktODM2Yi00MDA3NmI4NjVjNDYuZ2xiIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzc1MDg4MDAwfX19XX0_&Signature=Dvx8soZGxsVFE-kgcb3SbrHgk~ExT3F1WNhnKsRhHyPj~66d7VWKXpF0F~csMVsrToCs9DGeHhdRCINQZy0EyFLDZXf5lvTREZzwKimbDl9qjiRlPfozt9AbCQpt8sVWpKvSoyPhvFUc48DymOfsxkB~~NXBuzfF7K5fc8jDUsqLb3L4dzeO9WvR4ETZ1H1gMjeHhZpMuLPFz~dr-ZSK-wNlYe1sj4B7SHSCMgynITFpW-aPCN68gR4U8VSUHq3c31tBgmC2FPxYgypUuQQbY4ibczSumvEuTmiY6bL3nv7s6x3CGZIV3je2-2CpeiRCEr2-DqszS9spPAGIIhZOSg__",
+                    "prerigTaskId": "d7f9a0e2-7ef9-4378-b4d2-4b088f7fde1c",
+                    "rigTaskId": "e5f74ca6-e5fc-4fe0-af92-1b6b3dbf1cef"
                   }
                 ]
               }
@@ -113,7 +131,6 @@
             "images": [
               {
                 "url": "https://cdn.aimlapi.com/flamingo/files/b/0a948814/u4s6YkGO6Wf9_7NHR6z5M_37fe2d69cce74b97aedcd87fdb02db8d.jpg",
-                "selectedModel3dId": "07e7cd12-8e26-478d-9f66-903f5f505815",
                 "models3d": [
                   {
                     "id": "a8fc18bb-a689-41ba-8a51-5f1b40013981",
@@ -371,7 +388,16 @@
         "imagePrompt": {
           "model": "flux/schnell",
           "prompt": "A highly detailed fantasy monarch miniature figurine, full body, straight front view, facing forward, symmetrical pose, a regal king in ornate golden crown and flowing ivory royal robes trimmed with ermine, holding a golden scepter, warm gold and ivory color scheme with rich amber jewels, isolated on a pure white background, no shadows, product photography style, 3D render",
-          "negativePrompt": "blurry, low quality, cropped, background scenery, multiple figures, text, watermark, dark colors, shadow on background"
+          "negativePrompt": "blurry, low quality, cropped, background scenery, multiple figures, text, watermark, dark colors, shadow on background",
+          "images": [
+            {
+              "url": "https://cdn.aimlapi.com/flamingo/files/b/0a9489d9/gB7JoSJfDbqUO1I_XHte2.jpg",
+              "models3d": []
+            }
+          ],
+          "imageUrls": [
+            "https://cdn.aimlapi.com/flamingo/files/b/0a9489d9/gB7JoSJfDbqUO1I_XHte2.jpg"
+          ]
         }
       },
       "variantB": {
@@ -384,12 +410,31 @@
     },
     "skins": [
       {
-        "name": "Emperor",
+        "name": "Egypt Emperor",
         "variantA": {
           "imagePrompt": {
             "model": "flux/schnell",
-            "prompt": "A highly detailed fantasy emperor miniature figurine, full body, straight front view, facing forward, symmetrical pose, a powerful emperor in gilded full-plate ceremonial armor with a laurel crown of gold, a flowing crimson and gold cape, holding an ornate imperial sword, warm red and gold color scheme, isolated on a pure white background, no shadows, product photography style, 3D render",
-            "negativePrompt": "blurry, low quality, cropped, background scenery, multiple figures, text, watermark, dark colors, shadow on background"
+            "prompt": "A highly detailed fantasy emperor miniature figurine, full body, straight front view, facing forward, symmetrical pose, an illustrious Egyptian emperor in ornate gold and bronze ceremonial armor with a laurel crown of gold, featuring intricate hieroglyphic engravings, a flowing cape with warm amber and cream hues, holding an intricately designed imperial scepter, warm gold and amber color scheme, isolated on a pure white background, no shadows, product photography style, 3D render",
+            "negativePrompt": "blurry, low quality, cropped, background scenery, multiple figures, text, watermark, dark colors, shadow on background, side view, angled, 3/4 view, profile, turned, back view, cropped",
+            "images": [
+              {
+                "url": "https://cdn.aimlapi.com/flamingo/files/b/0a9489de/mq6rsZfkQTDEwqgcifUOc.jpg",
+                "models3d": [
+                  {
+                    "id": "d8f93e6f-afbd-41aa-bf42-9338006eeb75",
+                    "createdAt": "2026-04-01T18:24:02.831Z",
+                    "status": "success",
+                    "animations": [],
+                    "meshTaskId": "d058bb2a-2719-4fd2-bf06-094a40cd6dff",
+                    "pbrModelUrl": "https://tripo-data.rg1.data.tripo3d.com/tcli_36171dc1c2a54010bf133178663646c7/20260401/d058bb2a-2719-4fd2-bf06-094a40cd6dff/tripo_pbr_model_d058bb2a-2719-4fd2-bf06-094a40cd6dff.glb?Key-Pair-Id=K1676C64NMVM2J&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfMzYxNzFkYzFjMmE1NDAxMGJmMTMzMTc4NjYzNjQ2YzcvMjAyNjA0MDEvZDA1OGJiMmEtMjcxOS00ZmQyLWJmMDYtMDk0YTQwY2Q2ZGZmL3RyaXBvX3Bicl9tb2RlbF9kMDU4YmIyYS0yNzE5LTRmZDItYmYwNi0wOTRhNDBjZDZkZmYuZ2xiIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzc1MDg4MDAwfX19XX0_&Signature=b9JrZofkaAV-~BcmLGhbZqC58seSP~mWvFzSJwmnZRBTs4G8YGLgmh353gCAkP5NXZWDP8stk5z5l42jPr9OD-D94LM9Bo9Deq7aXUFsvCBKzF5Em~n9b4IJ36NO3THqV0wZYgIsJSWY0RyRsFL50ENjm2yeUSzJxdWVOE08i8eTXZwPS~c65WwTlm3GZExL2MJCTgmCzb33MRIOvgtzGUe6ftyKyUbGOLmTCpGehReHykKss3RumkKaLsMIigR3I5hXVKZb5KwUZ3YtYPwjfrrpNGU8cHJA8tgnPHPsynOkh-etaEJM9feE3EBATpX4YNohIV4ZLjVynPlGdDa76w__",
+                    "modelUrl": "https://tripo-data.rg1.data.tripo3d.com/tcli_36171dc1c2a54010bf133178663646c7/20260401/d058bb2a-2719-4fd2-bf06-094a40cd6dff/tripo_pbr_model_d058bb2a-2719-4fd2-bf06-094a40cd6dff.glb?Key-Pair-Id=K1676C64NMVM2J&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfMzYxNzFkYzFjMmE1NDAxMGJmMTMzMTc4NjYzNjQ2YzcvMjAyNjA0MDEvZDA1OGJiMmEtMjcxOS00ZmQyLWJmMDYtMDk0YTQwY2Q2ZGZmL3RyaXBvX3Bicl9tb2RlbF9kMDU4YmIyYS0yNzE5LTRmZDItYmYwNi0wOTRhNDBjZDZkZmYuZ2xiIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzc1MDg4MDAwfX19XX0_&Signature=b9JrZofkaAV-~BcmLGhbZqC58seSP~mWvFzSJwmnZRBTs4G8YGLgmh353gCAkP5NXZWDP8stk5z5l42jPr9OD-D94LM9Bo9Deq7aXUFsvCBKzF5Em~n9b4IJ36NO3THqV0wZYgIsJSWY0RyRsFL50ENjm2yeUSzJxdWVOE08i8eTXZwPS~c65WwTlm3GZExL2MJCTgmCzb33MRIOvgtzGUe6ftyKyUbGOLmTCpGehReHykKss3RumkKaLsMIigR3I5hXVKZb5KwUZ3YtYPwjfrrpNGU8cHJA8tgnPHPsynOkh-etaEJM9feE3EBATpX4YNohIV4ZLjVynPlGdDa76w__"
+                  }
+                ]
+              }
+            ],
+            "imageUrls": [
+              "https://cdn.aimlapi.com/flamingo/files/b/0a9489de/mq6rsZfkQTDEwqgcifUOc.jpg"
+            ]
           }
         },
         "variantB": {
@@ -397,6 +442,61 @@
             "model": "flux/schnell",
             "prompt": "A highly detailed fantasy emperor miniature figurine, full body, straight front view, facing forward, symmetrical pose, a fearsome emperor in dark obsidian ceremonial armor with a laurel crown of black iron, a flowing dark violet and silver cape, holding an ornate imperial sword crackling with dark energy, cool obsidian and dark violet color scheme, isolated on a pure white background, no shadows, product photography style, 3D render",
             "negativePrompt": "blurry, low quality, cropped, background scenery, multiple figures, text, watermark, warm colors, shadow on background"
+          }
+        }
+      },
+      {
+        "name": "",
+        "variantA": {
+          "imagePrompt": {
+            "model": "flux/schnell",
+            "prompt": "Ancient Aztec Emperor, wearing an elaborate feathered headdress with gold and bronze ornaments, intricate jewelry pieces, and a richly decorated robe with sunlit tones, ivory, and amber accents. The attire should reflect a regal and commanding presence with warm palette elements like gold, bronze, and cream. The emperor stands with arms slightly outstretched, symbolizing authority and power. Style: highly detailed miniature figurine, product photography, 3D render, front view, facing forward, symmetrical pose, full body",
+            "negativePrompt": "side view, angled, 3/4 view, profile, turned, back view, cropped",
+            "images": [
+              {
+                "url": "https://cdn.aimlapi.com/flamingo/files/b/0a9489ee/UTR0V-w3PbvSrORQOlxbX.jpg",
+                "models3d": [
+                  {
+                    "id": "68e9e088-d647-4db8-99cc-fbedbaae8786",
+                    "createdAt": "2026-04-01T18:26:35.500Z",
+                    "status": "success",
+                    "animations": [],
+                    "meshTaskId": "e0ea9395-5996-483e-be4f-30dd9a9b4be6",
+                    "pbrModelUrl": "https://tripo-data.rg1.data.tripo3d.com/tcli_36171dc1c2a54010bf133178663646c7/20260401/e0ea9395-5996-483e-be4f-30dd9a9b4be6/tripo_pbr_model_e0ea9395-5996-483e-be4f-30dd9a9b4be6.glb?Key-Pair-Id=K1676C64NMVM2J&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfMzYxNzFkYzFjMmE1NDAxMGJmMTMzMTc4NjYzNjQ2YzcvMjAyNjA0MDEvZTBlYTkzOTUtNTk5Ni00ODNlLWJlNGYtMzBkZDlhOWI0YmU2L3RyaXBvX3Bicl9tb2RlbF9lMGVhOTM5NS01OTk2LTQ4M2UtYmU0Zi0zMGRkOWE5YjRiZTYuZ2xiIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzc1MDg4MDAwfX19XX0_&Signature=QyrTuEe8vnCB~Va2uA7JVM29z7NKWnqWmtPRm7Qnn5XRDJIFRy~rT6tS99wQfCLM8ake0bfiojj2CQJ~wU26OvU9xWM1baj2xG3cqyC0VozUBkXjnCNCO6-iPJg~ra5u7wQj1fBuzGB8XXlxrhtTqACX5e1OfkplOHoTQlya0UV~J19c80uiEX8SIFBYz0Ltdq3EoO4HGldMr3PlmevN8uV4sI~YdKQxU4GTo2sjS2~WK9FeUpQzSbx~SNyAE~JWaW9UrBXnEh4fKuAMpcHzylfWArtxr~hgVbpmfy9lfh2z4F2GgMcBbQBRSzwvoMWuNqRYK0OnM82hTvaCKgnVdA__",
+                    "modelUrl": "https://tripo-data.rg1.data.tripo3d.com/tcli_36171dc1c2a54010bf133178663646c7/20260401/e0ea9395-5996-483e-be4f-30dd9a9b4be6/tripo_pbr_model_e0ea9395-5996-483e-be4f-30dd9a9b4be6.glb?Key-Pair-Id=K1676C64NMVM2J&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfMzYxNzFkYzFjMmE1NDAxMGJmMTMzMTc4NjYzNjQ2YzcvMjAyNjA0MDEvZTBlYTkzOTUtNTk5Ni00ODNlLWJlNGYtMzBkZDlhOWI0YmU2L3RyaXBvX3Bicl9tb2RlbF9lMGVhOTM5NS01OTk2LTQ4M2UtYmU0Zi0zMGRkOWE5YjRiZTYuZ2xiIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzc1MDg4MDAwfX19XX0_&Signature=QyrTuEe8vnCB~Va2uA7JVM29z7NKWnqWmtPRm7Qnn5XRDJIFRy~rT6tS99wQfCLM8ake0bfiojj2CQJ~wU26OvU9xWM1baj2xG3cqyC0VozUBkXjnCNCO6-iPJg~ra5u7wQj1fBuzGB8XXlxrhtTqACX5e1OfkplOHoTQlya0UV~J19c80uiEX8SIFBYz0Ltdq3EoO4HGldMr3PlmevN8uV4sI~YdKQxU4GTo2sjS2~WK9FeUpQzSbx~SNyAE~JWaW9UrBXnEh4fKuAMpcHzylfWArtxr~hgVbpmfy9lfh2z4F2GgMcBbQBRSzwvoMWuNqRYK0OnM82hTvaCKgnVdA__"
+                  }
+                ]
+              }
+            ],
+            "imageUrls": [
+              "https://cdn.aimlapi.com/flamingo/files/b/0a9489ee/UTR0V-w3PbvSrORQOlxbX.jpg"
+            ]
+          }
+        },
+        "variantB": {
+          "imagePrompt": {
+            "model": "flux/schnell",
+            "prompt": "Ancient Aztec Emperor, wearing an elaborate feathered headdress with obsidian and dark iron ornaments, intricate jewelry pieces, and a richly decorated robe with midnight blue, slate, and charcoal accents. The attire should reflect a regal and commanding presence with cool palette elements like obsidian, dark iron, and cold tones. The emperor stands with arms slightly outstretched, symbolizing authority and power. Style: highly detailed miniature figurine, product photography, 3D render, front view, facing forward, symmetrical pose, full body",
+            "negativePrompt": "side view, angled, 3/4 view, profile, turned, back view, cropped",
+            "images": [
+              {
+                "url": "https://cdn.aimlapi.com/flamingo/files/b/0a9489f4/Fw3HzS5Z1EP9L9E98Yru8.jpg",
+                "models3d": [
+                  {
+                    "id": "39194be1-6b32-491d-bc66-c752977714df",
+                    "createdAt": "2026-04-01T18:27:26.288Z",
+                    "status": "success",
+                    "animations": [],
+                    "meshTaskId": "294708f5-3992-41b0-bdc0-c90ebcf448f5",
+                    "pbrModelUrl": "https://tripo-data.rg1.data.tripo3d.com/tcli_36171dc1c2a54010bf133178663646c7/20260401/294708f5-3992-41b0-bdc0-c90ebcf448f5/tripo_pbr_model_294708f5-3992-41b0-bdc0-c90ebcf448f5.glb?Key-Pair-Id=K1676C64NMVM2J&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfMzYxNzFkYzFjMmE1NDAxMGJmMTMzMTc4NjYzNjQ2YzcvMjAyNjA0MDEvMjk0NzA4ZjUtMzk5Mi00MWIwLWJkYzAtYzkwZWJjZjQ0OGY1L3RyaXBvX3Bicl9tb2RlbF8yOTQ3MDhmNS0zOTkyLTQxYjAtYmRjMC1jOTBlYmNmNDQ4ZjUuZ2xiIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzc1MDg4MDAwfX19XX0_&Signature=Bfi6U7Uw484PMort6sL5UscDYfdICrCahQWNKUukn-XDMF0Ya2pBRSymsMO5al3D-2DbN-3B~MywJDaObs0QVznoyUYbfj6ksH3JiI8NKjw9A57o3rPTNOR4E7-jlHRB3aezvmPHNk1EFl~2gjp~qqEIKwLkiOvCRdVdMHD3ySy5h9Z3DbCvPBebqG~jGOjP8n4QuRU2doxk2~xC2LjMVNYZ6VoEZywGdx~BjbXYIL9D-a-OB-F9rz32bHx8s1VFEeCvmzP66XKkZzBZ4RmWYKF8IYfzO0B512drjwrJQa5eY92GDH5G9twHE8fNY1d1Z7dwnYr38o1kJpIsusmzwg__",
+                    "modelUrl": "https://tripo-data.rg1.data.tripo3d.com/tcli_36171dc1c2a54010bf133178663646c7/20260401/294708f5-3992-41b0-bdc0-c90ebcf448f5/tripo_pbr_model_294708f5-3992-41b0-bdc0-c90ebcf448f5.glb?Key-Pair-Id=K1676C64NMVM2J&Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiaHR0cHM6Ly90cmlwby1kYXRhLnJnMS5kYXRhLnRyaXBvM2QuY29tL3RjbGlfMzYxNzFkYzFjMmE1NDAxMGJmMTMzMTc4NjYzNjQ2YzcvMjAyNjA0MDEvMjk0NzA4ZjUtMzk5Mi00MWIwLWJkYzAtYzkwZWJjZjQ0OGY1L3RyaXBvX3Bicl9tb2RlbF8yOTQ3MDhmNS0zOTkyLTQxYjAtYmRjMC1jOTBlYmNmNDQ4ZjUuZ2xiIiwiQ29uZGl0aW9uIjp7IkRhdGVMZXNzVGhhbiI6eyJBV1M6RXBvY2hUaW1lIjoxNzc1MDg4MDAwfX19XX0_&Signature=Bfi6U7Uw484PMort6sL5UscDYfdICrCahQWNKUukn-XDMF0Ya2pBRSymsMO5al3D-2DbN-3B~MywJDaObs0QVznoyUYbfj6ksH3JiI8NKjw9A57o3rPTNOR4E7-jlHRB3aezvmPHNk1EFl~2gjp~qqEIKwLkiOvCRdVdMHD3ySy5h9Z3DbCvPBebqG~jGOjP8n4QuRU2doxk2~xC2LjMVNYZ6VoEZywGdx~BjbXYIL9D-a-OB-F9rz32bHx8s1VFEeCvmzP66XKkZzBZ4RmWYKF8IYfzO0B512drjwrJQa5eY92GDH5G9twHE8fNY1d1Z7dwnYr38o1kJpIsusmzwg__"
+                  }
+                ]
+              }
+            ],
+            "imageUrls": [
+              "https://cdn.aimlapi.com/flamingo/files/b/0a9489f4/Fw3HzS5Z1EP9L9E98Yru8.jpg"
+            ]
           }
         }
       }

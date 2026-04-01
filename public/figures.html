@@ -254,14 +254,45 @@
           Close
         </button>
       </div>
-      <div class="flex-1 min-h-0 p-2 sm:p-4 overflow-auto">
+      <div class="flex-1 min-h-0 p-2 sm:p-4 overflow-auto flex flex-col gap-3">
         <model-viewer id="mesh-model-viewer"
                       camera-controls
                       touch-action="pan-y"
                       shadow-intensity="1"
                       exposure="1"
+                      autoplay
                       alt="3D mesh preview">
         </model-viewer>
+        <div id="mesh-animate-panel" class="hidden rounded-lg border border-[#2a2a45] bg-[#12121f] p-4 space-y-3 flex-shrink-0">
+          <h3 class="text-[10px] font-mono uppercase tracking-widest text-slate-500">Animate (Tripo3D)</h3>
+          <p id="mesh-animate-hint" class="text-[11px] font-mono text-slate-400 leading-relaxed">
+            Animations need a rigged skeleton. Run <strong class="text-slate-300">Rig for animation</strong> once per mesh (pre-rig check + rigging; uses Tripo credits). Then choose a preset and generate — the preview updates to the animated GLB when ready.
+          </p>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" id="mesh-btn-rig"
+                    class="px-3 py-1.5 rounded-md text-xs font-mono font-medium bg-amber-700 hover:bg-amber-600 disabled:opacity-40 text-white border border-amber-500/50 transition-colors">
+              Rig for animation
+            </button>
+            <span id="mesh-rig-status" class="text-xs font-mono text-slate-400 min-h-[1.25rem]"></span>
+          </div>
+          <div id="mesh-animate-after-rig" class="hidden space-y-2 pt-1 border-t border-[#2a2a45]">
+            <label class="block text-[10px] font-mono text-slate-500">Animation preset</label>
+            <div class="flex flex-wrap items-stretch gap-2">
+              <select id="mesh-animate-select"
+                      class="flex-1 min-w-[12rem] bg-[#080810] border border-[#1a1a2e] rounded px-3 py-2 text-xs font-mono text-slate-300 focus:outline-none focus:border-violet-600/50 transition-colors">
+              </select>
+              <button type="button" id="mesh-btn-generate-anim"
+                      class="px-3 py-2 rounded-md text-xs font-mono font-medium bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white border border-violet-400/40 transition-colors">
+                Generate animation
+              </button>
+            </div>
+            <span id="mesh-anim-gen-status" class="text-xs font-mono text-slate-400 min-h-[1.25rem] block"></span>
+            <div id="mesh-animated-outputs" class="hidden space-y-1.5 pt-1">
+              <div class="text-[10px] font-mono text-slate-500 uppercase tracking-widest">Generated clips</div>
+              <ul id="mesh-animated-list" class="space-y-1 text-xs font-mono"></ul>
+            </div>
+          </div>
+        </div>
       </div>
       <p class="px-4 pb-3 pt-0 text-[11px] font-mono text-slate-500 flex-shrink-0">Drag to orbit · scroll / pinch to zoom · right-drag to pan</p>
     </div>
@@ -308,6 +339,28 @@
     let skinCount = 0;  // for generating unique skin IDs
     /** @type {Record<string, number>} current slide index per gallery prefix (2 images per slide) */
     let galleryCarouselSlide = {};
+    /** @type {null | { prefix: string, imageIndex: number, genId: string, meshTaskId: string, rigTaskId?: string }} */
+    let meshViewerFigureCtx = null;
+
+    /** Tripo `AnimationType` presets for retarget (labels for UI). */
+    const TRIPO_ANIMATION_PRESETS = [
+      { value: "preset:idle", label: "Idle" },
+      { value: "preset:walk", label: "Walk" },
+      { value: "preset:run", label: "Run" },
+      { value: "preset:dive", label: "Dive" },
+      { value: "preset:climb", label: "Climb" },
+      { value: "preset:jump", label: "Jump" },
+      { value: "preset:slash", label: "Slash" },
+      { value: "preset:shoot", label: "Shoot" },
+      { value: "preset:hurt", label: "Hurt" },
+      { value: "preset:fall", label: "Fall" },
+      { value: "preset:turn", label: "Turn" },
+      { value: "preset:quadruped:walk", label: "Quadruped walk" },
+      { value: "preset:hexapod:walk", label: "Hexapod walk" },
+      { value: "preset:octopod:walk", label: "Octopod walk" },
+      { value: "preset:serpentine:march", label: "Serpentine march" },
+      { value: "preset:aquatic:march", label: "Aquatic march" },
+    ];
 
     // ── API ────────────────────────────────────────────────────────────────────
 
@@ -345,6 +398,15 @@
       await loadFigures();
     }
 
+    function fillTripoAnimationSelect() {
+      const sel = document.getElementById("mesh-animate-select");
+      if (!sel || sel.dataset.filled === "1") return;
+      sel.innerHTML = TRIPO_ANIMATION_PRESETS.map(p =>
+        `<option value="${escAttr(p.value)}">${escHtml(p.label)}</option>`
+      ).join("");
+      sel.dataset.filled = "1";
+    }
+
     function wireMeshViewerModal() {
       const modal = document.getElementById("mesh-viewer-modal");
       const closeBtn = document.getElementById("mesh-viewer-close");
@@ -357,6 +419,222 @@
         if (modal?.classList.contains("hidden")) return;
         close();
       });
+      fillTripoAnimationSelect();
+      document.getElementById("mesh-btn-rig")?.addEventListener("click", () => meshViewerRunRig());
+      document.getElementById("mesh-btn-generate-anim")?.addEventListener("click", () => meshViewerGenerateAnim());
+    }
+
+    function getStoredModel3d(prefix, imageIndex, genId) {
+      const images = readImagesInput(prefix);
+      const list = images[imageIndex]?.models3d;
+      if (!Array.isArray(list)) return null;
+      return list.find(m => m.id === genId) ?? null;
+    }
+
+    function updateAnimationById(prefix, imageIndex, genId, animId, fn) {
+      const images = readImagesInput(prefix);
+      const gen = images[imageIndex]?.models3d?.find(g => g.id === genId);
+      const anims = gen?.animations;
+      if (!anims) return;
+      const i = anims.findIndex(a => a.id === animId);
+      if (i === -1) return;
+      anims[i] = fn({ ...anims[i] });
+      writeImagesInput(prefix, images);
+    }
+
+    function syncMeshAnimatePanelUi() {
+      const panel = document.getElementById("mesh-animate-panel");
+      const afterRig = document.getElementById("mesh-animate-after-rig");
+      const rigBtn = document.getElementById("mesh-btn-rig");
+      const rigStatus = document.getElementById("mesh-rig-status");
+      const outWrap = document.getElementById("mesh-animated-outputs");
+      const outList = document.getElementById("mesh-animated-list");
+      const ctx = meshViewerFigureCtx;
+      if (!panel) return;
+
+      if (!ctx?.meshTaskId) {
+        panel.classList.add("hidden");
+        return;
+      }
+      panel.classList.remove("hidden");
+      const stored = getStoredModel3d(ctx.prefix, ctx.imageIndex, ctx.genId);
+      const rigId = stored?.rigTaskId || ctx.rigTaskId || "";
+      if (rigBtn) rigBtn.disabled = !!rigId;
+      if (afterRig) afterRig.classList.toggle("hidden", !rigId);
+      const anims = stored?.animations ?? [];
+      const done = anims.filter(a => a.glbUrl && a.status === "success");
+      if (outWrap && outList) {
+        outWrap.classList.toggle("hidden", done.length === 0);
+        // Do not put Tripo URLs in HTML attributes — `&` in query strings breaks attribute parsing.
+        outList.innerHTML = done.map(a => {
+          const label = escHtml(a.animationKey || a.id);
+          return `<li class="flex items-center gap-2 flex-wrap rounded-md px-2 py-1.5 bg-[#0e0e18] border border-[#252538]">
+            <span class="text-emerald-300/90">${label}</span>
+            <button type="button" class="js-mesh-anim-preview px-2 py-0.5 rounded text-[10px] font-mono bg-teal-700 hover:bg-teal-600 text-white"
+                    data-anim-id="${escAttr(a.id)}">Show in preview</button>
+          </li>`;
+        }).join("");
+        outList.querySelectorAll(".js-mesh-anim-preview").forEach(btn => {
+          btn.addEventListener("click", async () => {
+            const animId = btn.getAttribute("data-anim-id");
+            const c = meshViewerFigureCtx;
+            if (!animId || !c) return;
+            const st = getStoredModel3d(c.prefix, c.imageIndex, c.genId);
+            const u = st?.animations?.find(x => x.id === animId)?.glbUrl;
+            if (u) await setMeshViewerModelSrc(u);
+          });
+        });
+      }
+    }
+
+    async function setMeshViewerModelSrc(url) {
+      const mv = document.getElementById("mesh-model-viewer");
+      const titleEl = document.getElementById("mesh-viewer-title");
+      if (!mv || !url) return;
+      revokeMeshViewerObjectUrl();
+      mv.removeAttribute("src");
+      if (isTripoMeshCdnUrl(url)) {
+        if (titleEl) titleEl.textContent = "Loading model…";
+        try {
+          const res = await fetch("/api/tripo/proxy-model", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url }),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || `HTTP ${res.status}`);
+          }
+          const blob = await res.blob();
+          const objectUrl = URL.createObjectURL(blob);
+          mv.dataset.blobUrl = objectUrl;
+          mv.src = objectUrl;
+        } finally {
+          if (titleEl) titleEl.textContent = "3D preview";
+        }
+      } else {
+        mv.src = url;
+      }
+    }
+
+    async function meshViewerRunRig() {
+      const ctx = meshViewerFigureCtx;
+      if (!ctx?.meshTaskId) return;
+      const { prefix, imageIndex, genId } = ctx;
+      const btn = document.getElementById("mesh-btn-rig");
+      const statusEl = document.getElementById("mesh-rig-status");
+      if (btn) btn.disabled = true;
+      if (statusEl) {
+        statusEl.style.color = "";
+        statusEl.textContent = "Pre-rig check…";
+      }
+      try {
+        const pre = await apiFetch("/api/tripo/prerig-check", {
+          method: "POST",
+          body: JSON.stringify({ meshTaskId: ctx.meshTaskId }),
+        });
+        const preTask = await pollTripoTaskUntilDone(pre.prerigTaskId);
+        if (!preTask.output?.riggable) throw new Error("Model is not riggable");
+        updateModel3dById(prefix, imageIndex, genId, g => ({ ...g, prerigTaskId: pre.prerigTaskId }));
+        if (statusEl) statusEl.textContent = "Rigging (may take several minutes)…";
+        const rigStart = await apiFetch("/api/tripo/start-rig", {
+          method: "POST",
+          body: JSON.stringify({ meshTaskId: ctx.meshTaskId }),
+        });
+        await pollTripoTaskUntilDone(rigStart.rigTaskId);
+        updateModel3dById(prefix, imageIndex, genId, g => ({ ...g, rigTaskId: rigStart.rigTaskId }));
+        ctx.rigTaskId = rigStart.rigTaskId;
+        await autoSaveFigure();
+        renderImageGallery(prefix, readImagesInput(prefix));
+        syncMeshAnimatePanelUi();
+        if (statusEl) {
+          statusEl.textContent = "Rig complete.";
+          setTimeout(() => {
+            if (statusEl.textContent === "Rig complete.") statusEl.textContent = "";
+          }, 5000);
+        }
+      } catch (e) {
+        if (statusEl) {
+          statusEl.textContent = "Error: " + (e instanceof Error ? e.message : String(e));
+          statusEl.style.color = "#fca5a5";
+        }
+      } finally {
+        const stored = getStoredModel3d(prefix, imageIndex, genId);
+        if (btn) btn.disabled = !!(stored?.rigTaskId || ctx.rigTaskId);
+      }
+    }
+
+    async function meshViewerGenerateAnim() {
+      const ctx = meshViewerFigureCtx;
+      const rigId = ctx?.rigTaskId || getStoredModel3d(ctx?.prefix, ctx?.imageIndex, ctx?.genId)?.rigTaskId;
+      if (!ctx?.meshTaskId || !rigId) return;
+      const sel = document.getElementById("mesh-animate-select");
+      const animation = sel?.value;
+      if (!animation) return;
+      const { prefix, imageIndex, genId } = ctx;
+      const animId = newAssetId();
+      const statusEl = document.getElementById("mesh-anim-gen-status");
+      const btn = document.getElementById("mesh-btn-generate-anim");
+
+      const images = readImagesInput(prefix);
+      const gen = images[imageIndex]?.models3d?.find(g => g.id === genId);
+      if (!gen) return;
+      if (!gen.animations) gen.animations = [];
+      gen.animations.push({
+        id: animId,
+        createdAt: new Date().toISOString(),
+        status: "running",
+        animationKey: animation,
+      });
+      writeImagesInput(prefix, images);
+      renderImageGallery(prefix, images);
+
+      if (btn) btn.disabled = true;
+      if (statusEl) {
+        statusEl.style.color = "";
+        statusEl.textContent = "Queueing animation…";
+      }
+      try {
+        const start = await apiFetch("/api/tripo/start-retarget", {
+          method: "POST",
+          body: JSON.stringify({ rigTaskId: rigId, animation }),
+        });
+        updateAnimationById(prefix, imageIndex, genId, animId, a => ({ ...a, retargetTaskId: start.retargetTaskId }));
+        if (statusEl) statusEl.textContent = "Rendering (may take several minutes)…";
+        const task = await pollTripoTaskUntilDone(start.retargetTaskId);
+        const glbUrl = task.output?.model;
+        if (!glbUrl) throw new Error("No model URL in retarget output");
+        updateAnimationById(prefix, imageIndex, genId, animId, a => ({
+          ...a,
+          status: "success",
+          glbUrl,
+        }));
+        await autoSaveFigure();
+        renderImageGallery(prefix, readImagesInput(prefix));
+        syncMeshAnimatePanelUi();
+        await setMeshViewerModelSrc(glbUrl);
+        if (statusEl) {
+          statusEl.textContent = "Showing animated model in preview.";
+          setTimeout(() => {
+            if (statusEl.textContent === "Showing animated model in preview.") statusEl.textContent = "";
+          }, 5000);
+        }
+      } catch (e) {
+        updateAnimationById(prefix, imageIndex, genId, animId, a => ({
+          ...a,
+          status: "failed",
+          error: e instanceof Error ? e.message : String(e),
+        }));
+        if (statusEl) {
+          statusEl.textContent = "Error: " + (e instanceof Error ? e.message : String(e));
+          statusEl.style.color = "#fca5a5";
+        }
+        await autoSaveFigure();
+        renderImageGallery(prefix, readImagesInput(prefix));
+      } finally {
+        if (btn) btn.disabled = false;
+        syncMeshAnimatePanelUi();
+      }
     }
 
     function isTripoMeshCdnUrl(url) {
@@ -379,12 +657,25 @@
       }
     }
 
-    window.__openMeshViewer = async function(url) {
+    window.__openMeshViewer = async function(url, ctx) {
       if (!url || typeof url !== "string") return;
       const modal = document.getElementById("mesh-viewer-modal");
       const mv = document.getElementById("mesh-model-viewer");
-      const titleEl = document.getElementById("mesh-viewer-title");
       if (!modal || !mv) return;
+
+      meshViewerFigureCtx = null;
+      if (ctx && typeof ctx === "object" && ctx.meshTaskId && ctx.prefix != null && ctx.genId != null) {
+        meshViewerFigureCtx = {
+          prefix: String(ctx.prefix),
+          imageIndex: Number(ctx.imageIndex),
+          genId: String(ctx.genId),
+          meshTaskId: String(ctx.meshTaskId),
+          rigTaskId: ctx.rigTaskId ? String(ctx.rigTaskId) : undefined,
+        };
+        const stored = getStoredModel3d(meshViewerFigureCtx.prefix, meshViewerFigureCtx.imageIndex, meshViewerFigureCtx.genId);
+        if (stored?.rigTaskId) meshViewerFigureCtx.rigTaskId = stored.rigTaskId;
+        if (stored?.meshTaskId) meshViewerFigureCtx.meshTaskId = stored.meshTaskId;
+      }
 
       revokeMeshViewerObjectUrl();
       mv.removeAttribute("src");
@@ -392,35 +683,27 @@
       modal.classList.remove("hidden");
       document.body.classList.add("overflow-hidden");
 
-      if (isTripoMeshCdnUrl(url)) {
-        if (titleEl) titleEl.textContent = "Loading model…";
-        try {
-          const res = await fetch("/api/tripo/proxy-model", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ url }),
-          });
-          if (!res.ok) {
-            const err = await res.json().catch(() => ({}));
-            throw new Error(err.error || `HTTP ${res.status}`);
-          }
-          const blob = await res.blob();
-          const objectUrl = URL.createObjectURL(blob);
-          mv.dataset.blobUrl = objectUrl;
-          mv.src = objectUrl;
-        } catch (e) {
-          alert(e instanceof Error ? e.message : String(e));
-          modal.classList.add("hidden");
-          document.body.classList.remove("overflow-hidden");
-        } finally {
-          if (titleEl) titleEl.textContent = "3D preview";
-        }
-      } else {
-        mv.src = url;
+      fillTripoAnimationSelect();
+      const rigStatus = document.getElementById("mesh-rig-status");
+      const animStatus = document.getElementById("mesh-anim-gen-status");
+      if (rigStatus) { rigStatus.textContent = ""; rigStatus.style.color = ""; }
+      if (animStatus) { animStatus.textContent = ""; animStatus.style.color = ""; }
+      syncMeshAnimatePanelUi();
+
+      try {
+        await setMeshViewerModelSrc(url);
+      } catch (e) {
+        alert(e instanceof Error ? e.message : String(e));
+        modal.classList.add("hidden");
+        document.body.classList.remove("overflow-hidden");
+        meshViewerFigureCtx = null;
+        document.getElementById("mesh-animate-panel")?.classList.add("hidden");
       }
     };
 
     window.__closeMeshViewer = function() {
+      meshViewerFigureCtx = null;
+      document.getElementById("mesh-animate-panel")?.classList.add("hidden");
       revokeMeshViewerObjectUrl();
       const modal = document.getElementById("mesh-viewer-modal");
       const mv = document.getElementById("mesh-model-viewer");
@@ -497,7 +780,6 @@
           if (typeof entry === "string") return { url: entry, models3d: [] };
           return {
             url: typeof entry.url === "string" ? entry.url : "",
-            selectedModel3dId: entry.selectedModel3dId === undefined ? undefined : entry.selectedModel3dId,
             models3d: Array.isArray(entry.models3d) ? entry.models3d.map(cloneModel3d) : [],
           };
         });
@@ -518,7 +800,6 @@
           if (typeof entry === "string") return { url: entry, models3d: [] };
           return {
             url: typeof entry.url === "string" ? entry.url : "",
-            selectedModel3dId: entry.selectedModel3dId,
             models3d: Array.isArray(entry.models3d) ? entry.models3d.map(cloneModel3d) : [],
           };
         }).filter(a => a.url);
@@ -752,20 +1033,29 @@
     function models3dListHtml(prefix, imageIndex, asset) {
       const models = asset.models3d ?? [];
       if (!models.length) return "";
-      const prefixJson = JSON.stringify(prefix);
       return `<div class="px-2 py-2.5 space-y-2 border-t border-[#2a2a45] bg-[#12121f]">
         ${models.map((g, gi) => {
-          const sel = asset.selectedModel3dId === g.id;
           const statusClass = g.status === "success" ? "text-emerald-300" : g.status === "failed" ? "text-red-300" : "text-amber-300";
           const url = g.pbrModelUrl || g.modelUrl;
-          const idJson = JSON.stringify(g.id);
           const errTip = g.error ? escAttr(g.error) : "";
+          const meshNum = gi + 1;
+          const viewerCtx = JSON.stringify({
+            prefix,
+            imageIndex,
+            genId: g.id,
+            meshTaskId: g.meshTaskId || "",
+            rigTaskId: g.rigTaskId || "",
+          });
+          const animBtns = (g.animations ?? []).filter(a => a.glbUrl && a.status === "success").map(a => {
+            const lab = escHtml(a.animationKey || "clip");
+            return `<button type="button" onclick='window.__openMeshViewer(${JSON.stringify(a.glbUrl)}, ${viewerCtx})' class="inline-flex items-center px-2 py-1 rounded-md text-[10px] font-mono bg-sky-700 text-white hover:bg-sky-600 border border-sky-500/50">▶ ${lab}</button>`;
+          }).join(" ");
           return `<div class="flex items-center gap-2 flex-wrap text-sm font-mono leading-normal min-h-[2rem] rounded-md px-2 py-1.5 bg-[#0e0e18] border border-[#252538] ${statusClass}">
-            <span class="font-bold text-slate-100 tabular-nums shrink-0">${sel ? "★ " : ""}Mesh ${gi + 1}</span>
+            <span class="font-bold text-slate-100 tabular-nums shrink-0">Mesh ${meshNum}</span>
             <span class="text-slate-200 capitalize font-medium">${g.status}</span>
-            ${url ? `<button type="button" onclick='window.__openMeshViewer(${JSON.stringify(url)})' class="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wide bg-teal-600 text-white hover:bg-teal-500 border border-teal-400/60 shadow-sm">View 3D</button>` : ""}
-            ${url ? `<a href="${escHtml(url)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wide bg-violet-600 text-white hover:bg-violet-500 border border-violet-400/60 shadow-sm">Open mesh</a>` : ""}
-            ${g.status === "success" && url ? `<button type="button" class="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wide border shadow-sm ${sel ? "bg-amber-500/25 text-amber-200 border-amber-400/50" : "bg-slate-600 text-slate-100 border-slate-500 hover:bg-slate-500"}" onclick='window.__selectModel3d(${prefixJson}, ${imageIndex}, ${idJson})'>${sel ? "Active" : "Use mesh"}</button>` : ""}
+            ${url ? `<button type="button" onclick='window.__openMeshViewer(${JSON.stringify(url)}, ${viewerCtx})' class="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wide bg-teal-600 text-white hover:bg-teal-500 border border-teal-400/60 shadow-sm">View 3D</button>` : ""}
+            ${url ? `<button type="button" onclick='window.__downloadMesh(${JSON.stringify(url)}, ${meshNum})' class="inline-flex items-center px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wide bg-violet-600 text-white hover:bg-violet-500 border border-violet-400/60 shadow-sm">Download mesh</button>` : ""}
+            ${animBtns ? `<span class="w-full text-[9px] text-slate-500 mt-0.5">Animated:</span>${animBtns}` : ""}
             ${g.error ? `<span class="text-red-300 max-w-[12rem] truncate text-xs font-medium" title="${errTip}">⚠ error</span>` : ""}
           </div>`;
         }).join("")}
@@ -850,13 +1140,40 @@
       renderImageGallery(prefix, images);
     };
 
-    window.__selectModel3d = async function(prefix, imageIndex, modelId) {
-      const images = readImagesInput(prefix);
-      if (!images[imageIndex]) return;
-      images[imageIndex].selectedModel3dId = modelId;
-      writeImagesInput(prefix, images);
-      renderImageGallery(prefix, images);
-      await autoSaveFigure();
+    window.__downloadMesh = async function(url, meshIndex) {
+      if (!url || typeof url !== "string") return;
+      const n = typeof meshIndex === "number" && meshIndex > 0 ? meshIndex : 1;
+      const filename = `figure-mesh-${n}.glb`;
+      try {
+        let blob;
+        if (isTripoMeshCdnUrl(url)) {
+          const res = await fetch("/api/tripo/proxy-model", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url }),
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.error || `HTTP ${res.status}`);
+          }
+          blob = await res.blob();
+        } else {
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(res.statusText || `HTTP ${res.status}`);
+          blob = await res.blob();
+        }
+        const objectUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = objectUrl;
+        a.download = filename;
+        a.rel = "noopener";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
+      } catch (e) {
+        alert(e instanceof Error ? e.message : String(e));
+      }
     };
 
     window.__mesh3dFromImage = async function(prefix, imageIndex) {

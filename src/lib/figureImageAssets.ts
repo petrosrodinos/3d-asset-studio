@@ -24,6 +24,10 @@ export interface FigureImageModel3D {
   createdAt: string;
   status: FigureImageAnimStatus;
   meshTaskId?: string;
+  /** After animate_prerigcheck (optional audit). */
+  prerigTaskId?: string;
+  /** Tripo `animate_rig` task id — use as `original_model_task_id` for `animate_retarget`. */
+  rigTaskId?: string;
   modelUrl?: string;
   pbrModelUrl?: string;
   error?: string;
@@ -32,8 +36,6 @@ export interface FigureImageModel3D {
 
 export interface FigureImageAsset {
   url: string;
-  /** Which mesh is selected for future rig/animate workflows */
-  selectedModel3dId?: string | null;
   models3d?: FigureImageModel3D[];
 }
 
@@ -60,7 +62,6 @@ export function normalizeImagePromptImages(ip: Record<string, unknown> | null | 
       const url = typeof o.url === "string" ? o.url : "";
       return {
         url,
-        selectedModel3dId: o.selectedModel3dId === undefined ? undefined : (o.selectedModel3dId as string | null),
         models3d: emptyModels3d(o.models3d as FigureImageModel3D[] | undefined),
       };
     });
