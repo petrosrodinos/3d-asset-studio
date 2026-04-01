@@ -166,20 +166,13 @@
                 <textarea id="f-default-A-neg" rows="2"
                           class="w-full bg-[#080810] border border-[#1a1a2e] rounded px-3 py-2 text-xs font-mono text-slate-300 focus:outline-none focus:border-violet-600/50 transition-colors resize-none leading-relaxed"></textarea>
               </div>
-              <input type="hidden" id="f-default-A-imageurl">
+              <input type="hidden" id="f-default-A-imageurls" value="[]">
               <div class="flex items-center gap-2 pt-1">
                 <button type="button" data-gen-img-btn="default-A" onclick="window.__generateImage('default-A')"
                         class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white text-[10px] font-mono rounded transition-colors">⬡ Generate Image</button>
                 <span id="img-status-default-A" class="text-[10px] font-mono text-slate-600"></span>
               </div>
-              <div id="img-preview-default-A" class="hidden space-y-1">
-                <div class="flex items-center justify-between">
-                  <label class="text-[10px] font-mono text-slate-500">Generated Image</label>
-                  <button type="button" onclick="window.__clearImage('default-A')"
-                          class="text-[10px] font-mono text-slate-600 hover:text-red-400 transition-colors">✕ Clear</button>
-                </div>
-                <img id="img-default-A" src="" loading="lazy" class="w-full rounded border border-[#1a1a2e] object-contain max-h-64" alt="Generated">
-              </div>
+              <div id="img-gallery-default-A" class="hidden space-y-1.5"></div>
             </div>
             <div id="default-B-panel" class="p-4 space-y-3 hidden">
               <div class="flex justify-end">
@@ -210,20 +203,13 @@
                 <textarea id="f-default-B-neg" rows="2"
                           class="w-full bg-[#080810] border border-[#1a1a2e] rounded px-3 py-2 text-xs font-mono text-slate-300 focus:outline-none focus:border-violet-600/50 transition-colors resize-none leading-relaxed"></textarea>
               </div>
-              <input type="hidden" id="f-default-B-imageurl">
+              <input type="hidden" id="f-default-B-imageurls" value="[]">
               <div class="flex items-center gap-2 pt-1">
                 <button type="button" data-gen-img-btn="default-B" onclick="window.__generateImage('default-B')"
                         class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white text-[10px] font-mono rounded transition-colors">⬡ Generate Image</button>
                 <span id="img-status-default-B" class="text-[10px] font-mono text-slate-600"></span>
               </div>
-              <div id="img-preview-default-B" class="hidden space-y-1">
-                <div class="flex items-center justify-between">
-                  <label class="text-[10px] font-mono text-slate-500">Generated Image</label>
-                  <button type="button" onclick="window.__clearImage('default-B')"
-                          class="text-[10px] font-mono text-slate-600 hover:text-red-400 transition-colors">✕ Clear</button>
-                </div>
-                <img id="img-default-B" src="" loading="lazy" class="w-full rounded border border-[#1a1a2e] object-contain max-h-64" alt="Generated">
-              </div>
+              <div id="img-gallery-default-B" class="hidden space-y-1.5"></div>
             </div>
           </div>
         </section>
@@ -273,6 +259,9 @@
     .skin-variant-tab { flex: 1; padding: 6px 12px; font-size: 10px; font-family: 'JetBrains Mono', monospace; color: #475569; background: #0a0a14; transition: all 0.12s; }
     .skin-variant-tab:hover { color: #94a3b8; }
     .active-skin-variant-tab { color: #f1f5f9; background: #0e0e1a; }
+    .img-carousel-viewport { overflow: hidden; border-radius: 0.5rem; }
+    .img-carousel-track { display: flex; transition: transform 0.3s ease-out; }
+    .img-carousel-slide { flex: 0 0 auto; box-sizing: border-box; }
   </style>
 
   <script type="module">
@@ -283,6 +272,8 @@
     let isCreating = false;
     let currentFilter = "all";
     let skinCount = 0;  // for generating unique skin IDs
+    /** @type {Record<string, number>} current slide index per gallery prefix (2 images per slide) */
+    let galleryCarouselSlide = {};
 
     // ── API ────────────────────────────────────────────────────────────────────
 
@@ -374,10 +365,10 @@
     // ── List rendering ─────────────────────────────────────────────────────────
 
     function figureThumb(f) {
-      return f.default?.variantA?.imagePrompt?.imageUrl
-          || f.default?.variantB?.imagePrompt?.imageUrl
-          || f.skins?.[0]?.variantA?.imagePrompt?.imageUrl
-          || f.skins?.[0]?.variantB?.imagePrompt?.imageUrl
+      return f.default?.variantA?.imagePrompt?.imageUrls?.[0]
+          || f.default?.variantB?.imagePrompt?.imageUrls?.[0]
+          || f.skins?.[0]?.variantA?.imagePrompt?.imageUrls?.[0]
+          || f.skins?.[0]?.variantB?.imagePrompt?.imageUrls?.[0]
           || null;
     }
 
@@ -431,6 +422,7 @@
     // ── Form population ────────────────────────────────────────────────────────
 
     function populateForm(figure) {
+      galleryCarouselSlide = {};
       document.getElementById("empty-state").classList.add("hidden");
       document.getElementById("figure-form").classList.remove("hidden");
       document.getElementById("editor-title").textContent = figure.name;
@@ -454,21 +446,14 @@
     }
 
     function setVariantFields(prefix, ip) {
-      // model: inject a fresh <select> into the wrapper div
       const wrap = document.getElementById(`f-${prefix}-model-wrap`);
       if (wrap) wrap.innerHTML = modelSelectHtml(`f-${prefix}-model`, ip.model ?? bestDefaultModel());
       document.getElementById(`f-${prefix}-prompt`).value = ip.prompt ?? "";
       document.getElementById(`f-${prefix}-neg`).value = ip.negativePrompt ?? "";
-      // image
-      const imageUrl = ip.imageUrl ?? "";
-      const urlInput = document.getElementById(`f-${prefix}-imageurl`);
-      if (urlInput) urlInput.value = imageUrl;
-      const imgEl = document.getElementById(`img-${prefix}`);
-      const preview = document.getElementById(`img-preview-${prefix}`);
-      if (imgEl && preview) {
-        imgEl.src = imageUrl;
-        preview.classList.toggle("hidden", !imageUrl);
-      }
+      const urls = ip.imageUrls ?? [];
+      const urlInput = document.getElementById(`f-${prefix}-imageurls`);
+      if (urlInput) urlInput.value = JSON.stringify(urls);
+      renderImageGallery(prefix, urls);
     }
 
     function getVariantFields(prefix) {
@@ -476,10 +461,11 @@
       const model = modelEl?.value?.trim() ?? bestDefaultModel();
       const prompt = document.getElementById(`f-${prefix}-prompt`).value.trim();
       const neg = document.getElementById(`f-${prefix}-neg`).value.trim();
-      const imageUrl = document.getElementById(`f-${prefix}-imageurl`)?.value.trim() ?? "";
+      const urlsRaw = document.getElementById(`f-${prefix}-imageurls`)?.value ?? "[]";
+      const imageUrls = JSON.parse(urlsRaw);
       const ip = { model, prompt };
       if (neg) ip.negativePrompt = neg;
-      if (imageUrl) ip.imageUrl = imageUrl;
+      if (imageUrls.length) ip.imageUrls = imageUrls;
       return { imagePrompt: ip };
     }
 
@@ -550,6 +536,95 @@
       }
     }
 
+    const IMAGES_PER_CAROUSEL_SLIDE = 2;
+
+    function chunkUrlsForCarousel(urls, chunkSize) {
+      const slides = [];
+      for (let i = 0; i < urls.length; i += chunkSize) slides.push(urls.slice(i, i + chunkSize));
+      return slides;
+    }
+
+    function singleImageCellHtml(prefix, url, globalIndex, imageLabel) {
+      const prefixJson = JSON.stringify(prefix);
+      return `
+            <div class="relative group rounded overflow-hidden border border-[#1a1a2e] min-h-0">
+              <img src="${escHtml(url)}" loading="lazy" class="w-full aspect-square object-cover" alt="${escAttr(imageLabel)}">
+              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors pointer-events-none"></div>
+              <button type="button" onclick='window.__removeImage(${prefixJson}, ${globalIndex})'
+                      class="absolute top-1 right-1 opacity-0 group-hover:opacity-100 bg-black/70 hover:bg-red-900/80 text-red-400 rounded px-1.5 py-0.5 text-[9px] font-mono transition-all z-10">✕</button>
+              <a href="${escHtml(url)}" target="_blank" rel="noopener noreferrer"
+                 class="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 bg-black/70 text-slate-300 rounded px-1.5 py-0.5 text-[9px] font-mono transition-all z-10">↗</a>
+            </div>`;
+    }
+
+    function imageGalleryInnerHtml(prefix, urls) {
+      if (!urls.length) return "";
+      const slides = chunkUrlsForCarousel(urls, IMAGES_PER_CAROUSEL_SLIDE);
+      const numSlides = slides.length;
+      const slidePct = 100 / numSlides;
+      let current = galleryCarouselSlide[prefix] ?? 0;
+      if (current >= numSlides) current = numSlides - 1;
+      if (current < 0) current = 0;
+      galleryCarouselSlide[prefix] = current;
+
+      const slidesHtml = slides.map((pair, si) => {
+        const cells = pair.map((url, j) => {
+          const globalIndex = si * IMAGES_PER_CAROUSEL_SLIDE + j;
+          return singleImageCellHtml(prefix, url, globalIndex, `Generated ${globalIndex + 1}`);
+        });
+        if (pair.length === 1) cells.push('<div class="rounded border border-dashed border-[#1a1a2e] bg-[#0a0a14]/50 min-h-[4rem]" aria-hidden="true"></div>');
+        return `
+          <div class="img-carousel-slide grid grid-cols-2 gap-1.5" style="width: ${slidePct}%; padding: 0 2px;">
+            ${cells.join("")}
+          </div>`;
+      }).join("");
+
+      const atStart = current <= 0;
+      const atEnd = current >= numSlides - 1;
+      const prefixJs = JSON.stringify(prefix);
+
+      return `
+        <div class="flex items-center justify-between gap-2">
+          <label class="text-[10px] font-mono text-slate-500">Generated Images (${urls.length})</label>
+          <span class="text-[10px] font-mono text-slate-600 tabular-nums">${current + 1} / ${numSlides}</span>
+        </div>
+        <div class="flex items-stretch gap-1.5">
+          <button type="button" aria-label="Previous images"
+                  onclick='window.__carouselStep(${prefixJs}, -1)'
+                  class="flex-shrink-0 self-center w-8 h-8 rounded border border-[#1a1a2e] bg-[#0e0e1a] text-slate-400 hover:text-slate-200 hover:border-violet-600/40 text-sm font-mono transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                  ${atStart ? "disabled" : ""}>‹</button>
+          <div class="img-carousel-viewport flex-1 min-w-0 border border-[#1a1a2e] bg-[#080810]">
+            <div class="img-carousel-track" style="width: ${numSlides * 100}%; transform: translateX(-${(current / numSlides) * 100}%);">
+              ${slidesHtml}
+            </div>
+          </div>
+          <button type="button" aria-label="Next images"
+                  onclick='window.__carouselStep(${prefixJs}, 1)'
+                  class="flex-shrink-0 self-center w-8 h-8 rounded border border-[#1a1a2e] bg-[#0e0e1a] text-slate-400 hover:text-slate-200 hover:border-violet-600/40 text-sm font-mono transition-colors disabled:opacity-30 disabled:pointer-events-none"
+                  ${atEnd ? "disabled" : ""}>›</button>
+        </div>`;
+    }
+
+    window.__carouselStep = function(prefix, delta) {
+      const input = document.getElementById(`f-${prefix}-imageurls`);
+      if (!input) return;
+      let urls;
+      try { urls = JSON.parse(input.value); } catch { return; }
+      if (!Array.isArray(urls) || !urls.length) return;
+      const numSlides = Math.ceil(urls.length / IMAGES_PER_CAROUSEL_SLIDE);
+      let s = galleryCarouselSlide[prefix] ?? 0;
+      s = Math.max(0, Math.min(numSlides - 1, s + delta));
+      galleryCarouselSlide[prefix] = s;
+      renderImageGallery(prefix, urls);
+    };
+
+    function renderImageGallery(prefix, urls) {
+      const gallery = document.getElementById(`img-gallery-${prefix}`);
+      if (!gallery) return;
+      gallery.classList.toggle("hidden", !urls.length);
+      gallery.innerHTML = imageGalleryInnerHtml(prefix, urls);
+    }
+
     window.__generateImage = async function(prefix) {
       const model  = document.getElementById(`f-${prefix}-model`)?.value?.trim();
       const prompt = document.getElementById(`f-${prefix}-prompt`)?.value?.trim();
@@ -576,9 +651,12 @@
         const url = first?.url ?? (first?.b64_json ? `data:image/png;base64,${first.b64_json}` : null);
         if (!url) throw new Error("No image in response");
 
-        document.getElementById(`f-${prefix}-imageurl`).value = url;
-        document.getElementById(`img-${prefix}`).src = url;
-        document.getElementById(`img-preview-${prefix}`).classList.remove("hidden");
+        const input = document.getElementById(`f-${prefix}-imageurls`);
+        const urls = JSON.parse(input.value);
+        urls.push(url);
+        input.value = JSON.stringify(urls);
+        renderImageGallery(prefix, urls);
+
         statusEl.textContent = "Saved";
         await autoSaveFigure();
         setTimeout(() => { statusEl.textContent = ""; }, 2000);
@@ -590,11 +668,12 @@
       }
     };
 
-    window.__clearImage = async function(prefix) {
-      document.getElementById(`f-${prefix}-imageurl`).value = "";
-      document.getElementById(`img-${prefix}`).src = "";
-      document.getElementById(`img-preview-${prefix}`).classList.add("hidden");
-      document.getElementById(`img-status-${prefix}`).textContent = "";
+    window.__removeImage = async function(prefix, index) {
+      const input = document.getElementById(`f-${prefix}-imageurls`);
+      const urls = JSON.parse(input.value);
+      urls.splice(index, 1);
+      input.value = JSON.stringify(urls);
+      renderImageGallery(prefix, urls);
       await autoSaveFigure();
     };
 
@@ -708,20 +787,14 @@
           <textarea id="f-${prefix}-neg" rows="2"
                     class="w-full bg-[#080810] border border-[#1a1a2e] rounded px-3 py-2 text-xs font-mono text-slate-300 focus:outline-none focus:border-violet-600/50 transition-colors resize-none leading-relaxed">${escHtml(ip.negativePrompt ?? '')}</textarea>
         </div>
-        <input type="hidden" id="f-${prefix}-imageurl" value="${escAttr(ip.imageUrl ?? '')}">
+        <input type="hidden" id="f-${prefix}-imageurls" value="${escAttr(JSON.stringify(ip.imageUrls ?? []))}">
         <div class="flex items-center gap-2 pt-1">
           <button type="button" data-gen-img-btn="${prefix}" onclick="window.__generateImage('${prefix}')"
                   class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white text-[10px] font-mono rounded transition-colors">⬡ Generate Image</button>
           <span id="img-status-${prefix}" class="text-[10px] font-mono text-slate-600"></span>
         </div>
-        <div id="img-preview-${prefix}" class="${ip.imageUrl ? '' : 'hidden'} space-y-1">
-          <div class="flex items-center justify-between">
-            <label class="text-[10px] font-mono text-slate-500">Generated Image</label>
-            <button type="button" onclick="window.__clearImage('${prefix}')"
-                    class="text-[10px] font-mono text-slate-600 hover:text-red-400 transition-colors">✕ Clear</button>
-          </div>
-          <img id="img-${prefix}" src="${escAttr(ip.imageUrl ?? '')}" loading="lazy"
-               class="w-full rounded border border-[#1a1a2e] object-contain max-h-64" alt="Generated">
+        <div id="img-gallery-${prefix}" class="${(ip.imageUrls ?? []).length ? '' : 'hidden'} space-y-1.5">
+          ${imageGalleryInnerHtml(prefix, ip.imageUrls ?? [])}
         </div>`;
     }
 
@@ -765,6 +838,7 @@
     // ── Create / Edit / Delete ─────────────────────────────────────────────────
 
     function showCreateForm() {
+      galleryCarouselSlide = {};
       isCreating = true;
       selectedName = null;
       document.getElementById("empty-state").classList.add("hidden");
