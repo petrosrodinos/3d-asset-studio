@@ -215,12 +215,17 @@ function togglePanel() {
   panel.style.display = state.panelVisible ? "flex" : "none";
 }
 
-function populateImageModels() {
+async function populateImageModels() {
   const sel = document.getElementById("image-model");
   if (!sel) return;
-  sel.innerHTML = IMAGE_MODELS.map(
-    (m) => `<option value="${m.id}">${m.label}</option>`
-  ).join("");
+  try {
+    const models = await fetch("/api/aiml/models").then((r) => r.json());
+    if (Array.isArray(models) && models.length > 0) {
+      sel.innerHTML = models.map((m) => `<option value="${m.id}">${m.id}</option>`).join("");
+      return;
+    }
+  } catch { /* fall through to built-in list */ }
+  sel.innerHTML = IMAGE_MODELS.map((m) => `<option value="${m.id}">${m.label}</option>`).join("");
 }
 
 /** Shorthand for getElementById + addEventListener. */

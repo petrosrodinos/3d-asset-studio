@@ -3,6 +3,7 @@ import { AimlApiService } from "../integrations/aimlapi/AimlApiService";
 import { Tool } from "../integrations/aimlapi/types";
 import { TripoService } from "../integrations/trippo/TripoService";
 import { ToolHandler } from "./types";
+import { readFigures, writeFigures } from "../lib/figures";
 import {
   defaultAudioExt,
   inferMimeTypeFromPath,
@@ -35,6 +36,11 @@ export function buildToolDefs(): Tool[] {
     { type: "function", function: { name: "tripo_getBalance", description: "Get Tripo user balance", parameters: { type: "object", properties: {}, additionalProperties: false } } },
     { type: "function", function: { name: "tripo_getStsToken", description: "Get Tripo upload sts token", parameters: { type: "object", properties: { format: { type: "string", enum: ["webp", "jpeg", "png"] } }, required: ["format"], additionalProperties: false } } },
     { type: "function", function: { name: "tripo_uploadImageFromPath", description: "Upload local image to Tripo upload endpoint", parameters: { type: "object", properties: { filePath: { type: "string" }, filename: { type: "string" }, mimeType: { type: "string", enum: ["image/png", "image/jpeg"] } }, required: ["filePath"], additionalProperties: false } } },
+    { type: "function", function: { name: "figures_list", description: "List all figures and obstacles from figures.json", parameters: { type: "object", properties: { type: { type: "string", enum: ["figure", "obstacle"], description: "Filter by type" } }, additionalProperties: false } } },
+    { type: "function", function: { name: "figures_get", description: "Get a single figure or obstacle by name", parameters: { type: "object", properties: { name: { type: "string" } }, required: ["name"], additionalProperties: false } } },
+    { type: "function", function: { name: "figures_create", description: "Create a new figure or obstacle in figures.json", parameters: { type: "object", properties: { figure: { type: "object", description: "Full figure object with name, type, default, and optional skins" } }, required: ["figure"], additionalProperties: false } } },
+    { type: "function", function: { name: "figures_update", description: "Replace a figure or obstacle by name in figures.json", parameters: { type: "object", properties: { name: { type: "string", description: "Current name of the figure to update" }, figure: { type: "object", description: "Full updated figure object" } }, required: ["name", "figure"], additionalProperties: false } } },
+    { type: "function", function: { name: "figures_delete", description: "Delete a figure or obstacle by name from figures.json", parameters: { type: "object", properties: { name: { type: "string" } }, required: ["name"], additionalProperties: false } } },
   ];
 }
 
@@ -87,6 +93,42 @@ export function makeHandlers(aiml: AimlApiService, tripo: TripoService): Record<
       const filename = optionalString(args, "filename") ?? path.basename(absolutePath);
       const mimeType = (optionalString(args, "mimeType") as "image/png" | "image/jpeg" | undefined) ?? inferMimeTypeFromPath(absolutePath);
       return tripo.uploadFile(data, filename, mimeType);
+    },
+    figures_list: async (args) => {
+      const figures = await readFigures();
+      if (typeof args.type === "string") return figures.filter((f: any) => f.type === args.type);
+      return figures;
+    },
+    figures_get: async (args) => {
+      const figures = await readFigures();
+      const figure = figures.find((f: any) => f.name === args.name);
+      if (!figure) throw new Error(`Figure "${args.name}" not found`);
+      return figure;
+    },
+    figures_create: async (args) => {
+      const figures = await readFigures();
+      const figure = args.figure as any;
+      if (!figure?.name) throw new Error("figure.name is required");
+      if (figures.some((f: any) => f.name === figure.name)) throw new Error(`Figure "${figure.name}" already exists`);
+      figures.push(figure);
+      await writeFigures(figures);
+      return figure;
+    },
+    figures_update: async (args) => {
+      const figures = await readFigures();
+      const idx = figures.findIndex((f: any) => f.name === args.name);
+      if (idx === -1) throw new Error(`Figure "${args.name}" not found`);
+      figures[idx] = args.figure;
+      await writeFigures(figures);
+      return figures[idx];
+    },
+    figures_delete: async (args) => {
+      const figures = await readFigures();
+      const idx = figures.findIndex((f: any) => f.name === args.name);
+      if (idx === -1) throw new Error(`Figure "${args.name}" not found`);
+      const [deleted] = figures.splice(idx, 1);
+      await writeFigures(figures);
+      return deleted;
     },
   };
 }

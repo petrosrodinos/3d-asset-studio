@@ -5,6 +5,7 @@ import chatRouter from "./routes/chat";
 import pipelineRouter from "./routes/pipeline";
 import imagesRouter from "./routes/images";
 import balanceRouter from "./routes/balance";
+import figuresRouter from "./routes/figures";
 import { getTripo } from "./services";
 
 const app = express();
@@ -17,6 +18,7 @@ app.use("/api/chat", chatRouter);
 app.use("/api/tripo/pipeline", pipelineRouter);
 app.use("/api/aiml", imagesRouter);
 app.use("/api/balance", balanceRouter);
+app.use("/api/figures", figuresRouter);
 
 app.get("/api/tripo/task/:id", async (req, res) => {
   try {
