@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { generateAndMesh } from "./generate-and-mesh.service";
-import { DEFAULT_POLL_TIMEOUT_MS } from "../../constants/pipeline";
+import { PIPELINE_CONFIG } from "../pipeline/config/pipeline.config";
 
 export async function generateAndMeshController(req: Request, res: Response) {
   try {
@@ -12,7 +12,7 @@ export async function generateAndMeshController(req: Request, res: Response) {
       n = 1,
       modelVersion,
       meshModelVersion,
-      timeoutMs = DEFAULT_POLL_TIMEOUT_MS,
+      timeoutMs = PIPELINE_CONFIG.DEFAULT_POLL_TIMEOUT_MS,
     } = req.body as Record<string, unknown>;
 
     if (typeof prompt !== "string" || !prompt.trim()) {

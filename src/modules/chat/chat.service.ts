@@ -1,6 +1,6 @@
 import { streamText, stepCountIs, type ModelMessage } from "ai";
-import { aimlProvider } from "../../lib/aiSdkClient";
-import { buildAiSdkTools } from "../../lib/aiSdkTools";
+import { aimlProvider } from "../../lib/ai-sdk/aiSdkClient";
+import { buildAiSdkTools } from "../../lib/ai-sdk/aiSdkTools";
 import { agentModel, getHandlers } from "../../services";
 import { CHAT_SYSTEM_PROMPT } from "../../ai-prompts/chat/chatSystemPrompt";
 

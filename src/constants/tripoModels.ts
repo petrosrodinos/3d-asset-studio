@@ -1,2 +1,0 @@
-export const DEFAULT_TRIPO_MODEL_VERSION = "v2.5-20250123";
-

@@ -2,8 +2,8 @@ import { Router } from "express";
 import multer from "multer";
 import { sseHeaders, sseWrite } from "../../lib/sse";
 import { runPipeline } from "./pipeline.service";
-import { DEFAULT_TRIPO_MODEL_VERSION } from "../../constants/tripoModels";
-import { PIPELINE_DEFAULT_ANIMATIONS, PIPELINE_SSE_EVENTS } from "../../constants/pipeline";
+import { TRIPO_CONFIG } from "../tripo/config/tripo.config";
+import { PIPELINE_CONFIG } from "./config/pipeline.config";
 
 const upload = multer({ storage: multer.memoryStorage() });
 const router = Router();
@@ -23,8 +23,8 @@ router.post("/", upload.single("image"), async (req, res, next) => {
 
   const rawAnimations = req.body.animations as string | string[] | undefined;
   const animations    = Array.isArray(rawAnimations) ? rawAnimations
-    : rawAnimations ? [rawAnimations] : PIPELINE_DEFAULT_ANIMATIONS;
-  const modelVersion  = (req.body.modelVersion as string) ?? DEFAULT_TRIPO_MODEL_VERSION;
+    : rawAnimations ? [rawAnimations] : PIPELINE_CONFIG.PIPELINE_DEFAULT_ANIMATIONS;
+  const modelVersion  = (req.body.modelVersion as string) ?? TRIPO_CONFIG.DEFAULT_TRIPO_MODEL_VERSION;
   const mimeType: "image/png" | "image/jpeg" =
     file.mimetype === "image/jpeg" ? "image/jpeg" : "image/png";
 
@@ -39,7 +39,7 @@ router.post("/", upload.single("image"), async (req, res, next) => {
       animations,
       modelVersion,
       emitProgress: ({ step, status, data = {} }) => {
-        sseWrite(res, PIPELINE_SSE_EVENTS.PROGRESS, { step, status, ...data });
+        sseWrite(res, PIPELINE_CONFIG.PIPELINE_SSE_EVENTS.PROGRESS, { step, status, ...data });
       },
       emitEvent: (event, data) => {
         sseWrite(res, event, data);

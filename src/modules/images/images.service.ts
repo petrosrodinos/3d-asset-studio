@@ -1,10 +1,9 @@
 import fs from "fs/promises";
 import { getAiml } from "../../services";
-import { DEFAULT_AIML_IMAGE_MODEL } from "../../constants/aimlModels";
-import { IMAGE_MODELS_PATH } from "../../constants/imageModelsPath";
+import { IMAGES_CONFIG } from "./config/images.config";
 
 export async function listImageModels() {
-  const raw = await fs.readFile(IMAGE_MODELS_PATH, "utf-8");
+  const raw = await fs.readFile(IMAGES_CONFIG.IMAGE_MODELS_PATH, "utf-8");
   return JSON.parse(raw);
 }
 
@@ -16,7 +15,7 @@ export async function generateImage(input: {
   steps?: number;
 }) {
   return getAiml().generateImage({
-    model: input.model ?? DEFAULT_AIML_IMAGE_MODEL,
+    model: input.model ?? IMAGES_CONFIG.DEFAULT_AIML_IMAGE_MODEL,
     prompt: input.prompt,
     size: input.size,
     n: input.n,

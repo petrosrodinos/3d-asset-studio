@@ -4,7 +4,7 @@ import {
   deleteImage as deleteImageRepo,
   listImages as listImagesRepo,
   updateSkinImageGcs,
-} from "../../repositories/skin-images/skin-images.repository";
+} from "./repositories/skin-images.repository";
 
 export async function createSkinImage(
   variantId: string,

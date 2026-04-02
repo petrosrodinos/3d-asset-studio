@@ -8,7 +8,7 @@ alwaysApply: false
 
 ## Goal
 
-When adding or modifying Express API functionality, keep the codebase scalable, testable, and easy to evolve by maintaining strict separation of concerns and a clean folder structure.
+When adding or modifying any API functionality in this repo (Express routers/controllers), keep the codebase scalable, testable, and easy to evolve by maintaining strict separation of concerns and a clean, domain/module-first folder structure.
 
 ## Folder Structure (recommended)
 
@@ -22,10 +22,14 @@ When adding or modifying Express API functionality, keep the codebase scalable, 
   - Delegate to services or module layer.
 
 - `src/modules/<feature>/*` (domain features)
-  - `*.router.ts`: Express wiring (paths/methods) + schema parsing.
-  - `*.service.ts`: business logic.
-  - `*.types.ts`: feature-specific types for request/response/domain.
-  - `*.schemas.ts` (optional but preferred): `zod` validation schemas.
+  - A feature is treated as a cohesive "module" folder (NestJS-style organization, adapted for this Express codebase).
+  - `*.router.ts`: Express wiring (paths/methods) and request parsing/validation orchestration.
+  - `*.service.ts`: business logic (no Express types).
+  - `repositories/`: module-scoped persistence/data-access logic for that feature.
+  - `config/`: grouped, module-scoped configuration.
+  - `helpers/`: module-scoped helpers (only if they belong to this module).
+  - `interfaces/`: module-scoped interfaces/types that are not global/shared.
+  - `*.types.ts` and/or `*.schemas.ts` (optional): feature-specific request/response/domain types and `zod` schemas.
   - `*.errors.ts` (optional): typed errors used by the feature.
 
 - `src/db/*` (Prisma / database access)
@@ -35,6 +39,46 @@ When adding or modifying Express API functionality, keep the codebase scalable, 
 - `src/integrations/*`
   - External APIs and side-effectful adapters (Tripo/AIML/GCS/etc).
   - Keep these calls behind narrow interfaces used by services.
+
+## Module-First Organization (Generalized)
+
+1. Modules First (Domain-Based)
+   - Organize everything by feature/module under `src/modules/<module-name>/`.
+   - Each module should contain only what is related to that feature’s domain logic (wiring, service logic, repositories, config, and module-scoped helpers/interfaces).
+
+2. Config Grouping (Do Not Create One File Per Constant)
+   - Related configuration must be grouped into a single config object file inside the module.
+   - BAD: `config/DEFAULT_AIML_IMAGE_MODEL.ts`, `config/IMAGE_MODELS_PATH.ts`, etc.
+   - GOOD: `src/modules/<module>/config/<module>.config.ts` exporting a single config object.
+   - Naming:
+     - Config file: `<module>.config.ts`
+     - Config object: `UPPER_SNAKE_CASE` (e.g. `AI_CONFIG`)
+   - Example shape:
+     - `export const AI_CONFIG = { DEFAULT_AIML_IMAGE_MODEL: '...', IMAGE_MODELS_PATH: '/models/images' }`
+
+3. Helpers Placement
+   - Helpers used only in one module belong inside that module’s `helpers/`.
+   - Shared helpers belong under `src/common/helpers/`.
+
+4. Interfaces Placement
+   - Global/shared interfaces belong under `src/interfaces/`.
+   - Module-specific interfaces belong inside the module’s `interfaces/`.
+
+5. Avoid Micro Files
+   - Do NOT create files for single constants, single small types, or tiny helpers.
+   - Group logically related items together (config objects, related types, or cohesive helpers).
+
+6. Repository Placement (must)
+   - Repositories are module-scoped by default and belong in `src/modules/<module>/repositories/`.
+   - Do not place feature repositories under top-level `src/repositories/` unless there is a true cross-domain shared repository abstraction.
+
+## Naming Conventions (Module Scoped)
+
+- `modules`: `<module-name>` is `kebab-case`.
+- `helpers`: `*.helper.ts`.
+- `interfaces`: `PascalCase`.
+- `config objects`: `UPPER_SNAKE_CASE`.
+- Prefer grouping by domain rather than by file size.
 
 ## Separation of Concerns Rules
 

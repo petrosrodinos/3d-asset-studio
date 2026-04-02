@@ -1,10 +1,10 @@
-import type { CreateSkinInput } from "../../interfaces/skins/skins.types";
+import type { CreateSkinInput } from "./interfaces/skins.types";
 import {
   createSkin as createSkinRepo,
   deleteSkin as deleteSkinRepo,
   listSkins as listSkinsRepo,
   setBaseSkin as setBaseSkinRepo,
-} from "../../repositories/skins/skins.repository";
+} from "./repositories/skins.repository";
 
 export async function listSkins(figureId: string) {
   return listSkinsRepo(figureId);

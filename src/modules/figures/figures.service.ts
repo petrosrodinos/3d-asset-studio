@@ -1,8 +1,8 @@
 import { agentModel, getAiml } from "../../services";
 import * as skinImageSvc from "../skin-images/skin-images.service";
 
-import type { CreateFigureInput, UpdateFigureInput } from "../../interfaces/figures/figures.types";
-import type { AiVariantContext, GenerateAiVariantInput, GenerateFigureImageInput } from "../../interfaces/figures/figures.generation.types";
+import type { CreateFigureInput, UpdateFigureInput } from "./interfaces/figures.types";
+import type { AiVariantContext, GenerateAiVariantInput, GenerateFigureImageInput } from "./interfaces/figures.generation.types";
 import {
   createFigure as createFigureRepo,
   deleteFigure as deleteFigureRepo,
@@ -11,11 +11,11 @@ import {
   resolveSkin,
   upsertSkinVariant,
   updateFigure as updateFigureRepo,
-} from "../../repositories/figures/figures.repository";
-import { applyNegativePrompt } from "../../helpers/negativePrompt.helper";
-import { safeParseJsonObject } from "../../helpers/safeJsonObjectParse.helper";
-import { AI_VARIANT_MODEL_PREFERENCE } from "../../constants/aiVariant";
-import { DEFAULT_AIML_IMAGE_MODEL } from "../../constants/aimlModels";
+} from "./repositories/figures.repository";
+import { applyNegativePrompt } from "./helpers/negativePrompt.helper";
+import { safeParseJsonObject } from "./helpers/safeJsonObjectParse.helper";
+import { FIGURES_CONFIG } from "./config/figures.config";
+import { IMAGES_CONFIG } from "../images/config/images.config";
 import {
   AI_VARIANT_SYSTEM_PROMPT,
   buildAiVariantUserPrompt,
@@ -48,7 +48,7 @@ export async function generateAndSaveFigureImage(input: GenerateFigureImageInput
     figureId,
     skinName,
     variant,
-    model = DEFAULT_AIML_IMAGE_MODEL,
+    model = IMAGES_CONFIG.DEFAULT_AIML_IMAGE_MODEL,
     prompt,
     negativePrompt,
     size,
@@ -110,7 +110,7 @@ export async function generateAiVariant(input: GenerateAiVariantInput): Promise<
 
   const chosenModel =
     (ctx.existingModel && available.some((m) => m.id === ctx.existingModel) ? ctx.existingModel : undefined) ??
-    AI_VARIANT_MODEL_PREFERENCE.find((id) => available.some((m) => m.id === id)) ??
+    FIGURES_CONFIG.AI_VARIANT_MODEL_PREFERENCE.find((id) => available.some((m) => m.id === id)) ??
     available[0]?.id ??
     undefined;
 
