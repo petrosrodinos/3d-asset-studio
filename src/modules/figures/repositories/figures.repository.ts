@@ -2,8 +2,27 @@ import { prisma } from "../../../db/client";
 import type { CreateFigureInput, UpdateFigureInput } from "../interfaces/figures.types";
 import { isObjectIdLike } from "../helpers/objectIdLike.helper";
 
-export async function listFigures() {
+const FULL_INCLUDE = {
+  skins: {
+    include: {
+      variants: {
+        include: {
+          images: {
+            include: {
+              models: {
+                include: { animations: true },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+} as const;
+
+export async function listFigures(userId: string) {
   return prisma.figure.findMany({
+    where: { userId },
     include: {
       skins: {
         include: {
@@ -27,51 +46,27 @@ export async function listFigures() {
   });
 }
 
-export async function getFigureById(id: string) {
+export async function getFigureById(userId: string, id: string) {
   if (isObjectIdLike(id)) {
-    return prisma.figure.findUnique({
-      where: { id },
-      include: {
-        skins: {
-          include: {
-            variants: {
-              include: {
-                images: {
-                  include: { models: { include: { animations: true } } },
-                },
-              },
-            },
-          },
-        },
-      },
+    return prisma.figure.findFirst({
+      where: { id, userId },
+      include: FULL_INCLUDE,
     });
   }
 
   return prisma.figure.findFirst({
-    where: { name: id },
-    include: {
-      skins: {
-        include: {
-          variants: {
-            include: {
-              images: {
-                include: { models: { include: { animations: true } } },
-              },
-            },
-          },
-        },
-      },
-    },
+    where: { name: id, userId },
+    include: FULL_INCLUDE,
   });
 }
 
-export async function createFigure(input: CreateFigureInput) {
+export async function createFigure(userId: string, input: CreateFigureInput) {
   return prisma.figure.create({
-    data: { name: input.name, type: input.type, metadata: input.metadata as never },
+    data: { userId, name: input.name, type: input.type, metadata: input.metadata as never },
   });
 }
 
-export async function updateFigure(id: string, input: UpdateFigureInput) {
+export async function updateFigure(userId: string, id: string, input: UpdateFigureInput) {
   const data = {
     name: input.name,
     type: input.type,
@@ -79,46 +74,40 @@ export async function updateFigure(id: string, input: UpdateFigureInput) {
   };
 
   if (isObjectIdLike(id)) {
+    const existing = await prisma.figure.findFirst({ where: { id, userId } });
+    if (!existing) return null;
     return prisma.figure.update({ where: { id }, data });
   }
 
-  // Avoid `updateMany` (Prisma needs MongoDB replica set for transactions).
-  // Instead, resolve the figure first, then update by its unique `id`.
-  const existing = await prisma.figure.findFirst({ where: { name: id } });
+  const existing = await prisma.figure.findFirst({ where: { name: id, userId } });
   if (!existing) return null;
   return prisma.figure.update({ where: { id: existing.id }, data });
 }
 
-export async function deleteFigure(id: string) {
-  if (isObjectIdLike(id)) return prisma.figure.delete({ where: { id } });
+export async function deleteFigure(userId: string, id: string) {
+  if (isObjectIdLike(id)) {
+    const existing = await prisma.figure.findFirst({ where: { id, userId } });
+    if (!existing) return null;
+    return prisma.figure.delete({ where: { id } });
+  }
 
   const existing = await prisma.figure.findFirst({
-    where: { name: id },
-    include: {
-      skins: {
-        include: {
-          variants: {
-            include: {
-              images: {
-                include: { models: { include: { animations: true } } },
-              },
-            },
-          },
-        },
-      },
-    },
+    where: { name: id, userId },
+    include: FULL_INCLUDE,
   });
   if (!existing) return null;
   await prisma.figure.delete({ where: { id: existing.id } });
   return existing;
 }
 
-export async function resolveSkin(figureId: string, skinName?: string | null) {
-  const resolvedSkin =
-    skinName && skinName.trim()
-      ? await prisma.skin.findFirst({ where: { figureId, name: skinName.trim() } })
-      : await prisma.skin.findFirst({ where: { figureId, isBase: true } });
-  return resolvedSkin;
+export async function resolveSkin(userId: string, figureId: string, skinName?: string | null) {
+  // Verify figure belongs to user first
+  const figure = await prisma.figure.findFirst({ where: { id: figureId, userId } });
+  if (!figure) return null;
+
+  return skinName && skinName.trim()
+    ? prisma.skin.findFirst({ where: { figureId, name: skinName.trim() } })
+    : prisma.skin.findFirst({ where: { figureId, isBase: true } });
 }
 
 export async function upsertSkinVariant(args: {
@@ -142,4 +131,3 @@ export async function upsertSkinVariant(args: {
     },
   });
 }
-

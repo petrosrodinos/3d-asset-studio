@@ -1,9 +1,11 @@
 import "dotenv/config";
 import express from "express";
+import cookieParser from "cookie-parser";
 import path from "path";
 import { env } from "./config/env";
 import { prisma } from "./db/client";
 import { errorHandler } from "./middleware/errorHandler";
+import { requireAuth } from "./middleware/requireAuth";
 
 import chatRouter from "./modules/chat/chat.router";
 import imagesRouter from "./modules/images/images.router";
@@ -11,6 +13,7 @@ import balanceRouter from "./modules/balance/balance.router";
 import tripoRouter from "./modules/tripo/tripo.router";
 import generateAndMeshRouter from "./modules/generate-and-mesh/generate-and-mesh.router";
 
+import authRouter      from "./modules/auth/auth.router";
 import figuresRouter    from "./modules/figures/figures.router";
 import skinsRouter      from "./modules/skins/skins.router";
 import variantsRouter   from "./modules/skin-variants/skin-variants.router";
@@ -23,11 +26,15 @@ const app = express();
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "../public")));
 app.use(
   "/vendor/model-viewer",
   express.static(path.join(__dirname, "../node_modules/@google/model-viewer/dist"))
 );
+
+// Auth (public)
+app.use("/api/auth", authRouter);
 
 // Legacy / non-DB routes
 app.use("/api/chat",    chatRouter);
@@ -42,14 +49,14 @@ app.use("/api", tripoRouter); // exposes: /api/mesh-from-image-url and related e
 // Prompt -> image -> mesh (single step)
 app.use("/api", generateAndMeshRouter); // exposes: /api/generate-and-mesh
 
-// DB-backed routes
-app.use("/api/figures",                                                                figuresRouter);
-app.use("/api/figures/:figureId/skins",                                                skinsRouter);
-app.use("/api/figures/:figureId/skins/:skinId/variants",                               variantsRouter);
-app.use("/api/figures/:figureId/skins/:skinId/variants/:variantId/images",             skinImagesRouter);
-app.use("/api/models3d",                                                               models3dRouter);
-app.use("/api/models3d/:model3dId/animations",                                         animationsRouter);
-app.use("/api/pipeline",                                                               pipelineRouter);
+// DB-backed routes (all require authentication)
+app.use("/api/figures",                                                                requireAuth, figuresRouter);
+app.use("/api/figures/:figureId/skins",                                                requireAuth, skinsRouter);
+app.use("/api/figures/:figureId/skins/:skinId/variants",                               requireAuth, variantsRouter);
+app.use("/api/figures/:figureId/skins/:skinId/variants/:variantId/images",             requireAuth, skinImagesRouter);
+app.use("/api/models3d",                                                               requireAuth, models3dRouter);
+app.use("/api/models3d/:model3dId/animations",                                         requireAuth, animationsRouter);
+app.use("/api/pipeline",                                                               requireAuth, pipelineRouter);
 
 app.use(errorHandler);
 

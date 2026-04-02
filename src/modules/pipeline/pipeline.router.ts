@@ -4,6 +4,7 @@ import { sseHeaders, sseWrite } from "../../lib/sse";
 import { runPipeline } from "./pipeline.service";
 import { TRIPO_CONFIG } from "../tripo/config/tripo.config";
 import { PIPELINE_CONFIG } from "./config/pipeline.config";
+import { prisma } from "../../db/client";
 
 const upload = multer({ storage: multer.memoryStorage() });
 const router = Router();
@@ -20,6 +21,9 @@ router.post("/", upload.single("image"), async (req, res, next) => {
   if (!variantId || !figureId) {
     return res.status(400).json({ error: "variantId and figureId are required" });
   }
+
+  const figure = await prisma.figure.findFirst({ where: { id: figureId, userId: req.userId } });
+  if (!figure) return res.status(404).json({ error: "Figure not found" });
 
   const rawAnimations = req.body.animations as string | string[] | undefined;
   const animations    = Array.isArray(rawAnimations) ? rawAnimations

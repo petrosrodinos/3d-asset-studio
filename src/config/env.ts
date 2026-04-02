@@ -13,6 +13,10 @@ const schema = z.object({
   GCS_PROJECT_ID: z.string().min(1).optional(),
   GCS_KEY_FILE: z.string().optional(),
   GCS_PUBLIC_BASE_URL: z.string().url().optional(),
+  JWT_ACCESS_SECRET:      z.string().min(32),
+  JWT_REFRESH_SECRET:     z.string().min(32),
+  JWT_ACCESS_EXPIRES_IN:  z.string().default("15m"),
+  JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
 });
 
 const parsed = schema.safeParse(process.env);

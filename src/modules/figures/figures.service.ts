@@ -1,3 +1,4 @@
+import { prisma } from "../../db/client";
 import { agentModel, getAiml } from "../../services";
 import * as skinImageSvc from "../skin-images/skin-images.service";
 
@@ -23,27 +24,30 @@ import {
   OBJECT_RIG_GUIDANCE,
 } from "../../ai-prompts/figures/aiVariant.prompts";
 
-export async function listFigures() {
-  return listFiguresRepo();
+/** Sentinel userId for seeded template figures */
+export const SEED_USER_ID = "000000000000000000000000";
+
+export async function listFigures(userId: string) {
+  return listFiguresRepo(userId);
 }
 
-export async function getFigureById(id: string) {
-  return getFigureByIdRepo(id);
+export async function getFigureById(userId: string, id: string) {
+  return getFigureByIdRepo(userId, id);
 }
 
-export async function createFigure(input: CreateFigureInput) {
-  return createFigureRepo(input);
+export async function createFigure(userId: string, input: CreateFigureInput) {
+  return createFigureRepo(userId, input);
 }
 
-export async function updateFigure(id: string, input: UpdateFigureInput) {
-  return updateFigureRepo(id, input);
+export async function updateFigure(userId: string, id: string, input: UpdateFigureInput) {
+  return updateFigureRepo(userId, id, input);
 }
 
-export async function deleteFigure(id: string) {
-  return deleteFigureRepo(id);
+export async function deleteFigure(userId: string, id: string) {
+  return deleteFigureRepo(userId, id);
 }
 
-export async function generateAndSaveFigureImage(input: GenerateFigureImageInput) {
+export async function generateAndSaveFigureImage(userId: string, input: GenerateFigureImageInput) {
   const {
     figureId,
     skinName,
@@ -55,7 +59,7 @@ export async function generateAndSaveFigureImage(input: GenerateFigureImageInput
     steps,
   } = input;
 
-  const resolvedSkin = await resolveSkin(figureId, skinName);
+  const resolvedSkin = await resolveSkin(userId, figureId, skinName);
 
   if (!resolvedSkin) {
     throw new Error("Skin not found for figure");
@@ -181,4 +185,82 @@ export async function generateAiVariant(input: GenerateAiVariantInput): Promise<
       : chosenModel;
 
   return { model, prompt: prompt.trim(), negativePrompt: negativePrompt.trim() };
+}
+
+/** Copy template figures (owned by SEED_USER_ID) into the new user's library */
+export async function copyTemplateFigures(userId: string) {
+  const templates = await prisma.figure.findMany({
+    where: { userId: SEED_USER_ID },
+    include: {
+      skins: {
+        include: {
+          variants: {
+            include: {
+              images: {
+                include: {
+                  models: {
+                    include: { animations: true },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  });
+
+  for (const fig of templates) {
+    const newFig = await prisma.figure.create({ data: { userId, name: fig.name, type: fig.type } });
+    for (const skin of fig.skins) {
+      const newSkin = await prisma.skin.create({
+        data: { figureId: newFig.id, name: skin.name, isBase: skin.isBase },
+      });
+      for (const variant of skin.variants) {
+        const newVariant = await prisma.skinVariant.create({
+          data: {
+            skinId: newSkin.id,
+            variant: variant.variant,
+            prompt: variant.prompt,
+            negativePrompt: variant.negativePrompt,
+            imageModel: variant.imageModel,
+          },
+        });
+        for (const img of variant.images) {
+          const newImg = await prisma.skinImage.create({
+            data: {
+              variantId: newVariant.id,
+              sourceUrl: img.sourceUrl,
+              gcsUrl: img.gcsUrl,
+              gcsBucket: img.gcsBucket,
+              gcsKey: img.gcsKey,
+            },
+          });
+          for (const model of img.models) {
+            const newModel = await prisma.model3D.create({
+              data: {
+                imageId: newImg.id,
+                status: model.status,
+                gcsPbrModelUrl: model.gcsPbrModelUrl,
+                gcsModelUrl: model.gcsModelUrl,
+                gcsPbrModelKey: model.gcsPbrModelKey,
+                gcsModelKey: model.gcsModelKey,
+              },
+            });
+            for (const anim of model.animations) {
+              await prisma.animation.create({
+                data: {
+                  model3dId: newModel.id,
+                  animationKey: anim.animationKey,
+                  gcsGlbUrl: anim.gcsGlbUrl,
+                  gcsGlbKey: anim.gcsGlbKey,
+                  status: anim.status,
+                },
+              });
+            }
+          }
+        }
+      }
+    }
+  }
 }

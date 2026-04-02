@@ -87,6 +87,9 @@ async function seedVariant(
   }
 }
 
+/** Fixed sentinel ObjectId for template figures — must be 24-char hex */
+const SEED_USER_ID = new ObjectId("000000000000000000000000");
+
 async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error("Missing DATABASE_URL in env.");
@@ -111,6 +114,7 @@ async function main() {
       const figureId = new ObjectId();
       await cols.figures.insertOne({
         _id: figureId,
+        userId: SEED_USER_ID,
         name: fig.name,
         type: fig.type ?? "figure",
         metadata: fig.metadata ?? undefined,
