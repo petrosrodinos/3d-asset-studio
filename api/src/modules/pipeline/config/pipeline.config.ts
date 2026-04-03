@@ -23,6 +23,7 @@ export const PIPELINE_CONFIG = {
   } as const,
 
   DEFAULT_POLL_INTERVAL_MS: 2000,
+  MESH_POLL_TIMEOUT_MS: 900_000,
   DEFAULT_POLL_TIMEOUT_MS: 600_000,
 } as const;
 

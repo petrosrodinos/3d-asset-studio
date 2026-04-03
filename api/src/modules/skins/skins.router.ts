@@ -16,6 +16,14 @@ router.post("/", async (req: Request<{ figureId: string }>, res: Response, next:
   } catch (err) { next(err); }
 });
 
+router.put("/:skinId", async (req: Request<{ figureId: string; skinId: string }>, res: Response, next: NextFunction) => {
+  try {
+    const { name } = req.body;
+    if (typeof name !== "string") return res.status(400).json({ error: "name is required" });
+    res.json(await skinsSvc.updateSkin(req.params.skinId, name));
+  } catch (err) { next(err); }
+});
+
 router.post("/:skinId/set-base", async (req: Request<{ figureId: string; skinId: string }>, res: Response, next: NextFunction) => {
   try {
     res.json(await skinsSvc.setBaseSkin(req.params.figureId, req.params.skinId));

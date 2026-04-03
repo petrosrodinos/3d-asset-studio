@@ -63,6 +63,7 @@ export async function getFigureById(userId: string, id: string) {
 export async function createFigure(userId: string, input: CreateFigureInput) {
   return prisma.figure.create({
     data: { userId, name: input.name, type: input.type, metadata: input.metadata as never },
+    include: FULL_INCLUDE,
   });
 }
 
@@ -112,7 +113,7 @@ export async function resolveSkin(userId: string, figureId: string, skinName?: s
 
 export async function upsertSkinVariant(args: {
   skinId: string;
-  variant: "A" | "B";
+  variant: string;
   imageModel: string;
   prompt: string;
   negativePrompt?: string;

@@ -41,3 +41,7 @@ export async function getModel3D(id: string) {
   return prisma.model3D.findUnique({ where: { id }, include: { animations: true } });
 }
 
+export async function deleteModel3D(id: string) {
+  return prisma.model3D.delete({ where: { id } });
+}
+

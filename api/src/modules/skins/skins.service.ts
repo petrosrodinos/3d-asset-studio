@@ -4,6 +4,7 @@ import {
   deleteSkin as deleteSkinRepo,
   listSkins as listSkinsRepo,
   setBaseSkin as setBaseSkinRepo,
+  updateSkin as updateSkinRepo,
 } from "./repositories/skins.repository";
 
 export async function listSkins(figureId: string) {
@@ -12,6 +13,10 @@ export async function listSkins(figureId: string) {
 
 export async function createSkin(figureId: string, input: CreateSkinInput) {
   return createSkinRepo(figureId, input);
+}
+
+export async function updateSkin(id: string, name: string) {
+  return updateSkinRepo(id, name);
 }
 
 export async function setBaseSkin(figureId: string, skinId: string) {

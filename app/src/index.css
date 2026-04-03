@@ -87,3 +87,9 @@ body {
   color: #a78bfa;
 }
 .msg-text strong { color: #f1f5f9; }
+
+.active-mode-btn {
+  border-color: rgba(124, 58, 237, 0.45);
+  background: rgba(124, 58, 237, 0.12);
+  color: #e2e8f0;
+}

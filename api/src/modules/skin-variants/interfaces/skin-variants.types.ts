@@ -1,7 +1,12 @@
 export interface UpsertVariantInput {
-  variant: string; // "A" | "B"
+  variant: string;
+  name?: string;
   prompt?: string;
   negativePrompt?: string;
   imageModel?: string;
+}
+
+export interface CreateVariantInput {
+  name?: string;
 }
 

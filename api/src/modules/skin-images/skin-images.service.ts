@@ -2,6 +2,7 @@ import { archiveRemoteUrl } from "../../integrations/gcs/gcs.service";
 import {
   createSkinImageRecord,
   deleteImage as deleteImageRepo,
+  getSkinImageById,
   listImages as listImagesRepo,
   updateSkinImageGcs,
 } from "./repositories/skin-images.repository";
@@ -23,6 +24,10 @@ export async function createSkinImage(
     console.warn(`GCS upload failed for image ${image.id}:`, err);
     return image;
   }
+}
+
+export async function getSkinImage(id: string) {
+  return getSkinImageById(id);
 }
 
 export async function listImages(variantId: string) {

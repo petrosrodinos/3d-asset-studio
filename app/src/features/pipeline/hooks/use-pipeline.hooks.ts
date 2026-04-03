@@ -11,11 +11,13 @@ export interface PipelineResult {
   model3dId: string;
   gcsPbrModelUrl: string;
   gcsModelUrl: string;
-  animations: Array<{ animationKey: string; gcsGlbUrl: string; status: string }>;
 }
 
-export function usePipeline(onComplete: (r: PipelineResult) => void) {
-  const [steps, setSteps] = useState<PipelineStep[]>([]);
+export function usePipeline(
+  onComplete: (r: PipelineResult) => void,
+  onError?: () => void,
+  onModelCreated?: () => void,
+) {
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,29 +26,26 @@ export function usePipeline(onComplete: (r: PipelineResult) => void) {
     figureId: string,
     imageId: string,
     file: File | null,
-    animations: string[],
   ) {
     setRunning(true);
-    setSteps([]);
     setError(null);
+    let firstEvent = true;
     try {
       const form = new FormData();
       if (file) form.append("image", file);
       form.append("variantId", variantId);
       form.append("figureId", figureId);
-      form.append("imageId", imageId);
-      animations.forEach((a) => form.append("animations", a));
+      if (imageId) form.append("imageId", imageId);
 
-      const res = await fetch("/api/pipeline", {
+      const res = await fetch("/api/pipeline/mesh", {
         method: "POST",
         credentials: "include",
         body: form,
       });
 
       for await (const evt of parseSSE(res.body!)) {
+        if (firstEvent) { firstEvent = false; onModelCreated?.(); }
         const data = JSON.parse(evt.data) as Record<string, unknown>;
-        if (evt.event === "progress")
-          setSteps((prev) => [...prev, data as PipelineStep]);
         if (evt.event === "complete") {
           onComplete(data as unknown as PipelineResult);
           break;
@@ -55,10 +54,11 @@ export function usePipeline(onComplete: (r: PipelineResult) => void) {
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Pipeline failed");
+      onError?.();
     } finally {
       setRunning(false);
     }
   }
 
-  return { steps, running, error, run };
+  return { running, error, run };
 }

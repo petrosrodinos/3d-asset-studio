@@ -146,23 +146,7 @@ export async function generateAiVariant(input: GenerateAiVariantInput): Promise<
       { role: "system", content: systemPrompt },
       { role: "user", content: userPrompt },
     ],
-    response_format: {
-      type: "json_schema",
-      json_schema: {
-        name: "ai_variant_image_prompt",
-        strict: true,
-        schema: {
-          type: "object",
-          additionalProperties: false,
-          properties: {
-            model: { type: "string" },
-            prompt: { type: "string", minLength: 1 },
-            negativePrompt: { type: "string", minLength: 1 },
-          },
-          required: ["prompt", "negativePrompt"],
-        },
-      },
-    },
+    response_format: { type: "json_object" },
   });
 
   const content = response.choices?.[0]?.message?.content ?? "";

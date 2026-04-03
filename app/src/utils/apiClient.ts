@@ -33,6 +33,8 @@ export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promi
     throw new Error((d as { error?: string }).error ?? `HTTP ${res.status}`);
   }
 
+  if (res.status === 204) return undefined as T;
+
   return res.json() as Promise<T>;
 }
 

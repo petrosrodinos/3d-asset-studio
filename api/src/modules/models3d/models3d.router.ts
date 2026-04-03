@@ -11,4 +11,11 @@ router.get("/:model3dId", async (req, res, next) => {
   } catch (err) { next(err); }
 });
 
+router.delete("/:model3dId", async (req, res, next) => {
+  try {
+    await models3dSvc.deleteModel3D(req.params.model3dId);
+    res.status(204).end();
+  } catch (err) { next(err); }
+});
+
 export default router;

@@ -34,7 +34,8 @@ export interface SkinImage {
 export interface SkinVariant {
   id: string;
   skinId: string;
-  variant: "A" | "B";
+  variant: string;
+  name: string | null;
   prompt: string | null;
   negativePrompt: string | null;
   imageModel: string | null;

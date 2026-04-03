@@ -1,11 +1,27 @@
+import { useRef, useCallback } from "react";
 import { cn } from "@/utils/cn";
 import type { TextareaHTMLAttributes } from "react";
 
 interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
   label?: string;
+  autoResize?: boolean;
 }
 
-export function Textarea({ label, className, id, ...props }: TextareaProps) {
+export function Textarea({ label, className, id, autoResize, onInput, ...props }: TextareaProps) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+
+  const handleInput = useCallback(
+    (e: React.FormEvent<HTMLTextAreaElement>) => {
+      if (autoResize) {
+        const el = e.currentTarget;
+        el.style.height = "auto";
+        el.style.height = `${el.scrollHeight}px`;
+      }
+      onInput?.(e);
+    },
+    [autoResize, onInput],
+  );
+
   return (
     <div className="flex flex-col gap-1">
       {label && (
@@ -14,10 +30,13 @@ export function Textarea({ label, className, id, ...props }: TextareaProps) {
         </label>
       )}
       <textarea
+        ref={ref}
         id={id}
+        onInput={handleInput}
         className={cn(
           "bg-panel border border-border rounded px-3 py-2 text-sm text-slate-200 placeholder:text-slate-600",
-          "focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors resize-none",
+          "focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-colors",
+          autoResize ? "resize-none overflow-hidden" : "resize-y",
           className,
         )}
         {...props}

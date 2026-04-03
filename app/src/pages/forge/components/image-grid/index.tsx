@@ -4,10 +4,12 @@ import type { SkinImage } from "@/interfaces";
 
 interface ImageGridProps {
   images: SkinImage[];
+  activeImageId: string | null;
   onRunPipeline: (image: SkinImage) => void;
+  onDelete: (image: SkinImage) => void;
 }
 
-export function ImageGrid({ images, onRunPipeline }: ImageGridProps) {
+export function ImageGrid({ images, activeImageId, onRunPipeline, onDelete }: ImageGridProps) {
   const { selectedImage, setSelectedImage } = useForgeStore();
 
   const sorted = [...images].sort(
@@ -20,8 +22,10 @@ export function ImageGrid({ images, onRunPipeline }: ImageGridProps) {
         <ImageCard
           key={img.id}
           image={img}
+          isRunning={activeImageId === img.id}
           onRunPipeline={onRunPipeline}
           onSelect={setSelectedImage}
+          onDelete={onDelete}
           selected={selectedImage?.id === img.id}
         />
       ))}

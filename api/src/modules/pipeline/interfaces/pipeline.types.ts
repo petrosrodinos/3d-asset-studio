@@ -12,13 +12,13 @@ export type PipelineSseEventEmitter = (
 export interface RunPipelineOpts {
   figureId: string;
   variantId: string;
+  /** Existing skin image ID — when provided, skips GCS upload and image record creation. */
+  skinImageId?: string;
   imageBuffer: Buffer;
   filename: string;
   mimeType: "image/png" | "image/jpeg";
-  animations: readonly string[];
   modelVersion: string;
 
   emitProgress: PipelineProgressEmitter;
   emitEvent: PipelineSseEventEmitter;
 }
-

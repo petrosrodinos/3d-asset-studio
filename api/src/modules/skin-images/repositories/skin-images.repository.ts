@@ -27,6 +27,10 @@ export async function listImages(variantId: string) {
   });
 }
 
+export async function getSkinImageById(id: string) {
+  return prisma.skinImage.findUnique({ where: { id } });
+}
+
 export async function deleteImage(id: string) {
   return prisma.skinImage.delete({ where: { id } });
 }

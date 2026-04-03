@@ -2,6 +2,7 @@ import { archiveRemoteUrl } from "../../integrations/gcs/gcs.service";
 import type { TaskIds, TripoModelUrls } from "./interfaces/models3d.types";
 import {
   createModel3D as createModel3DRepo,
+  deleteModel3D as deleteModel3DRepo,
   getModel3D as getModel3DRepo,
   setModel3DFailed,
   setModel3DSuccess,
@@ -37,4 +38,8 @@ export async function failModel3D(id: string, error: string) {
 
 export async function getModel3D(id: string) {
   return getModel3DRepo(id);
+}
+
+export async function deleteModel3D(id: string) {
+  return deleteModel3DRepo(id);
 }
