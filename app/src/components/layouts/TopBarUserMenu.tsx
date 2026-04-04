@@ -6,7 +6,6 @@ import { cn } from "@/utils/cn";
 
 const MENU_LINKS = [
   { to: "/settings/account", label: "Account" },
-  { to: "/settings/credits", label: "Credits" },
   { to: "/settings/billing", label: "Billing" },
 ] as const;
 

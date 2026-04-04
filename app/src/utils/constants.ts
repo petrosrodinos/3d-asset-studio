@@ -1,5 +1,14 @@
 export const APP_NAME = '3d-figures';
-export const API_BASE_URL = import.meta.env.VITE_API_URL ?? '';
+
+/** API origin only (no path). Set `VITE_API_URL` in production when the app and API are on different hosts. */
+function resolveApiBaseUrl(): string {
+  const raw = import.meta.env.VITE_API_URL?.trim();
+  if (raw) return raw.replace(/\/$/, "");
+  if (import.meta.env.DEV) return "http://localhost:3000";
+  return "";
+}
+
+export const API_BASE_URL = resolveApiBaseUrl();
 export const MAX_RETRY_COUNT = 3;
 
 export const ANIMATION_PRESETS = [

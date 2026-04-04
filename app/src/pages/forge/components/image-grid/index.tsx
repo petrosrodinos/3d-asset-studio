@@ -9,19 +9,15 @@ import type { SkinImage } from "@/interfaces";
 interface ImageGridProps {
   images: SkinImage[];
   activeImageId: string | null;
-  uploadPendingImageId: string | null;
   onRunPipeline: (image: SkinImage) => void;
   onDelete: (image: SkinImage) => void;
-  onUploadImage: (image: SkinImage, file: File) => void;
 }
 
 export function ImageGrid({
   images,
   activeImageId,
-  uploadPendingImageId,
   onRunPipeline,
   onDelete,
-  onUploadImage,
 }: ImageGridProps) {
   const { selectedImage, setSelectedImage } = useForgeStore();
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", dragFree: true });
@@ -53,11 +49,10 @@ export function ImageGrid({
             <div key={img.id} className="flex-none w-[47%] max-w-52">
               <ImageCard
                 image={img}
-                isRunning={activeImageId === img.id || uploadPendingImageId === img.id}
+                isRunning={activeImageId === img.id}
                 onRunPipeline={onRunPipeline}
                 onSelect={setSelectedImage}
                 onDelete={onDelete}
-                onUploadImage={onUploadImage}
                 selected={selectedImage?.id === img.id}
               />
             </div>

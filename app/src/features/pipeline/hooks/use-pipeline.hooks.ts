@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { parseSSE } from "@/hooks/useSSE";
 import type { PipelineResult } from "@/features/pipeline/interfaces/pipeline.interfaces";
+import { API_BASE_URL } from "@/utils/constants";
 
 export function usePipeline(
   onComplete: (r: PipelineResult) => void,
@@ -26,7 +27,7 @@ export function usePipeline(
       form.append("figureId", figureId);
       if (imageId) form.append("imageId", imageId);
 
-      const res = await fetch("/api/pipeline/mesh", {
+      const res = await fetch(`${API_BASE_URL}/api/pipeline/mesh`, {
         method: "POST",
         credentials: "include",
         body: form,

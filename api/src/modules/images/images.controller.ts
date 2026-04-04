@@ -1,5 +1,7 @@
 import type { Request, Response } from "express";
 import { generateImage, listImageModels } from "./images.service";
+import { IMAGES_CONFIG } from "./config/images.config";
+import { debitForImageModel, InsufficientTokensError } from "../tokens/tokens.service";
 
 export async function listImageModelsController(_req: Request, res: Response) {
   try {
@@ -13,6 +15,24 @@ export async function generateImageController(req: Request, res: Response) {
   const { prompt, model, size, n, steps } = req.body as Record<string, unknown>;
   if (typeof prompt !== "string" || !prompt.trim()) {
     res.status(400).json({ error: "prompt is required" });
+    return;
+  }
+
+  const modelId = typeof model === "string" ? model : IMAGES_CONFIG.DEFAULT_AIML_IMAGE_MODEL;
+
+  try {
+    await debitForImageModel(req.userId, modelId);
+  } catch (err) {
+    if (err instanceof InsufficientTokensError) {
+      res.status(402).json({ error: err.message, required: err.required, balance: err.balance });
+      return;
+    }
+    const status = (err as Error & { status?: number }).status;
+    if (status === 400) {
+      res.status(400).json({ error: err instanceof Error ? err.message : String(err) });
+      return;
+    }
+    res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
     return;
   }
 

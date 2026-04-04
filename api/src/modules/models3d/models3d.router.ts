@@ -1,7 +1,26 @@
 import { Router } from "express";
+import { requireTokens } from "../../middleware/requireTokens";
+import { streamAnimatePipeline } from "../pipeline/animate-stream";
 import * as models3dSvc from "./models3d.service";
 
 const router = Router({ mergeParams: true });
+
+router.post(
+  "/:model3dId/animate",
+  (req, res, next) => {
+    const animations = (req.body as { animations?: string[] }).animations;
+    if (!Array.isArray(animations) || animations.length === 0) {
+      return res.status(400).json({ error: "animations array is required" });
+    }
+    next();
+  },
+  requireTokens("animationRetarget"),
+  async (req, res, next) => {
+    const animations = (req.body as { animations?: string[] }).animations ?? [];
+    const model3dId = Array.isArray(req.params.model3dId) ? req.params.model3dId[0] : req.params.model3dId;
+    await streamAnimatePipeline(req, res, next, model3dId, animations);
+  },
+);
 
 router.get("/:model3dId", async (req, res, next) => {
   try {

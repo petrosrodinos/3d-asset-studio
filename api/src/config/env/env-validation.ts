@@ -17,6 +17,10 @@ const schema = z.object({
   JWT_REFRESH_SECRET: z.string().min(5),
   JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
+  STRIPE_SECRET_KEY: z.string().min(1),
+  STRIPE_WEBHOOK_SECRET: z.string().min(1),
+  STRIPE_PUBLISHABLE_KEY: z.string().min(1),
+  APP_URL: z.string().url().default("http://localhost:5173"),
 });
 
 const parsed = schema.safeParse(process.env);

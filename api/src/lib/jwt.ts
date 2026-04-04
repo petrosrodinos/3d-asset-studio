@@ -20,5 +20,11 @@ export const verifyRefreshToken = (t: string) =>
   jwt.verify(t, env.JWT_REFRESH_SECRET) as RefreshPayload;
 
 export function cookieOptions(maxAgeSec: number): import("express").CookieOptions {
-  return { httpOnly: true, secure: env.NODE_ENV === "production", sameSite: "lax", maxAge: maxAgeSec * 1000 };
+  const production = env.NODE_ENV === "production";
+  return {
+    httpOnly: true,
+    secure: production,
+    sameSite: production ? "none" : "lax",
+    maxAge: maxAgeSec * 1000,
+  };
 }

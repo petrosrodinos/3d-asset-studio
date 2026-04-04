@@ -1,3 +1,6 @@
+import { isAxiosError } from "axios";
+import { axiosInstance } from "@/lib/axiosInstance";
+
 export class InsufficientTokensError extends Error {
   required: number;
   balance: number;
@@ -8,34 +11,62 @@ export class InsufficientTokensError extends Error {
   }
 }
 
-export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
-  let res = await fetch(input, { credentials: "include", ...init });
+function headersFromInit(h: RequestInit["headers"]): Record<string, string> | undefined {
+  if (!h) return undefined;
+  if (h instanceof Headers) {
+    const o: Record<string, string> = {};
+    h.forEach((v, k) => {
+      o[k] = v;
+    });
+    return o;
+  }
+  if (Array.isArray(h)) {
+    return Object.fromEntries(h);
+  }
+  return { ...h };
+}
 
-  if (res.status === 401) {
-    const r = await fetch("/api/auth/refresh", { method: "POST", credentials: "include" });
-    if (r.ok) res = await fetch(input, { credentials: "include", ...init });
-    else {
-      const path = window.location.pathname;
-      if (path !== "/login" && path !== "/register") {
-        window.location.href = "/login";
-      }
-      throw new Error("Session expired");
+export async function apiFetch<T>(path: string, init?: RequestInit): Promise<T> {
+  const method = (init?.method ?? "GET").toUpperCase();
+  const hdrs = headersFromInit(init?.headers);
+  let data: unknown;
+
+  if (init?.body !== undefined && init?.body !== null) {
+    if (init.body instanceof FormData) {
+      data = init.body;
+      if (hdrs) delete hdrs["Content-Type"];
+    } else if (typeof init.body === "string") {
+      data = JSON.parse(init.body) as unknown;
+    } else {
+      data = init.body;
     }
   }
 
-  if (res.status === 402) {
-    const d = await res.json();
-    throw new InsufficientTokensError(d.required, d.balance);
+  try {
+    const res = await axiosInstance.request<T>({
+      url: path,
+      method,
+      headers: hdrs,
+      data,
+    });
+
+    if (res.status === 204) return undefined as T;
+    return res.data;
+  } catch (e) {
+    if (isAxiosError(e) && e.response?.status === 402) {
+      const d = e.response.data as { required: number; balance: number };
+      throw new InsufficientTokensError(d.required, d.balance);
+    }
+    if (isAxiosError(e) && e.response?.data !== undefined) {
+      const d = e.response.data as { error?: string };
+      const msg =
+        typeof d === "object" && d && "error" in d && typeof d.error === "string"
+          ? d.error
+          : `HTTP ${e.response.status}`;
+      throw new Error(msg);
+    }
+    throw e;
   }
-
-  if (!res.ok) {
-    const d = await res.json().catch(() => ({}));
-    throw new Error((d as { error?: string }).error ?? `HTTP ${res.status}`);
-  }
-
-  if (res.status === 204) return undefined as T;
-
-  return res.json() as Promise<T>;
 }
 
 export function jsonInit(body: unknown): RequestInit {

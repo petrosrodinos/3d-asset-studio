@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { parseSSE } from "@/hooks/useSSE";
 import type { ChatMessage, ToolCall } from "@/features/chat/interfaces/chat.interfaces";
+import { API_BASE_URL } from "@/utils/constants";
 
 export function useChat() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -22,7 +23,7 @@ export function useChat() {
     const toolCalls: ToolCall[] = [];
 
     try {
-      const res = await fetch("/api/chat", {
+      const res = await fetch(`${API_BASE_URL}/api/chat`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

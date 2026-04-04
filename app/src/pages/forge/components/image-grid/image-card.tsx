@@ -1,5 +1,5 @@
-import { useRef, useState } from "react";
-import { Download, Maximize2, Play, Trash2, Upload } from "lucide-react";
+import { useState } from "react";
+import { Download, Maximize2, Play, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
@@ -25,7 +25,6 @@ interface ImageCardProps {
   onRunPipeline: (image: SkinImage) => void;
   onSelect: (image: SkinImage) => void;
   onDelete: (image: SkinImage) => void;
-  onUploadImage: (image: SkinImage, file: File) => void;
   selected?: boolean;
 }
 
@@ -35,7 +34,6 @@ export function ImageCard({
   onRunPipeline,
   onSelect,
   onDelete,
-  onUploadImage,
   selected,
 }: ImageCardProps) {
   const status = bestModelStatus(image.models);
@@ -43,7 +41,6 @@ export function ImageCard({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [expandOpen, setExpandOpen] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const previewSrc = image.gcsUrl ?? image.sourceUrl;
 
   const imageMenuItems = [
@@ -52,15 +49,6 @@ export function ImageCard({
       label: "Extend",
       icon: Maximize2,
       onSelect: () => setExpandOpen(true),
-    },
-    {
-      id: "upload",
-      label: "Upload",
-      icon: Upload,
-      disabled: isRunning || isProcessing,
-      onSelect: () => {
-        requestAnimationFrame(() => fileInputRef.current?.click());
-      },
     },
     {
       id: "download",
@@ -86,17 +74,6 @@ export function ImageCard({
         <div className="relative w-full aspect-square bg-surface">
           {!imgLoaded && <Skeleton className="absolute inset-0 rounded-none" />}
           <img src={previewSrc} alt="" onLoad={() => setImgLoaded(true)} className={`w-full h-full object-cover transition-opacity duration-200 ${imgLoaded ? "opacity-100" : "opacity-0"}`} />
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) onUploadImage(image, file);
-              e.target.value = "";
-            }}
-          />
           <OptionsMenu className="absolute top-1.5 right-1.5 z-10" triggerVariant="secondary" triggerClassName="h-6 w-6 shadow-md bg-panel/95 backdrop-blur-sm border-border" menuLabel="Image options" items={imageMenuItems} />
         </div>
 

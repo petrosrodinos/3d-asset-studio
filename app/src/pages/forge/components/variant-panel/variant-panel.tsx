@@ -61,16 +61,6 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
     });
   }
 
-  function handleUploadToImage(image: SkinImage, file: File) {
-    uploadSkinImage.mutate({
-      figureId,
-      skinId: variant.skinId,
-      variantId: variant.id,
-      file,
-      imageId: image.id,
-    });
-  }
-
   function handleDeleteImage(image: SkinImage) {
     deleteSkinImage.mutate({
       figureId,
@@ -84,11 +74,6 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
     selectedImage?.id && variant.images.find((i) => i.id === selectedImage.id)
       ? variant.images.find((i) => i.id === selectedImage.id)!.models
       : [];
-
-  const uploadPendingImageId =
-    uploadSkinImage.isPending && uploadSkinImage.variables?.imageId
-      ? uploadSkinImage.variables.imageId
-      : null;
 
   return (
     <div className="flex flex-col gap-0 overflow-y-auto h-full">
@@ -123,10 +108,8 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
           <ImageGrid
             images={variant.images}
             activeImageId={activeImageId}
-            uploadPendingImageId={uploadPendingImageId}
             onRunPipeline={handleRunPipeline}
             onDelete={handleDeleteImage}
-            onUploadImage={handleUploadToImage}
           />
         ) : (
           <p className="text-xs text-slate-500">Upload to add images to this variant.</p>

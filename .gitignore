@@ -1,2 +1,3 @@
 /api/gcp-credentials.json
 /api/public/
+/app/.env

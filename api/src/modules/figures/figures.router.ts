@@ -92,7 +92,7 @@ router.post("/ai-variant", async (req, res, next) => {
       return res.status(400).json({ error: "Invalid request body", details: parsed.error.flatten() });
     }
 
-    const result = await figuresSvc.generateAiVariant(parsed.data);
+    const result = await figuresSvc.generateAiVariant(req.userId, parsed.data);
     res.json(result);
   } catch (err) { next(err); }
 });

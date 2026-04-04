@@ -9,6 +9,7 @@ import {
   meshFromImageUrl,
   proxyModelByUrl,
 } from "./tripo.service";
+import { debitForTrippoModelId, InsufficientTokensError } from "../tokens/tokens.service";
 
 export async function proxyModelController(req: Request, res: Response) {
   try {
@@ -49,8 +50,13 @@ export async function meshFromImageUrlController(req: Request, res: Response) {
       res.status(400).json({ error: "imageUrl is required" });
       return;
     }
+    await debitForTrippoModelId(req.userId, "image_to_model", "trippoMesh");
     res.json(await meshFromImageUrl(imageUrl, modelVersion));
   } catch (err) {
+    if (err instanceof InsufficientTokensError) {
+      res.status(402).json({ error: err.message, required: err.required, balance: err.balance });
+      return;
+    }
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 }
@@ -75,8 +81,13 @@ export async function startRigController(req: Request, res: Response) {
       res.status(400).json({ error: "meshTaskId is required" });
       return;
     }
+    await debitForTrippoModelId(req.userId, "animate_rig", "rig");
     res.json(await createRig(meshTaskId));
   } catch (err) {
+    if (err instanceof InsufficientTokensError) {
+      res.status(402).json({ error: err.message, required: err.required, balance: err.balance });
+      return;
+    }
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 }
@@ -93,8 +104,13 @@ export async function startRetargetController(req: Request, res: Response) {
       res.status(400).json({ error: "animation is required" });
       return;
     }
+    await debitForTrippoModelId(req.userId, "animate_retarget", "animationRetarget");
     res.json(await createRetarget(rigTaskId, animation));
   } catch (err) {
+    if (err instanceof InsufficientTokensError) {
+      res.status(402).json({ error: err.message, required: err.required, balance: err.balance });
+      return;
+    }
     res.status(500).json({ error: err instanceof Error ? err.message : String(err) });
   }
 }

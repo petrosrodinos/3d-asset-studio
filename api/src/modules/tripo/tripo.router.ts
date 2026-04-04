@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAuth } from "../../middleware/requireAuth";
 import {
   getTaskController,
   meshFromImageUrlController,
@@ -12,10 +13,10 @@ const router = Router();
 
 router.post("/proxy-model", proxyModelController);
 router.get("/task/:id", getTaskController);
-router.post("/mesh-from-image-url", meshFromImageUrlController);
-router.post("/prerig-check", prerigCheckController);
-router.post("/start-rig", startRigController);
-router.post("/start-retarget", startRetargetController);
+router.post("/mesh-from-image-url", requireAuth, meshFromImageUrlController);
+router.post("/prerig-check", requireAuth, prerigCheckController);
+router.post("/start-rig", requireAuth, startRigController);
+router.post("/start-retarget", requireAuth, startRetargetController);
 
 export default router;
 

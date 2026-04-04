@@ -11,6 +11,7 @@ import {
 import { getAiml } from "../../services";
 import * as skinImageSvc from "../skin-images/skin-images.service";
 import { IMAGES_CONFIG } from "../images/config/images.config";
+import { debitForImageModel } from "../tokens/tokens.service";
 import { ImageModels } from "../../config/models/image-models";
 import { buildAimlImageGenerationsBody } from "../../integrations/aimlapi/buildImageGenerationsBody";
 
@@ -48,6 +49,7 @@ export async function deleteVariantById(id: string) {
 }
 
 export async function generateImageForVariant(
+  userId: string,
   skinId: string,
   variant: string,
   figureId: string,
@@ -75,6 +77,9 @@ export async function generateImageForVariant(
   }
 
   const finalPrompt = neg ? `${prompt}\n\nNegative prompt: ${neg}` : prompt;
+
+  await debitForImageModel(userId, model);
+
   const generated = await getAiml().generateImage(
     sourceTrimmed
       ? buildAimlImageGenerationsBody({

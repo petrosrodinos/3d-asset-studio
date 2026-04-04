@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { requireAuth } from "../../middleware/requireAuth";
 import {
   generateImageController,
   listImageModelsController,
@@ -7,7 +8,7 @@ import {
 const router = Router();
 
 router.get("/models", listImageModelsController);
-router.post("/generate", generateImageController);
+router.post("/generate", requireAuth, generateImageController);
 
 export default router;
 

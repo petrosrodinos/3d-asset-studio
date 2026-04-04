@@ -33,7 +33,7 @@ router.put("/:variant", async (req: Request<{ skinId: string; variant: string }>
 router.post("/:variant/generate-image", async (req: Request<{ figureId: string; skinId: string; variant: string }>, res: Response, next: NextFunction) => {
   try {
     const { figureId, skinId, variant } = req.params;
-    const result = await variantsSvc.generateImageForVariant(skinId, variant, figureId, req.body);
+    const result = await variantsSvc.generateImageForVariant(req.userId, skinId, variant, figureId, req.body);
     res.status(201).json(result);
   } catch (err) { next(err); }
 });

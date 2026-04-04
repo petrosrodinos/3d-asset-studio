@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { parseSSE } from "@/hooks/useSSE";
 import type { AnimateResult } from "@/features/pipeline/interfaces/pipeline.interfaces";
+import { API_BASE_URL } from "@/utils/constants";
 
 export function useAnimate(onComplete: (r: AnimateResult) => void) {
   const [running, setRunning] = useState(false);
@@ -10,7 +11,7 @@ export function useAnimate(onComplete: (r: AnimateResult) => void) {
     setRunning(true);
     setError(null);
     try {
-      const res = await fetch("/api/pipeline/animate", {
+      const res = await fetch(`${API_BASE_URL}/api/pipeline/animate`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },

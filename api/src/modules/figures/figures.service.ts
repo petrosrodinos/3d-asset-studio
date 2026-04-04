@@ -19,6 +19,7 @@ import { applyNegativePrompt } from "./helpers/negativePrompt.helper";
 import { safeParseJsonObject } from "./helpers/safeJsonObjectParse.helper";
 import { FIGURES_CONFIG } from "./config/figures.config";
 import { IMAGES_CONFIG } from "../images/config/images.config";
+import { debitForImageModel, debitForOperation } from "../tokens/tokens.service";
 import {
   AI_VARIANT_SYSTEM_PROMPT,
   buildAiVariantUserPrompt,
@@ -70,6 +71,8 @@ export async function generateAndSaveFigureImage(userId: string, input: Generate
     throw new Error("Skin not found for figure");
   }
 
+  await debitForImageModel(userId, model);
+
   const variantRecord = await upsertSkinVariant({
     skinId: resolvedSkin.id,
     variant,
@@ -107,11 +110,13 @@ export async function generateAndSaveFigureImage(userId: string, input: Generate
   };
 }
 
-export async function generateAiVariant(input: GenerateAiVariantInput): Promise<{
+export async function generateAiVariant(userId: string, input: GenerateAiVariantInput): Promise<{
   model?: string;
   prompt: string;
   negativePrompt: string;
 }> {
+  await debitForOperation(userId, "chat");
+
   const ctx: AiVariantContext = input.context ?? {};
   const figureType = (ctx.figureType ?? "figure").toLowerCase();
   const descriptionLower = input.description.toLowerCase();

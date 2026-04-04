@@ -2,10 +2,12 @@ import { Router } from "express";
 import multer from "multer";
 import { sseHeaders, sseWrite } from "../../lib/sse";
 import { runPipeline } from "./pipeline.service";
-import { runAnimations } from "./animate.service";
+import { streamAnimatePipeline } from "./animate-stream";
 import { TRIPO_CONFIG } from "../tripo/config/tripo.config";
 import { PIPELINE_CONFIG } from "./config/pipeline.config";
 import { prisma } from "../../integrations/db/client";
+import { debitForOperation, InsufficientTokensError } from "../tokens/tokens.service";
+import { requireTokens } from "../../middleware/requireTokens";
 
 const upload = multer({ storage: multer.memoryStorage() });
 const router = Router();
@@ -60,6 +62,15 @@ router.post("/mesh", upload.single("image"), async (req, res, next) => {
 
   const modelVersion = (req.body.modelVersion as string) ?? TRIPO_CONFIG.DEFAULT_TRIPO_MODEL_VERSION;
 
+  try {
+    await debitForOperation(req.userId, "pipeline");
+  } catch (e) {
+    if (e instanceof InsufficientTokensError) {
+      return res.status(402).json({ error: e.message, required: e.required, balance: e.balance });
+    }
+    return next(e);
+  }
+
   sseHeaders(res);
   try {
     await runPipeline({
@@ -82,41 +93,21 @@ router.post("/mesh", upload.single("image"), async (req, res, next) => {
 
 // POST /api/pipeline/animate
 // Body (JSON): { model3dId, animations[] }
-router.post("/animate", async (req, res, next) => {
-  const { model3dId, animations } = req.body as { model3dId?: string; animations?: string[] };
-
-  if (!model3dId) return res.status(400).json({ error: "model3dId is required" });
-  if (!Array.isArray(animations) || animations.length === 0) {
-    return res.status(400).json({ error: "animations array is required" });
-  }
-
-  const model = await prisma.model3D.findUnique({
-    where: { id: model3dId },
-    include: { image: { include: { variant: { include: { skin: true } } } } },
-  });
-  if (!model) return res.status(404).json({ error: "Model not found" });
-  if (!model.rigTaskId) return res.status(400).json({ error: "Model has not been rigged yet" });
-
-  // Verify ownership
-  const figure = await prisma.figure.findFirst({
-    where: { id: model.image.variant.skin.figureId, userId: req.userId },
-  });
-  if (!figure) return res.status(404).json({ error: "Figure not found" });
-
-  sseHeaders(res);
-  try {
-    await runAnimations({
-      model3dId,
-      rigTaskId: model.rigTaskId,
-      animations,
-      emitProgress: ({ step, status, data = {} }) => {
-        sseWrite(res, PIPELINE_CONFIG.PIPELINE_SSE_EVENTS.PROGRESS, { step, status, ...data });
-      },
-      emitEvent: (event, data) => {
-        sseWrite(res, event, data);
-      },
-    });
-  } catch (e) { next(e); } finally { res.end(); }
-});
+router.post(
+  "/animate",
+  (req, res, next) => {
+    const { model3dId, animations } = req.body as { model3dId?: string; animations?: string[] };
+    if (!model3dId) return res.status(400).json({ error: "model3dId is required" });
+    if (!Array.isArray(animations) || animations.length === 0) {
+      return res.status(400).json({ error: "animations array is required" });
+    }
+    next();
+  },
+  requireTokens("animationRetarget"),
+  async (req, res, next) => {
+    const { model3dId, animations } = req.body as { model3dId: string; animations: string[] };
+    await streamAnimatePipeline(req, res, next, model3dId, animations);
+  },
+);
 
 export default router;

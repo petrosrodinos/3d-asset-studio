@@ -97,14 +97,14 @@ export interface TokenPack {
   id: string;
   name: string;
   tokens: number;
-  priceUsd: number;
+  price: number;
   stripePriceId: string; // populate after running createStripeProducts script
 }
 
 export const TOKEN_PACKS: TokenPack[] = [
-  { id: "starter", name: "Starter", tokens: 100, priceUsd: 5, stripePriceId: "" },
-  { id: "creator", name: "Creator", tokens: 500, priceUsd: 20, stripePriceId: "" },
-  { id: "studio", name: "Studio", tokens: 1500, priceUsd: 50, stripePriceId: "" },
+  { id: "starter", name: "Starter", tokens: 100, price: 5, stripePriceId: "" },
+  { id: "creator", name: "Creator", tokens: 500, price: 20, stripePriceId: "" },
+  { id: "studio", name: "Studio", tokens: 1500, price: 50, stripePriceId: "" },
 ];
 
 export const getPackById = (id: string) => TOKEN_PACKS.find((p) => p.id === id);
@@ -128,7 +128,7 @@ async function main() {
     });
     const price = await stripe.prices.create({
       product: product.id,
-      unit_amount: pack.priceUsd * 100,
+      unit_amount: pack.price * 100,
       currency: "usd",
       lookup_key: pack.id,
     });
@@ -170,22 +170,22 @@ Run: `npx prisma db push`
 
 **Goal:** Every time tokens are deducted for an AI or Tripo call, append an immutable row for analytics, support, and cost reconciliation. Values should match the config the charge was based on (`api/src/config/models/image-models.ts` → `ImageModels[].id`, `trippo-models.ts` → `TrippoModels[].id`, and `./pricing` → `MARKUP_FACTOR`).
 
-| Column | Type | Notes |
-| ------ | ---- | ----- |
-| `id` | ObjectId | Primary key |
-| `userId` | ObjectId | Who was charged |
-| `usageKind` | enum | `image` \| `trippo` (or extend later, e.g. `chat`) |
-| `modelId` | string | Same string as `ImageModels.id` or `TrippoModels.id` for that request |
-| `operation` | string? | Optional coarse gate, e.g. `image`, `tripoMesh`, `rig`, `animationRetarget` — useful if `requireTokens` stays operation-based |
-| `tokens_original` | number | Pre-markup token units from provider/cost table (`tokens_original` on the model) |
-| `price_original` | number | Pre-markup USD basis (`price_original` on the model) |
-| `tokens` | number | Tokens actually debited (`tokens` / post-markup side of config) |
-| `price` | number | Post-markup USD equivalent if you store it (`price` on the model), else derivable |
-| `markup_factor` | number | Snapshot of `MARKUP_FACTOR` at charge time so historical rows stay correct if config changes |
-| `balance_after` | int? | Optional: `User.tokenBalance` after decrement (debugging and statements) |
-| `idempotency_key` | string? | Optional unique key per job/request to avoid double-logging on retries |
-| `metadata` | Json? | Optional: job id, pipeline step, Stripe-irrelevant request refs |
-| `created_at` | DateTime | When the debit occurred |
+| Column            | Type     | Notes                                                                                                                         |
+| ----------------- | -------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `id`              | ObjectId | Primary key                                                                                                                   |
+| `userId`          | ObjectId | Who was charged                                                                                                               |
+| `usageKind`       | enum     | `image` \| `trippo` (or extend later, e.g. `chat`)                                                                            |
+| `modelId`         | string   | Same string as `ImageModels.id` or `TrippoModels.id` for that request                                                         |
+| `operation`       | string?  | Optional coarse gate, e.g. `image`, `tripoMesh`, `rig`, `animationRetarget` — useful if `requireTokens` stays operation-based |
+| `tokens_original` | number   | Pre-markup token units from provider/cost table (`tokens_original` on the model)                                              |
+| `price_original`  | number   | Pre-markup USD basis (`price_original` on the model)                                                                          |
+| `tokens`          | number   | Tokens actually debited (`tokens` / post-markup side of config)                                                               |
+| `price`           | number   | Post-markup USD equivalent if you store it (`price` on the model), else derivable                                             |
+| `markup_factor`   | number   | Snapshot of `MARKUP_FACTOR` at charge time so historical rows stay correct if config changes                                  |
+| `balance_after`   | int?     | Optional: `User.tokenBalance` after decrement (debugging and statements)                                                      |
+| `idempotency_key` | string?  | Optional unique key per job/request to avoid double-logging on retries                                                        |
+| `metadata`        | Json?    | Optional: job id, pipeline step, Stripe-irrelevant request refs                                                               |
+| `created_at`      | DateTime | When the debit occurred                                                                                                       |
 
 `prisma/schema.prisma` — add something like:
 
@@ -327,7 +327,7 @@ export async function getPurchaseHistory(userId: string) {
   return prisma.tokenPurchase.findMany({ where: { userId }, orderBy: { createdAt: "desc" }, take: 50 });
 }
 
-export const getTokenPacks = () => TOKEN_PACKS.map(({ id, name, tokens, priceUsd }) => ({ id, name, tokens, priceUsd }));
+export const getTokenPacks = () => TOKEN_PACKS.map(({ id, name, tokens, price }) => ({ id, name, tokens, price }));
 
 /** Called by webhook — idempotent via stripeSessionId unique index */
 export async function creditTokensFromWebhook(userId: string, packId: string, tokens: number, amountCents: number, stripeSessionId: string) {

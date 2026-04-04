@@ -1,12 +1,14 @@
 import { Coins, Menu } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/use-auth.hooks";
+import { useBalance } from "@/features/billing/hooks/use-billing.hooks";
 import { useForgeStore } from "@/store/forgeStore";
 import { cn } from "@/utils/cn";
 import { TopBarUserMenu } from "@/components/layouts/TopBarUserMenu";
 
 export function TopBar() {
   const { user } = useAuth();
+  const { data: billingBalance } = useBalance({ enabled: !!user });
   const { chatPanelOpen, setChatPanelOpen, figurePanelOpen, setFigurePanelOpen } = useForgeStore();
   const navigate = useNavigate();
   const location = useLocation();
@@ -51,7 +53,10 @@ export function TopBar() {
           <>
             <span className="flex items-center gap-1 text-xs text-slate-400">
               <Coins size={12} />
-              {user.tokenBalance}
+              <span className="font-mono text-accent-light tabular-nums">
+                {billingBalance?.balance ?? "—"}
+              </span>
+              <span className="text-slate-500">tokens</span>
             </span>
             <Link
               to="/settings/billing"

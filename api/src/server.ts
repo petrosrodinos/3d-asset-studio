@@ -1,5 +1,6 @@
 import "dotenv/config";
 import express from "express";
+import cors from "cors";
 import cookieParser from "cookie-parser";
 import path from "path";
 import swaggerUi from "swagger-ui-express";
@@ -8,11 +9,13 @@ import { errorHandler } from "./middleware/errorHandler";
 import { requireAuth } from "./middleware/requireAuth";
 import { OPEN_API_DOCUMENT } from "./config/docs/openapi";
 
+import stripeWebhookRouter from "./integrations/stripe/stripe.webhook.router";
 import chatRouter from "./modules/chat/chat.router";
 import imagesRouter from "./modules/images/images.router";
 import balanceRouter from "./modules/balance/balance.router";
 import tripoRouter from "./modules/tripo/tripo.router";
 import generateAndMeshRouter from "./modules/generate-and-mesh/generate-and-mesh.router";
+import billingRouter from "./modules/billing/billing.router";
 
 import authRouter from "./modules/auth/auth.router";
 import figuresRouter from "./modules/figures/figures.router";
@@ -25,6 +28,15 @@ import pipelineRouter from "./modules/pipeline/pipeline.router";
 import { prisma } from "./integrations/db/client";
 
 const app = express();
+
+app.use(
+  cors({
+    origin: env.APP_URL,
+    credentials: true,
+  }),
+);
+
+app.use("/api", stripeWebhookRouter);
 
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true }));
@@ -42,6 +54,8 @@ app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(OPEN_API_DOCUMENT));
 
 // Auth (public)
 app.use("/api/auth", authRouter);
+
+app.use("/api/billing", billingRouter);
 
 // Legacy / non-DB routes
 app.use("/api/chat", chatRouter);

@@ -8,7 +8,6 @@ import RegisterPage from "@/pages/register";
 import ForgePage from "@/pages/forge";
 import SettingsPage from "@/pages/settings";
 import SettingsAccountPage from "@/pages/settings/subpages/account";
-import SettingsCreditsPage from "@/pages/settings/subpages/credits";
 import SettingsBillingPage from "@/pages/settings/subpages/billing";
 
 function RequireAuth({ children }: PropsWithChildren) {
@@ -41,7 +40,6 @@ export function AppRoutes() {
         <Route path="settings" element={<SettingsPage />}>
           <Route index element={<Navigate to="account" replace />} />
           <Route path="account" element={<SettingsAccountPage />} />
-          <Route path="credits" element={<SettingsCreditsPage />} />
           <Route path="billing" element={<SettingsBillingPage />} />
         </Route>
       </Route>
