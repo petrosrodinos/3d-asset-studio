@@ -1,11 +1,33 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { deleteSkinImage } from "@/features/skin-images/services/skin-images.services";
-import type { DeleteSkinImageParams } from "@/features/skin-images/interfaces/skin-images.interfaces";
+import { toast } from "sonner";
+import { deleteSkinImage, uploadSkinImage } from "@/features/skin-images/services/skin-images.services";
+import type {
+  DeleteSkinImageParams,
+  UploadSkinImageParams,
+} from "@/features/skin-images/interfaces/skin-images.interfaces";
 
 export function useDeleteSkinImage() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (params: DeleteSkinImageParams) => deleteSkinImage(params),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["figures"] }),
+    onSuccess: () => {
+      toast.success("Skin image removed");
+      void qc.invalidateQueries({ queryKey: ["figures"] });
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not remove skin image"),
+  });
+}
+
+export function useUploadSkinImage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (params: UploadSkinImageParams) => uploadSkinImage(params),
+    onSuccess: () => {
+      toast.success("Image uploaded");
+      void qc.invalidateQueries({ queryKey: ["figures"] });
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not upload image"),
   });
 }

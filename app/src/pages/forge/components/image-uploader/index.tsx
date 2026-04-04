@@ -4,15 +4,17 @@ import { cn } from "@/utils/cn";
 
 interface ImageUploaderProps {
   onFile: (file: File) => void;
+  disabled?: boolean;
 }
 
-export function ImageUploader({ onFile }: ImageUploaderProps) {
+export function ImageUploader({ onFile, disabled = false }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
 
   function handleDrop(e: React.DragEvent) {
     e.preventDefault();
     setDragOver(false);
+    if (disabled) return;
     const file = e.dataTransfer.files[0];
     if (file) onFile(file);
   }
@@ -25,13 +27,16 @@ export function ImageUploader({ onFile }: ImageUploaderProps) {
   return (
     <div
       className={cn(
-        "border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center gap-2 cursor-pointer transition-colors",
-        dragOver && "drop-active",
+        "border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center gap-2 transition-colors",
+        disabled
+          ? "cursor-not-allowed opacity-50 pointer-events-none"
+          : "cursor-pointer",
+        dragOver && !disabled && "drop-active",
       )}
-      onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+      onDragOver={(e) => { e.preventDefault(); if (!disabled) setDragOver(true); }}
       onDragLeave={() => setDragOver(false)}
       onDrop={handleDrop}
-      onClick={() => inputRef.current?.click()}
+      onClick={() => { if (!disabled) inputRef.current?.click(); }}
     >
       <UploadCloud size={24} className="text-slate-500" />
       <p className="text-xs text-slate-400">Drop image or click to upload</p>
@@ -40,6 +45,7 @@ export function ImageUploader({ onFile }: ImageUploaderProps) {
         type="file"
         accept="image/*"
         className="hidden"
+        disabled={disabled}
         onChange={handleChange}
       />
     </div>

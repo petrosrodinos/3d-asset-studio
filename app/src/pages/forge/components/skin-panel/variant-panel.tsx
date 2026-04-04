@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Wand2, Upload } from "lucide-react";
 import { PromptEditor } from "@/pages/forge/components/prompt-editor";
 import { ImageGrid } from "@/pages/forge/components/image-grid";
 import { ImageUploader } from "@/pages/forge/components/image-uploader";
@@ -7,9 +6,8 @@ import { ModelCard } from "@/pages/forge/components/model-card";
 import { useForgeStore } from "@/store/forgeStore";
 import { usePipeline } from "@/features/pipeline/hooks/use-pipeline.hooks";
 import { useUpdateVariant } from "@/features/skin-variants/hooks/use-skin-variants.hooks";
-import { useDeleteSkinImage } from "@/features/skin-images/hooks/use-skin-images.hooks";
+import { useDeleteSkinImage, useUploadSkinImage } from "@/features/skin-images/hooks/use-skin-images.hooks";
 import { useQueryClient } from "@tanstack/react-query";
-import { cn } from "@/utils/cn";
 import type { SkinVariant, SkinImage } from "@/interfaces";
 
 interface VariantPanelProps {
@@ -20,17 +18,15 @@ interface VariantPanelProps {
   skinName: string | null;
 }
 
-type Section = "generate" | "upload";
-
 export function VariantPanel({ variant, figureId, figureType, figureName, skinName }: VariantPanelProps) {
   const qc = useQueryClient();
   const { selectedImage, setSelectedImage } = useForgeStore();
   const [name, setName] = useState(variant.name ?? "");
-  const [activeSection, setActiveSection] = useState<Section>("generate");
   const [activeImageId, setActiveImageId] = useState<string | null>(null);
 
   const updateVariant = useUpdateVariant();
   const deleteSkinImage = useDeleteSkinImage();
+  const uploadSkinImage = useUploadSkinImage();
 
   const { run } = usePipeline(
     () => { setActiveImageId(null); qc.invalidateQueries({ queryKey: ["figures"] }); },
@@ -57,7 +53,22 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
   }
 
   function handleUploadFile(file: File) {
-    void run(variant.id, figureId, "", file);
+    uploadSkinImage.mutate({
+      figureId,
+      skinId: variant.skinId,
+      variantId: variant.id,
+      file,
+    });
+  }
+
+  function handleUploadToImage(image: SkinImage, file: File) {
+    uploadSkinImage.mutate({
+      figureId,
+      skinId: variant.skinId,
+      variantId: variant.id,
+      file,
+      imageId: image.id,
+    });
   }
 
   function handleDeleteImage(image: SkinImage) {
@@ -73,6 +84,11 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
     selectedImage?.id && variant.images.find((i) => i.id === selectedImage.id)
       ? variant.images.find((i) => i.id === selectedImage.id)!.models
       : [];
+
+  const uploadPendingImageId =
+    uploadSkinImage.isPending && uploadSkinImage.variables?.imageId
+      ? uploadSkinImage.variables.imageId
+      : null;
 
   return (
     <div className="flex flex-col gap-0 overflow-y-auto h-full">
@@ -90,64 +106,35 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
         </div>
       </div>
 
-      <div className="flex border-b border-border shrink-0">
-        <button
-          onClick={() => setActiveSection("generate")}
-          className={cn(
-            "flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors",
-            activeSection === "generate"
-              ? "border-accent text-slate-100"
-              : "border-transparent text-slate-400 hover:text-slate-200",
-          )}
-        >
-          <Wand2 size={12} />
-          Generate with AI
-        </button>
-        <button
-          onClick={() => setActiveSection("upload")}
-          className={cn(
-            "flex items-center gap-1.5 px-4 py-2.5 text-xs font-medium border-b-2 transition-colors",
-            activeSection === "upload"
-              ? "border-accent text-slate-100"
-              : "border-transparent text-slate-400 hover:text-slate-200",
-          )}
-        >
-          <Upload size={12} />
-          Upload Image
-        </button>
-      </div>
-
       <div className="px-4 py-4 border-b border-border">
-        {activeSection === "generate" && (
-          <PromptEditor
-            variant={variant}
-            figureId={figureId}
-            figureType={figureType}
-            figureName={figureName}
-            skinName={skinName}
-          />
-        )}
-        {activeSection === "upload" && (
-          <div className="flex flex-col gap-3">
-            <p className="text-xs text-slate-400">
-              Upload an image to use as the base for 3D generation. After uploading, the pipeline will start automatically.
-            </p>
-            <ImageUploader onFile={handleUploadFile} />
-          </div>
-        )}
+        <PromptEditor
+          variant={variant}
+          figureId={figureId}
+          figureType={figureType}
+          figureName={figureName}
+          skinName={skinName}
+        />
       </div>
 
-      {variant.images.length > 0 && (
-        <div className="flex flex-col gap-2 px-4 py-4 border-b border-border">
-          <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Images</p>
+      <div className="flex flex-col gap-2 px-4 py-4 border-b border-border">
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Images</p>
+        <ImageUploader
+          onFile={handleUploadFile}
+          disabled={uploadSkinImage.isPending}
+        />
+        {variant.images.length > 0 ? (
           <ImageGrid
             images={variant.images}
             activeImageId={activeImageId}
+            uploadPendingImageId={uploadPendingImageId}
             onRunPipeline={handleRunPipeline}
             onDelete={handleDeleteImage}
+            onUploadImage={handleUploadToImage}
           />
-        </div>
-      )}
+        ) : (
+          <p className="text-xs text-slate-500">Upload to add images to this variant.</p>
+        )}
+      </div>
 
       {activeModels.length > 0 && (
         <div className="flex flex-col gap-2 px-4 py-4">

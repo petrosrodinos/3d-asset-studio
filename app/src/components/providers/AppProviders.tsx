@@ -2,28 +2,11 @@ import type { PropsWithChildren } from "react";
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "sonner";
-import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
-import { InsufficientTokensError } from "@/utils/apiClient";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: { retry: 1, staleTime: 30_000 },
-    mutations: {
-      onError: (err) => {
-        if (err instanceof InsufficientTokensError) {
-          toast.error(
-            `Not enough tokens (need ${err.required}, have ${err.balance})`,
-            {
-              action: {
-                label: "Buy tokens",
-                onClick: () => (window.location.href = "/settings/billing"),
-              },
-            },
-          );
-        }
-      },
-    },
   },
 });
 

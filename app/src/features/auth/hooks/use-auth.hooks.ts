@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useAuthStore } from "@/store/authStore";
 import { register } from "@/features/auth/services/auth.services";
 import type { RegisterDto } from "@/features/auth/interfaces/auth.interfaces";
@@ -14,5 +15,8 @@ export function useAuth() {
 export function useRegister() {
   return useMutation({
     mutationFn: (dto: RegisterDto) => register(dto),
+    onSuccess: () => toast.success("Account created"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not create account"),
   });
 }

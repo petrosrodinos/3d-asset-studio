@@ -11,7 +11,7 @@ const upload = multer({ storage: multer.memoryStorage() });
 const router = Router();
 
 // POST /api/pipeline/mesh
-// Body (multipart): (image file OR imageId), variantId, figureId, modelVersion
+// Body (multipart): variantId, figureId; new raster via image file (creates skin image + mesh), or imageId only to mesh an existing stored image
 router.post("/mesh", upload.single("image"), async (req, res, next) => {
   const variantId = req.body.variantId as string | undefined;
   const figureId = req.body.figureId as string | undefined;
@@ -32,6 +32,12 @@ router.post("/mesh", upload.single("image"), async (req, res, next) => {
     imageBuffer = req.file.buffer;
     filename = req.file.originalname ?? "upload.png";
     mimeType = req.file.mimetype === "image/jpeg" ? "image/jpeg" : "image/png";
+    const bodyImageId = req.body.imageId as string | undefined;
+    if (bodyImageId) {
+      return res.status(400).json({
+        error: "Do not send imageId with a file here. Upload the file to POST .../variants/:variantId/images, then run mesh with imageId only.",
+      });
+    }
   } else {
     const imageId = req.body.imageId as string | undefined;
     if (!imageId) {

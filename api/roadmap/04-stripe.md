@@ -1,6 +1,6 @@
 # Phase 04 — Token Purchases & Billing (Stripe)
 
-**Goal:** Add a token wallet per user, sell token packs via Stripe Checkout, and gate every AI/3D API operation behind a token cost check. Every GCS asset upload, AIML image generation, Tripo pipeline step, and animation costs tokens.
+**Goal:** Add a token wallet per user, sell token packs via Stripe Checkout, and gate every AI/3D API operation behind a token cost check. Every AIML image generation, Tripo animation costs tokens.
 
 **Depends on:** Phase 02 (`User.tokenBalance`) and Phase 03 (React billing page stub).
 
@@ -8,19 +8,14 @@
 
 ## Token cost table
 
-`src/lib/tokenCosts.ts`:
+`src/services/pricing/model-costs.ts`:
 
 | Operation           | Tokens | Note                                       |
 | ------------------- | ------ | ------------------------------------------ |
-| `chat`              | 1      | Per message round-trip                     |
 | `image`             | 5      | Per AIML generation call                   |
-| `pipeline`          | 20     | Full mesh → rig → animate pipeline         |
 | `tripoMesh`         | 8      | Mesh-only (no rig/animate)                 |
+| `rig`               | 10     | Per rig generation call                    |
 | `animationRetarget` | 5      | Per additional animation on existing model |
-| `video`             | 10     | AIML video generation                      |
-| `tts`               | 2      | Text-to-speech                             |
-| `stt`               | 2      | Speech-to-text                             |
-| `embeddings`        | 1      | Embeddings call                            |
 
 ---
 
@@ -37,9 +32,9 @@ src/
 │   └── stripe/
 │       ├── stripe.client.ts           # Stripe singleton
 │       └── stripe.webhook.router.ts   # POST /api/stripe/webhook (raw body — before express.json)
-├── lib/
-│   ├── tokenCosts.ts
-│   └── tokenPacks.ts
+├── services/pricing/
+│   ├── model-costs.ts
+│   └── packs.ts
 └── middleware/
     └── requireTokens.ts
 ```
@@ -89,23 +84,7 @@ export const stripe = new Stripe(env.STRIPE_SECRET_KEY, { apiVersion: "2024-12-1
 
 ### 3. Token costs
 
-File: `src/lib/tokenCosts.ts`
-
-```ts
-export const TOKEN_COSTS = {
-  chat: 1,
-  image: 5,
-  pipeline: 20,
-  tripoMesh: 8,
-  animationRetarget: 5,
-  video: 10,
-  tts: 2,
-  stt: 2,
-  embeddings: 1,
-} as const;
-
-export type TokenOperation = keyof typeof TOKEN_COSTS;
-```
+File: `api\src\config\models`
 
 ---
 
@@ -184,6 +163,65 @@ model TokenPurchase {
 ```
 
 Run: `npx prisma db push`
+
+---
+
+### 6b. Token usage ledger (per debit)
+
+**Goal:** Every time tokens are deducted for an AI or Tripo call, append an immutable row for analytics, support, and cost reconciliation. Values should match the config the charge was based on (`api/src/config/models/image-models.ts` → `ImageModels[].id`, `trippo-models.ts` → `TrippoModels[].id`, and `./pricing` → `MARKUP_FACTOR`).
+
+| Column | Type | Notes |
+| ------ | ---- | ----- |
+| `id` | ObjectId | Primary key |
+| `userId` | ObjectId | Who was charged |
+| `usageKind` | enum | `image` \| `trippo` (or extend later, e.g. `chat`) |
+| `modelId` | string | Same string as `ImageModels.id` or `TrippoModels.id` for that request |
+| `operation` | string? | Optional coarse gate, e.g. `image`, `tripoMesh`, `rig`, `animationRetarget` — useful if `requireTokens` stays operation-based |
+| `tokens_original` | number | Pre-markup token units from provider/cost table (`tokens_original` on the model) |
+| `price_original` | number | Pre-markup USD basis (`price_original` on the model) |
+| `tokens` | number | Tokens actually debited (`tokens` / post-markup side of config) |
+| `price` | number | Post-markup USD equivalent if you store it (`price` on the model), else derivable |
+| `markup_factor` | number | Snapshot of `MARKUP_FACTOR` at charge time so historical rows stay correct if config changes |
+| `balance_after` | int? | Optional: `User.tokenBalance` after decrement (debugging and statements) |
+| `idempotency_key` | string? | Optional unique key per job/request to avoid double-logging on retries |
+| `metadata` | Json? | Optional: job id, pipeline step, Stripe-irrelevant request refs |
+| `created_at` | DateTime | When the debit occurred |
+
+`prisma/schema.prisma` — add something like:
+
+```prisma
+enum TokenUsageKind {
+  image
+  trippo
+}
+
+model TokenUsage {
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  userId           String         @db.ObjectId
+  user             User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  usageKind        TokenUsageKind
+  modelId          String
+  operation        String?
+  tokens_original  Float
+  price_original   Float
+  tokens           Float
+  price            Float
+  markup_factor    Float
+  balance_after    Int?
+  idempotencyKey   String?        @unique
+  metadata         Json?
+  createdAt        DateTime       @default(now())
+
+  @@index([userId, createdAt])
+  @@index([usageKind, modelId])
+}
+```
+
+On `User`, add `tokenUsages TokenUsage[]` alongside other relations.
+
+**Implementation note:** `requireTokens` only knows the coarse `TokenOperation`, not `modelId`. Create `TokenUsage` rows in the same place you resolve the model and debit tokens (e.g. image-generation and Tripo pipeline services), ideally in the **same transaction** as `tokenBalance` decrement. If you keep a generic middleware-only decrement, either pass `modelId` / pricing snapshot into the request context after validation, or migrate to “debit + log” helpers shared by those routes.
+
+Add a read endpoint when needed, e.g. `GET /api/billing/usage?limit=50`, mirroring purchase history.
 
 ---
 
@@ -460,21 +498,21 @@ export function useCheckout() {
 }
 ```
 
-**`features/billing/components/BillingPage.tsx`** — three sections:
+**`pages/settings/credits/components/BillingPage.tsx`** — three sections:
 
 1. **Balance card** — large token count, last updated timestamp.
 2. **Pack grid** — three cards: Starter / Creator / Studio. Each shows token count, price, "Buy" button. Disable while checkout mutation is pending. Show a loading spinner on the active button.
 3. **Purchase history** — table: Pack name | Tokens | Amount | Date. Empty state if no purchases.
 
-On return from Stripe (`/billing?success=1`): show a toast + invalidate balance query.
-On `/billing?cancelled=1`: show a neutral toast "Purchase cancelled".
+On return from Stripe (`/credits?success=1`): show a toast + invalidate balance query.
+On `/credits?cancelled=1`: show a neutral toast "Purchase cancelled".
 
 **`app/layout/TopBar.tsx`** — token balance display:
 
 ```tsx
 const { data } = useBalance();
 <span className="font-mono text-accent-light">{data?.balance ?? "—"} tokens</span>
-<Link to="/billing" className="text-xs text-slate-400 hover:text-white ml-2">Buy</Link>
+<Link to="/credits" className="text-xs text-slate-400 hover:text-white ml-2">Buy</Link>
 ```
 
 ---
@@ -493,3 +531,4 @@ const { data } = useBalance();
 - [ ] Stripe webhook signature mismatch → `400` (not `500`).
 - [ ] All Stripe interactions use test keys in development.
 - [ ] No Prisma calls outside `*.service.ts` files.
+- [ ] Each token debit for a model-backed call writes a `TokenUsage` row with `modelId`, `tokens_original` / `price_original`, charged `tokens` / `price`, and `markup_factor` at charge time (idempotent when `idempotencyKey` is set).

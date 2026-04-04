@@ -1,4 +1,5 @@
-import { archiveRemoteUrl, deleteGcsFiles } from "../../integrations/gcs/gcs.service";
+import { prisma } from "../../integrations/db/client";
+import { archiveRemoteUrl, deleteGcsFiles, uploadBuffer } from "../../integrations/gcs/gcs.service";
 import { collectGcsKeysFromSkinImage } from "../../integrations/gcs/collectGcsAssetKeys";
 import {
   createSkinImageRecord,
@@ -8,6 +9,23 @@ import {
   listImages as listImagesRepo,
   updateSkinImageGcs,
 } from "./repositories/skin-images.repository";
+
+/** Create a skin image from an uploaded buffer only (no 3D pipeline). */
+export async function createSkinImageFromUpload(
+  variantId: string,
+  figureId: string,
+  buffer: Buffer,
+  mimeType: "image/png" | "image/jpeg",
+) {
+  const ext = mimeType === "image/jpeg" ? "jpg" : "png";
+  const image = await createSkinImageRecord(variantId, figureId, "upload://local");
+  const gcsKey = `images/figures/${figureId}/${variantId}/${image.id}.${ext}`;
+  const { gcsUrl, gcsBucket } = await uploadBuffer(buffer, gcsKey, mimeType);
+  return prisma.skinImage.update({
+    where: { id: image.id },
+    data: { gcsUrl, gcsBucket, gcsKey, sourceUrl: gcsUrl },
+  });
+}
 
 export async function createSkinImage(
   variantId: string,
@@ -40,4 +58,31 @@ export async function deleteImage(id: string) {
   const existing = await findSkinImageWithGcsAssets(id);
   if (existing) await deleteGcsFiles(collectGcsKeysFromSkinImage(existing));
   return deleteImageRepo(id);
+}
+
+/** Replace raster for an existing skin image, remove prior 3D models and their GCS assets, then upload new source. */
+export async function replaceSkinImageSourceFromUpload(args: {
+  imageId: string;
+  variantId: string;
+  figureId: string;
+  buffer: Buffer;
+  mimeType: "image/png" | "image/jpeg";
+}) {
+  const { imageId, variantId, figureId, buffer, mimeType } = args;
+  const existing = await findSkinImageWithGcsAssets(imageId);
+  if (!existing || existing.variantId !== variantId) {
+    throw new Error("Skin image not found");
+  }
+
+  await deleteGcsFiles(collectGcsKeysFromSkinImage(existing));
+  await prisma.model3D.deleteMany({ where: { imageId } });
+
+  const ext = mimeType === "image/jpeg" ? "jpg" : "png";
+  const gcsKey = `images/figures/${figureId}/${variantId}/${imageId}-${Date.now()}.${ext}`;
+  const { gcsUrl, gcsBucket } = await uploadBuffer(buffer, gcsKey, mimeType);
+
+  return prisma.skinImage.update({
+    where: { id: imageId },
+    data: { gcsUrl, gcsBucket, gcsKey, sourceUrl: gcsUrl },
+  });
 }
