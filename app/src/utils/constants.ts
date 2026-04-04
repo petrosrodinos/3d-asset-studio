@@ -22,9 +22,9 @@ export const ANIMATION_PRESETS = [
 export const FALLBACK_IMAGE_MODEL_ID = "flux/schnell";
 
 export const PIPELINE_STEPS = [
-  { id: "upload",  label: "Upload Image",  icon: "↑" },
-  { id: "mesh",    label: "Generate Mesh", icon: "⬡" },
-  { id: "prerig",  label: "Pre-rig Check", icon: "⊡" },
-  { id: "rig",     label: "Rigging",       icon: "⊕" },
-  { id: "animate", label: "Animation",     icon: "▷" },
+  { id: "upload", label: "Upload Image" },
+  { id: "mesh", label: "Generate Mesh" },
+  { id: "prerig", label: "Pre-rig Check" },
+  { id: "rig", label: "Rigging" },
+  { id: "animate", label: "Animation" },
 ] as const;

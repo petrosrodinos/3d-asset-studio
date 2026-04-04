@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { Send } from "lucide-react";
+import { Circle, Send } from "lucide-react";
 import { useChat } from "@/features/chat/hooks/use-chat.hooks";
 import { ToolCallCard } from "@/pages/forge/components/chat-panel/tool-call-card";
 import { Spinner } from "@/components/ui/Spinner";
@@ -54,10 +54,10 @@ export function ChatPanel() {
           </div>
         ))}
         {streaming && (
-          <div className="flex items-center gap-1 text-slate-500">
-            <span className="dot-1">•</span>
-            <span className="dot-2">•</span>
-            <span className="dot-3">•</span>
+          <div className="flex items-center gap-1 text-slate-500" aria-hidden>
+            <Circle className="dot-1 h-2 w-2 fill-current stroke-none" strokeWidth={0} />
+            <Circle className="dot-2 h-2 w-2 fill-current stroke-none" strokeWidth={0} />
+            <Circle className="dot-3 h-2 w-2 fill-current stroke-none" strokeWidth={0} />
           </div>
         )}
         <div ref={bottomRef} />

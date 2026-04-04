@@ -17,7 +17,7 @@ const queryClient = new QueryClient({
             {
               action: {
                 label: "Buy tokens",
-                onClick: () => (window.location.href = "/billing"),
+                onClick: () => (window.location.href = "/settings/billing"),
               },
             },
           );

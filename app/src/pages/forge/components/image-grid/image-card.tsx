@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { Maximize2, Play, Trash2 } from "lucide-react";
+import { Download, Maximize2, Play, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Modal } from "@/components/ui/Modal";
+import { OptionsMenu } from "@/components/ui/OptionsMenu";
+import { downloadUrlAsFile, fileExtensionFromUrl } from "@/utils/helpers";
 import type { SkinImage } from "@/interfaces";
 
 function bestModelStatus(models: SkinImage["models"]): string {
@@ -34,25 +36,38 @@ export function ImageCard({ image, isRunning, onRunPipeline, onSelect, onDelete,
   const [imgLoaded, setImgLoaded] = useState(false);
   const previewSrc = image.gcsUrl ?? image.sourceUrl;
 
+  const imageMenuItems = [
+    {
+      id: "extend",
+      label: "Extend",
+      icon: Maximize2,
+      onSelect: () => setExpandOpen(true),
+    },
+    {
+      id: "download",
+      label: "Download",
+      icon: Download,
+      onSelect: () => {
+        const ext = fileExtensionFromUrl(previewSrc) || ".png";
+        void downloadUrlAsFile(previewSrc, `image-${image.id.slice(0, 8)}${ext}`);
+      },
+    },
+    {
+      id: "delete",
+      label: "Delete",
+      icon: Trash2,
+      destructive: true,
+      onSelect: () => setConfirmOpen(true),
+    },
+  ];
+
   return (
     <>
       <div className={`rounded-lg overflow-hidden border cursor-pointer transition-colors ${selected ? "border-accent" : "border-border hover:border-slate-500"}`} onClick={() => onSelect(image)}>
         <div className="relative w-full aspect-square bg-surface">
           {!imgLoaded && <Skeleton className="absolute inset-0 rounded-none" />}
           <img src={previewSrc} alt="" onLoad={() => setImgLoaded(true)} className={`w-full h-full object-cover transition-opacity duration-200 ${imgLoaded ? "opacity-100" : "opacity-0"}`} />
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            className="absolute top-1.5 right-1.5 p-1.5 h-6 w-6 min-w-0 shadow-md bg-panel/95 backdrop-blur-sm border-border"
-            aria-label="Expand image"
-            onClick={(e) => {
-              e.stopPropagation();
-              setExpandOpen(true);
-            }}
-          >
-            <Maximize2 size={14} />
-          </Button>
+          <OptionsMenu className="absolute top-1.5 right-1.5 z-10" triggerVariant="secondary" triggerClassName="h-6 w-6 shadow-md bg-panel/95 backdrop-blur-sm border-border" menuLabel="Image options" items={imageMenuItems} />
         </div>
 
         <div className="bg-panel px-2 pt-1.5 pb-2 flex flex-col gap-1">
@@ -60,34 +75,20 @@ export function ImageCard({ image, isRunning, onRunPipeline, onSelect, onDelete,
             {status !== "success" && <Badge status={status} />}
             <span className="text-[10px] text-slate-500 ml-auto">{image.models.length} models</span>
           </div>
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-end">
             <Button
-              variant="ghost"
+              variant="secondary"
               size="sm"
-              className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-400/10"
-              disabled={isProcessing}
+              className="px-2 py-1 gap-1"
+              disabled={isRunning || isProcessing}
               onClick={(e) => {
                 e.stopPropagation();
-                setConfirmOpen(true);
+                onRunPipeline(image);
               }}
             >
-              <Trash2 size={13} />
+              {isRunning ? <Spinner className="w-2.5 h-2.5" /> : <Play size={10} />}
+              {isRunning ? "Running…" : "Run 3D"}
             </Button>
-            <div className="flex items-center gap-1">
-              <Button
-                variant="secondary"
-                size="sm"
-                className="px-2 py-1 gap-1"
-                disabled={isRunning || isProcessing}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onRunPipeline(image);
-                }}
-              >
-                {isRunning ? <Spinner className="w-2.5 h-2.5" /> : <Play size={10} />}
-                {isRunning ? "Running…" : "Run 3D"}
-              </Button>
-            </div>
           </div>
         </div>
       </div>

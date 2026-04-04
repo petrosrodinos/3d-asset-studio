@@ -1,13 +1,16 @@
-import { useState } from "react";
-import { ChevronRight, Trash2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ChevronRight, Download, Maximize2, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { OptionsMenu } from "@/components/ui/OptionsMenu";
 import { ModelViewer } from "@/pages/forge/components/model-card/model-viewer";
+import { ModelViewerModal } from "@/pages/forge/components/model-card/model-viewer-modal";
 import { AnimationList } from "@/pages/forge/components/animation-list";
 import { AnimationPicker } from "@/pages/forge/components/animation-list/animation-picker";
 import { useAnimate } from "@/features/pipeline/hooks/use-animate.hooks";
 import { useDeleteModel3d } from "@/features/models3d/hooks/use-models3d.hooks";
+import { downloadUrlAsFile, fileExtensionFromUrl } from "@/utils/helpers";
 import { cn } from "@/utils/cn";
 import type { Model3D } from "@/interfaces";
 
@@ -17,6 +20,7 @@ interface ModelCardProps {
 
 export function ModelCard({ model }: ModelCardProps) {
   const [open, setOpen] = useState(false);
+  const [viewerOpen, setViewerOpen] = useState(false);
   const [selectedAnimations, setSelectedAnimations] = useState<string[]>([]);
   const [confirmDelete, setConfirmDelete] = useState(false);
 
@@ -26,6 +30,38 @@ export function ModelCard({ model }: ModelCardProps) {
   const canAnimate = model.status === "success" && !!model.rigTaskId;
   const canShowViewer = model.status === "success" && !!model.gcsPbrModelUrl;
   const isBusy = model.status === "processing" || model.status === "pending";
+
+  const modelUrl = model.gcsPbrModelUrl ?? "";
+
+  const modelMenuItems = useMemo(
+    () => [
+      {
+        id: "extend",
+        label: "Extend",
+        icon: Maximize2,
+        disabled: !canShowViewer,
+        onSelect: () => setViewerOpen(true),
+      },
+      {
+        id: "download",
+        label: "Download",
+        icon: Download,
+        disabled: !canShowViewer,
+        onSelect: () => {
+          const ext = fileExtensionFromUrl(modelUrl) || ".glb";
+          void downloadUrlAsFile(modelUrl, `model-${model.id.slice(0, 8)}${ext}`);
+        },
+      },
+      {
+        id: "delete",
+        label: "Delete",
+        icon: Trash2,
+        destructive: true,
+        onSelect: () => setConfirmDelete(true),
+      },
+    ],
+    [canShowViewer, model.id, modelUrl],
+  );
 
   return (
     <>
@@ -46,15 +82,11 @@ export function ModelCard({ model }: ModelCardProps) {
             <Badge status={running ? "processing" : model.status} />
           </button>
           <div className="flex items-center pr-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="px-1.5 py-1 text-slate-500 hover:text-red-400 hover:bg-red-400/10"
-              aria-label="Delete 3D model"
-              onClick={() => setConfirmDelete(true)}
-            >
-              <Trash2 size={12} />
-            </Button>
+            <OptionsMenu
+              menuLabel="Model options"
+              triggerClassName="px-1.5 py-1 text-slate-500 hover:text-slate-200"
+              items={modelMenuItems}
+            />
           </div>
         </div>
 
@@ -99,6 +131,10 @@ export function ModelCard({ model }: ModelCardProps) {
           </div>
         )}
       </div>
+
+      {viewerOpen && model.gcsPbrModelUrl ? (
+        <ModelViewerModal src={model.gcsPbrModelUrl} onClose={() => setViewerOpen(false)} />
+      ) : null}
 
       <ConfirmDialog
         open={confirmDelete}

@@ -6,7 +6,10 @@ import { Shell } from "@/components/layouts/Shell";
 import LoginPage from "@/pages/login";
 import RegisterPage from "@/pages/register";
 import ForgePage from "@/pages/forge";
-import BillingPage from "@/pages/billing";
+import SettingsPage from "@/pages/settings";
+import SettingsAccountPage from "@/pages/settings/subpages/account";
+import SettingsCreditsPage from "@/pages/settings/subpages/credits";
+import SettingsBillingPage from "@/pages/settings/subpages/billing";
 
 function RequireAuth({ children }: PropsWithChildren) {
   const { user, loading } = useAuth();
@@ -34,7 +37,13 @@ export function AppRoutes() {
       >
         <Route index element={<Navigate to="/forge" replace />} />
         <Route path="forge" element={<ForgePage />} />
-        <Route path="billing" element={<BillingPage />} />
+        <Route path="billing" element={<Navigate to="/settings/billing" replace />} />
+        <Route path="settings" element={<SettingsPage />}>
+          <Route index element={<Navigate to="account" replace />} />
+          <Route path="account" element={<SettingsAccountPage />} />
+          <Route path="credits" element={<SettingsCreditsPage />} />
+          <Route path="billing" element={<SettingsBillingPage />} />
+        </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
