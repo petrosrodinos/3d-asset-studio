@@ -3,13 +3,13 @@ import { useForgeStore } from "@/store/forgeStore";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { Textarea } from "@/components/ui/Textarea";
-import { IMAGE_MODELS } from "@/utils/constants";
+import { ImageModelSelect } from "@/features/image-models/components/ImageModelSelect";
 import { useGenerateImage } from "@/features/skin-variants/hooks/use-skin-variants.hooks";
 
 export function ImageGenPanel() {
   const { activeFigure, activeVariant } = useForgeStore();
   const [prompt, setPrompt] = useState("");
-  const [model, setModel] = useState<string>(IMAGE_MODELS[0].id);
+  const [model, setModel] = useState("");
 
   const generateImage = useGenerateImage();
 
@@ -32,16 +32,10 @@ export function ImageGenPanel() {
       {activeVariant && (
         <>
           <div className="flex flex-col gap-1">
-            <label className="text-xs text-slate-400 font-medium">Model</label>
-            <select
-              value={model}
-              onChange={(e) => setModel(e.target.value)}
-              className="bg-panel border border-border rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-accent/50"
-            >
-              {IMAGE_MODELS.map((m) => (
-                <option key={m.id} value={m.id}>{m.label}</option>
-              ))}
-            </select>
+            <label htmlFor="image-gen-model" className="text-xs text-slate-400 font-medium">
+              Model
+            </label>
+            <ImageModelSelect id="image-gen-model" value={model} onChange={setModel} />
           </div>
 
           <Textarea
@@ -52,7 +46,7 @@ export function ImageGenPanel() {
             placeholder="Describe the image to generate…"
           />
 
-          <Button onClick={handleGenerate} disabled={generateImage.isPending || !prompt.trim()}>
+          <Button onClick={handleGenerate} disabled={generateImage.isPending || !prompt.trim() || !model.trim()}>
             {generateImage.isPending ? <Spinner className="w-3.5 h-3.5" /> : "Generate Image"}
           </Button>
 

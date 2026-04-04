@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
-import { IMAGE_MODELS } from "@/utils/constants";
 import { useGenerateAiPrompt, useUpdateVariant, useGenerateImage } from "@/features/skin-variants/hooks/use-skin-variants.hooks";
+import { useImageModels } from "@/features/image-models/hooks/use-image-models.hooks";
+import { ImageModelSelect } from "@/features/image-models/components/ImageModelSelect";
 import type { SkinVariant } from "@/interfaces";
 
 interface PromptEditorProps {
@@ -26,13 +27,18 @@ export function PromptEditor({
 }: PromptEditorProps) {
   const [prompt, setPrompt] = useState(variant.prompt ?? "");
   const [negPrompt, setNegPrompt] = useState(variant.negativePrompt ?? "");
-  const [model, setModel] = useState(variant.imageModel ?? IMAGE_MODELS[0].id);
+  const [model, setModel] = useState(variant.imageModel ?? "");
   const [aiOpen, setAiOpen] = useState(false);
   const [aiDescription, setAiDescription] = useState("");
 
+  const { data: imageModels = [] } = useImageModels();
   const generateAiPrompt = useGenerateAiPrompt();
   const updateVariant = useUpdateVariant();
   const generateImage = useGenerateImage();
+
+  useEffect(() => {
+    setModel(variant.imageModel ?? "");
+  }, [variant.id, variant.imageModel]);
 
   function handleAiGenerate() {
     if (!aiDescription.trim()) return;
@@ -41,7 +47,7 @@ export function PromptEditor({
       {
         description: aiDescription.trim(),
         variant: variantLabel,
-        availableModels: IMAGE_MODELS.map((m) => ({ id: m.id, label: m.label })),
+        availableModels: imageModels.map((m) => ({ id: m.id, label: m.label })),
         context: {
           figureType,
           figureName,
@@ -82,16 +88,10 @@ export function PromptEditor({
   return (
     <div className="flex flex-col gap-3">
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-slate-400 font-medium">Model</label>
-        <select
-          value={model}
-          onChange={(e) => setModel(e.target.value)}
-          className="bg-panel border border-border rounded px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-accent/50"
-        >
-          {IMAGE_MODELS.map((m) => (
-            <option key={m.id} value={m.id}>{m.label}</option>
-          ))}
-        </select>
+        <label htmlFor={`image-model-${variant.id}`} className="text-xs text-slate-400 font-medium">
+          Model
+        </label>
+        <ImageModelSelect id={`image-model-${variant.id}`} value={model} onChange={setModel} />
       </div>
 
       <Textarea
@@ -146,10 +146,10 @@ export function PromptEditor({
           <Sparkles size={12} />
           AI Prompt
         </Button>
-        <Button variant="secondary" size="sm" onClick={handleSave} disabled={updateVariant.isPending}>
+        <Button variant="secondary" size="sm" onClick={handleSave} disabled={updateVariant.isPending || !model.trim()}>
           {updateVariant.isPending ? <Spinner className="w-3 h-3" /> : "Save"}
         </Button>
-        <Button size="sm" onClick={handleGenerateImage} disabled={generateImage.isPending || !prompt.trim()}>
+        <Button size="sm" onClick={handleGenerateImage} disabled={generateImage.isPending || !prompt.trim() || !model.trim()}>
           {generateImage.isPending ? <Spinner className="w-3 h-3" /> : "Generate Image"}
         </Button>
       </div>

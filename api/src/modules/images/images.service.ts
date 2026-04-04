@@ -1,9 +1,16 @@
 import { getAiml } from "../../services";
 import { IMAGES_CONFIG } from "./config/images.config";
 import { ImageModels } from "../../config/models/image-models";
+import type { ListedImageModelDto } from "./images.types";
 
-export async function listImageModels() {
-  return ImageModels.filter(model => model.available);
+export function listImageModels(): ListedImageModelDto[] {
+  return ImageModels.filter((m) => m.available).map((m) => ({
+    id: m.id,
+    label: m.name,
+    provider: m.provider,
+    tokens: m.tokens,
+    isImageToImage: m.is_image_to_image,
+  }));
 }
 
 export async function generateImage(input: {
