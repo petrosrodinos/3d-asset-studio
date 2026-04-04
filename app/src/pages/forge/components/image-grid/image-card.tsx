@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { Play, Trash2 } from "lucide-react";
+import { Maximize2, Play, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { Modal } from "@/components/ui/Modal";
 import type { SkinImage } from "@/interfaces";
 
 function bestModelStatus(models: SkinImage["models"]): string {
@@ -29,24 +30,29 @@ export function ImageCard({ image, isRunning, onRunPipeline, onSelect, onDelete,
   const status = bestModelStatus(image.models);
   const isProcessing = status === "processing";
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [expandOpen, setExpandOpen] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
+  const previewSrc = image.gcsUrl ?? image.sourceUrl;
 
   return (
     <>
-      <div
-        className={`rounded-lg overflow-hidden border cursor-pointer transition-colors ${
-          selected ? "border-accent" : "border-border hover:border-slate-500"
-        }`}
-        onClick={() => onSelect(image)}
-      >
+      <div className={`rounded-lg overflow-hidden border cursor-pointer transition-colors ${selected ? "border-accent" : "border-border hover:border-slate-500"}`} onClick={() => onSelect(image)}>
         <div className="relative w-full aspect-square bg-surface">
           {!imgLoaded && <Skeleton className="absolute inset-0 rounded-none" />}
-          <img
-            src={image.gcsUrl ?? image.sourceUrl}
-            alt=""
-            onLoad={() => setImgLoaded(true)}
-            className={`w-full h-full object-cover transition-opacity duration-200 ${imgLoaded ? "opacity-100" : "opacity-0"}`}
-          />
+          <img src={previewSrc} alt="" onLoad={() => setImgLoaded(true)} className={`w-full h-full object-cover transition-opacity duration-200 ${imgLoaded ? "opacity-100" : "opacity-0"}`} />
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="absolute top-1.5 right-1.5 p-1.5 h-6 w-6 min-w-0 shadow-md bg-panel/95 backdrop-blur-sm border-border"
+            aria-label="Expand image"
+            onClick={(e) => {
+              e.stopPropagation();
+              setExpandOpen(true);
+            }}
+          >
+            <Maximize2 size={14} />
+          </Button>
         </div>
 
         <div className="bg-panel px-2 pt-1.5 pb-2 flex flex-col gap-1">
@@ -60,7 +66,10 @@ export function ImageCard({ image, isRunning, onRunPipeline, onSelect, onDelete,
               size="sm"
               className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-400/10"
               disabled={isProcessing}
-              onClick={(e) => { e.stopPropagation(); setConfirmOpen(true); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setConfirmOpen(true);
+              }}
             >
               <Trash2 size={13} />
             </Button>
@@ -70,7 +79,10 @@ export function ImageCard({ image, isRunning, onRunPipeline, onSelect, onDelete,
                 size="sm"
                 className="px-2 py-1 gap-1"
                 disabled={isRunning || isProcessing}
-                onClick={(e) => { e.stopPropagation(); onRunPipeline(image); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRunPipeline(image);
+                }}
               >
                 {isRunning ? <Spinner className="w-2.5 h-2.5" /> : <Play size={10} />}
                 {isRunning ? "Running…" : "Run 3D"}
@@ -85,11 +97,17 @@ export function ImageCard({ image, isRunning, onRunPipeline, onSelect, onDelete,
         title="Delete image?"
         description="This will also delete all 3D models generated from this image."
         confirmLabel="Delete"
-        onConfirm={() => { setConfirmOpen(false); onDelete(image); }}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          onDelete(image);
+        }}
         onCancel={() => setConfirmOpen(false)}
         danger
       />
 
+      <Modal open={expandOpen} onClose={() => setExpandOpen(false)} title="Image preview">
+        <img src={previewSrc} alt="" className="max-h-[min(85vh,900px)] w-full object-contain rounded-lg" />
+      </Modal>
     </>
   );
 }
