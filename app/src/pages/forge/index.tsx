@@ -94,13 +94,16 @@ export default function ForgePage() {
     syncFigureData(fresh);
   }, [figures, activeFigureId, syncFigureData]);
 
-  function handleDeleteSkin(skin: Skin) {
+  function handleDeleteSkin(skin: Skin, opts?: { onSettled?: () => void }) {
     if (!activeFigure) return;
     if (activeSkin?.id === skin.id) {
       const next = activeFigure.skins.find((s) => s.id !== skin.id);
       setActiveSkin(next ?? null);
     }
-    deleteSkin.mutate({ figureId: activeFigure.id, skinId: skin.id });
+    deleteSkin.mutate(
+      { figureId: activeFigure.id, skinId: skin.id },
+      { onSettled: opts?.onSettled },
+    );
   }
 
   function openAddSkin() {
@@ -176,6 +179,7 @@ export default function ForgePage() {
                 figureId={activeFigure.id}
                 onAddSkin={openAddSkin}
                 onDeleteSkin={handleDeleteSkin}
+                skinDeleteInProgress={deleteSkin.isPending}
               />
               <div className="relative z-0 flex-1 overflow-hidden min-h-0">
                 {activeFigure.skins.length === 0 ? (

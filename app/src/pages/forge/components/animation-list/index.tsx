@@ -116,11 +116,18 @@ export function AnimationList({ animations, model3dId }: AnimationListProps) {
             : undefined
         }
         confirmLabel="Delete"
+        confirmLoading={
+          !!pendingDelete &&
+          deleteAnim.isPending &&
+          deleteAnim.variables?.animationId === pendingDelete.id
+        }
         onConfirm={() => {
-          if (!pendingDelete) return;
+          if (!pendingDelete || deleteAnim.isPending) return;
           const id = pendingDelete.id;
-          setPendingDelete(null);
-          deleteAnim.mutate({ model3dId, animationId: id });
+          deleteAnim.mutate(
+            { model3dId, animationId: id },
+            { onSettled: () => setPendingDelete(null) },
+          );
         }}
         onCancel={() => setPendingDelete(null)}
         danger

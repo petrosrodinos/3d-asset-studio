@@ -28,7 +28,7 @@ export const LANDING_HERO_BADGE = "AI game asset studio";
 export const LANDING_HERO_TITLE = "AI 3D Game Asset Studio for real-time games";
 
 export const LANDING_HERO_SUBTITLE =
-  "Turn prompts and reference images into rigged characters, preset animations, and export-ready meshes—built for indie studios, Unity and Unreal teams, modders, and 3D artists who need volume without losing quality.";
+  "Turn prompts or images into rigged characters, preset animations, and export-ready meshes—built for indie studios, Unity and Unreal teams, modders, and 3D artists who need volume without losing quality.";
 
 export const LANDING_CTA_PRIMARY = "Generate assets now";
 
@@ -42,9 +42,10 @@ export const LANDING_NAV_DASHBOARD = "Dashboard";
 
 export const LANDING_NAV_ANCHORS = [
   { href: "#features", label: "Features" },
+  { href: "#samples", label: "Samples" },
+  { href: "#token-packs", label: "Token packs" },
   { href: "#use-cases", label: "Use cases" },
   { href: "#how-it-works", label: "How it works" },
-  { href: "#token-packs", label: "Token packs" },
 ] as const;
 
 export const LANDING_PACKS_TITLE = "Token packs";
@@ -53,6 +54,32 @@ export const LANDING_PACKS_SUBTITLE =
   "Pick a pack to start with — create an account and pay securely through Stripe.";
 
 export const LANDING_VISUAL_CAPTION = "Image → mesh → rig → animate";
+
+/** Static GLB files in `app/public/3d-samples` (served at `/3d-samples/...`). */
+export const LANDING_3D_SAMPLES = [
+  {
+    src: "/3d-samples/model-69d23cab.glb",
+    title: "Hero showcase — dynamic combat pose",
+    description:
+      "Full-color ancient warrior with weapons and PBR materials, staged like a collectible miniature under dramatic studio lighting.",
+    prompt:
+      "Highly detailed ancient warrior figurine, full body, dynamic fighting stance, multiple weapons (bronze sword, iron spear, round shield, dagger), fully colored and textured, realistic painted materials, bronze armor with aged patina, deep red cloth tunic, dark brown leather straps, weathered steel blade, gold trim accents, painted shield emblem, dust and battle wear, muscular anatomy, stylized for 3D game asset, PBR textures, albedo colors, roughness variation, metallic highlights, high-resolution sculpt, clean silhouette, neutral studio background, dramatic lighting, ultra detailed, 4k, game-ready character concept, collectible miniature style",
+  },
+  {
+    src: "/3d-samples/model-69d23de7.glb",
+    title: "Rig-prep view — landmarks and clean framing",
+    description:
+      "Same character in a neutral, front-facing pose on a plain background so rig joints and proportions read clearly before animation.",
+    prompt:
+      "Highly detailed ancient warrior figurine in dark mode, full body, neutral pose, front-facing camera, visible rig landmarks including articulated joints, full subject framing from head to feet, plain background, single subject only, dynamic fighting stance with multiple weapons (bronze sword, iron spear, round shield, dagger), fully colored and textured, realistic painted materials, bronze armor with aged patina, deep red cloth tunic, dark brown leather straps, weathered steel blade, gold trim accents, painted shield emblem, dust and battle wear, muscular anatomy, stylized for 3D game asset, PBR textures, albedo colors, roughness variation, metallic highlights, high-resolution sculpt, clean silhouette, dramatic lighting, ultra detailed, 4k, game-ready character concept, collectible miniature style",
+  },
+] as const;
+
+export const LANDING_SAMPLES_SECTION = {
+  id: "samples",
+  title: "Explore real 3D examples",
+  subtitle: "These models load right in your browser—drag to rotate and scroll to zoom, same as in the app.",
+} as const;
 
 export const LANDING_FOOTER_TAGLINE =
   "AI 3D game assets, auto rigging, and batch-ready exports—dark-mode native workspace for shipping characters faster.";

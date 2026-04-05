@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Download, Maximize2, Play, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -31,6 +31,8 @@ interface ImageCardProps {
   onSelect: (image: SkinImage) => void;
   onDelete: (image: SkinImage) => void;
   selected?: boolean;
+  /** True while this image’s delete request is in flight */
+  deletePending?: boolean;
 }
 
 export function ImageCard({
@@ -40,12 +42,25 @@ export function ImageCard({
   onSelect,
   onDelete,
   selected,
+  deletePending = false,
 }: ImageCardProps) {
   const status = bestModelStatus(image.models);
   const isProcessing = status === "processing";
   const { data: pricingCosts } = usePricingCosts();
   const pipelineTokenCost = getFixedCostTokens(pricingCosts, PRICING_COST_KEYS.FORGE_PIPELINE_MESH_RIG);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const deleteStartedRef = useRef(false);
+
+  useEffect(() => {
+    if (deletePending) deleteStartedRef.current = true;
+  }, [deletePending]);
+
+  useEffect(() => {
+    if (!deletePending && deleteStartedRef.current && confirmOpen) {
+      setConfirmOpen(false);
+      deleteStartedRef.current = false;
+    }
+  }, [deletePending, confirmOpen]);
   const [expandOpen, setExpandOpen] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
   const previewSrc = image.gcsUrl ?? image.sourceUrl;
@@ -121,11 +136,15 @@ export function ImageCard({
         title="Delete image?"
         description="This will also delete all 3D models generated from this image."
         confirmLabel="Delete"
+        confirmLoading={deletePending}
         onConfirm={() => {
-          setConfirmOpen(false);
+          if (deletePending) return;
           onDelete(image);
         }}
-        onCancel={() => setConfirmOpen(false)}
+        onCancel={() => {
+          deleteStartedRef.current = false;
+          setConfirmOpen(false);
+        }}
         danger
       />
 

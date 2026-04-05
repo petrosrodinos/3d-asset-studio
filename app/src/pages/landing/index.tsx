@@ -7,6 +7,7 @@ import { LandingHead } from "@/pages/landing/components/LandingHead";
 import { LandingUseCases } from "@/pages/landing/components/LandingUseCases";
 import { LandingHowItWorks } from "@/pages/landing/components/LandingHowItWorks";
 import { LandingMidCta } from "@/pages/landing/components/LandingMidCta";
+import { LandingSampleModels } from "@/pages/landing/components/LandingSampleModels";
 import { LandingTokenPacks } from "@/pages/landing/components/LandingTokenPacks";
 import { cn } from "@/utils/cn";
 import { LANDING_CTA_PRIMARY, LANDING_CTA_SECONDARY, LANDING_HERO_BADGE, LANDING_HERO_SUBTITLE, LANDING_HERO_TITLE, LANDING_SIGN_IN_LINK, LANDING_SIGN_IN_PROMPT } from "@/pages/landing/constants";
@@ -35,7 +36,7 @@ export default function LandingPage() {
               <Link to="/register" className={cn("inline-flex items-center justify-center rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-white", "transition-colors hover:bg-purple-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent-light")}>
                 {LANDING_CTA_PRIMARY}
               </Link>
-              <a href="#use-cases" className={cn("inline-flex items-center justify-center rounded-md border border-border bg-panel/70 px-5 py-2.5 text-sm font-medium text-slate-300", "transition-colors hover:border-slate-600 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500")}>
+              <a href="#samples" className={cn("inline-flex items-center justify-center rounded-md border border-border bg-panel/70 px-5 py-2.5 text-sm font-medium text-slate-300", "transition-colors hover:border-slate-600 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500")}>
                 {LANDING_CTA_SECONDARY}
               </a>
             </div>
@@ -49,9 +50,10 @@ export default function LandingPage() {
           <LandingHeroVisual />
         </section>
         <LandingFeatureSections />
+        <LandingSampleModels />
+        <LandingTokenPacks />
         <LandingUseCases />
         <LandingHowItWorks />
-        <LandingTokenPacks />
         <LandingMidCta />
       </main>
       <LandingFooter />

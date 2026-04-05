@@ -66,6 +66,7 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
   }
 
   function handleDeleteImage(image: SkinImage) {
+    if (deleteSkinImage.isPending) return;
     deleteSkinImage.mutate({
       figureId,
       skinId: variant.skinId,
@@ -73,6 +74,11 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
       imageId: image.id,
     });
   }
+
+  const deletingImageId =
+    deleteSkinImage.isPending && deleteSkinImage.variables?.imageId
+      ? deleteSkinImage.variables.imageId
+      : null;
 
   const activeModels =
     selectedImage?.id && variant.images.find((i) => i.id === selectedImage.id)
@@ -126,6 +132,7 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
               activeImageId={activeImageId}
               onRunPipeline={handleRunPipeline}
               onDelete={handleDeleteImage}
+              deletingImageId={deletingImageId}
             />
           ) : (
             <p className="rounded-lg border border-dashed border-border/80 bg-surface/30 px-3 py-6 text-center text-xs text-slate-500">

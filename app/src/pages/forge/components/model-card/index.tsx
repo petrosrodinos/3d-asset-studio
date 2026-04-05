@@ -163,9 +163,10 @@ export function ModelCard({ model }: ModelCardProps) {
         title="Delete 3D model?"
         description="This will permanently delete the model and all its animations."
         confirmLabel="Delete"
+        confirmLoading={deleteModel.isPending && deleteModel.variables?.id === model.id}
         onConfirm={() => {
-          setConfirmDelete(false);
-          deleteModel.mutate({ id: model.id });
+          if (deleteModel.isPending) return;
+          deleteModel.mutate({ id: model.id }, { onSettled: () => setConfirmDelete(false) });
         }}
         onCancel={() => setConfirmDelete(false)}
         danger

@@ -11,6 +11,8 @@ interface ImageGridProps {
   activeImageId: string | null;
   onRunPipeline: (image: SkinImage) => void;
   onDelete: (image: SkinImage) => void;
+  /** When set, that image’s delete confirm shows loading */
+  deletingImageId?: string | null;
 }
 
 export function ImageGrid({
@@ -18,6 +20,7 @@ export function ImageGrid({
   activeImageId,
   onRunPipeline,
   onDelete,
+  deletingImageId = null,
 }: ImageGridProps) {
   const { selectedImage, setSelectedImage } = useForgeStore();
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", dragFree: true });
@@ -54,6 +57,7 @@ export function ImageGrid({
                 onSelect={setSelectedImage}
                 onDelete={onDelete}
                 selected={selectedImage?.id === img.id}
+                deletePending={deletingImageId === img.id}
               />
             </div>
           ))}

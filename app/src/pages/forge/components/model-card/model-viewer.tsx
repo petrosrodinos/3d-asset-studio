@@ -7,6 +7,8 @@ interface ModelViewerProps {
   src: string;
   animationName?: string;
   className?: string;
+  /** Applied to the inner `model-viewer` element (e.g. `h-full` for flexible layouts). */
+  viewerClassName?: string;
 }
 
 type ModelViewerPlayback = HTMLElement & {
@@ -27,7 +29,7 @@ async function ensureModelViewerDefined(): Promise<void> {
   await customElements.whenDefined("model-viewer");
 }
 
-export function ModelViewer({ src, animationName, className }: ModelViewerProps) {
+export function ModelViewer({ src, animationName, className, viewerClassName }: ModelViewerProps) {
   const viewerRef = useRef<HTMLElement | null>(null);
   const [playing, setPlaying] = useState(false);
 
@@ -83,7 +85,7 @@ export function ModelViewer({ src, animationName, className }: ModelViewerProps)
         camera-controls=""
         shadow-intensity="1"
         animation-name={animationName}
-        className="w-full h-[360px] bg-panel"
+        className={cn("w-full h-[360px] bg-panel", viewerClassName)}
       />
       {showControls ? (
         <div className="flex justify-center px-2 py-2 bg-surface/70 border-t border-border/60">

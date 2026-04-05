@@ -54,13 +54,18 @@ export function SkinPanel({ skin, figureId, figureType, figureName }: SkinPanelP
   }
 
   function handleConfirmDelete() {
-    if (!pendingDelete) return;
-    const next = skin.variants.find((v) => v.id !== pendingDelete.id);
+    if (!pendingDelete || deleteVariant.isPending) return;
+    const deletingId = pendingDelete.id;
+    const next = skin.variants.find((v) => v.id !== deletingId);
     deleteVariant.mutate(
-      { figureId, skinId: skin.id, variantId: pendingDelete.id },
-      { onSuccess: () => { if (activeVariantId === pendingDelete.id) setActiveVariantId(next?.id ?? null); } },
+      { figureId, skinId: skin.id, variantId: deletingId },
+      {
+        onSuccess: () => {
+          if (activeVariantId === deletingId) setActiveVariantId(next?.id ?? null);
+        },
+        onSettled: () => setPendingDelete(null),
+      },
     );
-    setPendingDelete(null);
   }
 
   if (skin.variants.length === 0) {
@@ -144,6 +149,7 @@ export function SkinPanel({ skin, figureId, figureType, figureName }: SkinPanelP
         title={`Delete variant "${pendingDelete?.name ?? pendingDelete?.variant}"?`}
         description="All images and models under this variant will be permanently deleted."
         confirmLabel="Delete"
+        confirmLoading={deleteVariant.isPending}
         onConfirm={handleConfirmDelete}
         onCancel={() => setPendingDelete(null)}
         danger

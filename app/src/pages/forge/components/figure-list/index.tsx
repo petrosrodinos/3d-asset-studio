@@ -102,9 +102,9 @@ export const FigureList = forwardRef<FigureListHandle, FigureListProps>(function
   const isPending = modal?.mode === "create" ? createFigure.isPending : updateFigure.isPending;
 
   function handleConfirmDelete() {
-    if (!pendingDelete) return;
-    deleteFigure.mutate(pendingDelete.id);
-    setPendingDelete(null);
+    if (!pendingDelete || deleteFigure.isPending) return;
+    const id = pendingDelete.id;
+    deleteFigure.mutate(id, { onSettled: () => setPendingDelete(null) });
   }
 
   const compactThumbUrl = figureThumbUrl(activeFigure);
@@ -300,6 +300,7 @@ export const FigureList = forwardRef<FigureListHandle, FigureListProps>(function
         title={`Delete "${pendingDelete?.name}"?`}
         description="All skins, images, and 3D models for this figure will be permanently deleted."
         confirmLabel="Delete"
+        confirmLoading={deleteFigure.isPending}
         onConfirm={handleConfirmDelete}
         onCancel={() => setPendingDelete(null)}
         danger

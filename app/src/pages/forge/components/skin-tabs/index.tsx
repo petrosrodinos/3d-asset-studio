@@ -11,10 +11,11 @@ interface SkinTabsProps {
   skins: Skin[];
   figureId: string;
   onAddSkin: () => void;
-  onDeleteSkin: (skin: Skin) => void;
+  onDeleteSkin: (skin: Skin, opts?: { onSettled?: () => void }) => void;
+  skinDeleteInProgress?: boolean;
 }
 
-export function SkinTabs({ skins, figureId, onAddSkin, onDeleteSkin }: SkinTabsProps) {
+export function SkinTabs({ skins, figureId, onAddSkin, onDeleteSkin, skinDeleteInProgress = false }: SkinTabsProps) {
   const { activeSkin, setActiveSkin } = useForgeStore();
   const [pendingDelete, setPendingDelete] = useState<Skin | null>(null);
   const [editingSkin, setEditingSkin] = useState<Skin | null>(null);
@@ -38,10 +39,9 @@ export function SkinTabs({ skins, figureId, onAddSkin, onDeleteSkin }: SkinTabsP
   }
 
   function handleConfirmDelete() {
-    if (pendingDelete) {
-      onDeleteSkin(pendingDelete);
-      setPendingDelete(null);
-    }
+    if (!pendingDelete || skinDeleteInProgress) return;
+    const skin = pendingDelete;
+    onDeleteSkin(skin, { onSettled: () => setPendingDelete(null) });
   }
 
   return (
@@ -139,6 +139,7 @@ export function SkinTabs({ skins, figureId, onAddSkin, onDeleteSkin }: SkinTabsP
         title={`Delete skin "${pendingDelete?.name ?? "Skin"}"?`}
         description="All variants, images, and models under this skin will be permanently deleted."
         confirmLabel="Delete"
+        confirmLoading={skinDeleteInProgress}
         onConfirm={handleConfirmDelete}
         onCancel={() => setPendingDelete(null)}
         danger

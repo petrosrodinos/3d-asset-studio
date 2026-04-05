@@ -520,7 +520,7 @@ const imageModels: ImageModelDefinition[] = [
         available: false
     },
     {
-        id: "flux-1-1-pro-ultra-api",
+        id: "flux-pro/v1.1-ultra",
         name: "Black Forest Labs / Flux pro 1.1 ultra",
         provider: "Black Forest Labs",
         price_original: 0.078,
@@ -553,7 +553,7 @@ const imageModels: ImageModelDefinition[] = [
         available: true
     },
     {
-        id: "flux-1-1-pro-api",
+        id: "flux-pro/v1.1",
         name: "Black Forest Labs / Flux pro 1.1",
         provider: "Black Forest Labs",
         price_original: 0.052,
@@ -619,7 +619,7 @@ const imageModels: ImageModelDefinition[] = [
         available: false
     },
     {
-        id: "flux-1-pro-api",
+        id: "flux-pro",
         name: "Black Forest Labs / Flux pro",
         provider: "Black Forest Labs",
         price_original: 0.065,
@@ -655,6 +655,9 @@ const LEGACY_IMAGE_MODEL_IDS: Record<string, string> = {
     "flux-2-pro-text-to-image": "blackforestlabs/flux-2-pro",
     "flux-2-text-to-image": "blackforestlabs/flux-2",
     "flux-2-max": "blackforestlabs/flux-2-max",
+    "flux-1-pro-api": "flux-pro",
+    "flux-1-1-pro-api": "flux-pro/v1.1",
+    "flux-1-1-pro-ultra-api": "flux-pro/v1.1-ultra",
 };
 
 export function canonicalImageModelId(modelId: string): string {
