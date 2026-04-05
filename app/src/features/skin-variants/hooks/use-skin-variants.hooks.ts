@@ -18,7 +18,8 @@ import type {
 export function useCreateVariant() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ figureId, skinId }: CreateSkinVariantParams) => createVariant(figureId, skinId),
+    mutationFn: ({ figureId, skinId, ...seed }: CreateSkinVariantParams) =>
+      createVariant(figureId, skinId, seed),
     onSuccess: () => {
       toast.success("Variant created");
       void qc.invalidateQueries({ queryKey: ["figures"] });
@@ -31,8 +32,8 @@ export function useCreateVariant() {
 export function useUpdateVariant() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ figureId, skinId, variantCode, dto }: UpdateSkinVariantParams) =>
-      updateVariant(figureId, skinId, variantCode, dto),
+    mutationFn: ({ figureId, skinId, variantId, dto }: UpdateSkinVariantParams) =>
+      updateVariant(figureId, skinId, variantId, dto),
     onSuccess: () => {
       toast.success("Variant updated");
       void qc.invalidateQueries({ queryKey: ["figures"] });

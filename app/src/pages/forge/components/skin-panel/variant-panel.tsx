@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PromptEditor } from "@/pages/forge/components/prompt-editor";
 import { ImageGrid } from "@/pages/forge/components/image-grid";
 import { ImageUploader } from "@/pages/forge/components/image-uploader";
@@ -34,6 +34,10 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
     () => { qc.invalidateQueries({ queryKey: ["figures"] }); },
   );
 
+  useEffect(() => {
+    setName(variant.name ?? "");
+  }, [variant.id]);
+
   function handleNameBlur() {
     const trimmed = name.trim();
     const current = variant.name ?? "";
@@ -41,7 +45,7 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
     updateVariant.mutate({
       figureId,
       skinId: variant.skinId,
-      variantCode: variant.variant,
+      variantId: variant.id,
       dto: { name: trimmed || null },
     });
   }
@@ -92,6 +96,12 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
       </section>
 
       <section className="rounded-xl border border-border/80 bg-panel/40 p-4 ring-1 ring-white/5">
+        <div className="mb-3 space-y-1.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Image generation</p>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Describe the look you want and generate artwork for this variant. That image becomes the visual base when you build the 3D model below.
+          </p>
+        </div>
         <PromptEditor
           variant={variant}
           figureId={figureId}
@@ -102,7 +112,12 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
       </section>
 
       <section className="rounded-xl border border-border/80 bg-panel/40 p-4 ring-1 ring-white/5">
-        <p className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">Images</p>
+        <div className="mb-3 space-y-1.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Images</p>
+          <p className="text-xs text-slate-500 leading-relaxed">
+            Your uploads and generated images for this variant. Click a card to select it, then use Run 3D to turn that picture into a mesh.
+          </p>
+        </div>
         <ImageUploader onFile={handleUploadFile} disabled={uploadSkinImage.isPending} />
         <div className="mt-3">
           {variant.images.length > 0 ? (

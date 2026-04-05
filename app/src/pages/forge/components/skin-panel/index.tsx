@@ -39,8 +39,16 @@ export function SkinPanel({ skin, figureId, figureType, figureName }: SkinPanelP
     skin.variants.find((v) => v.id === activeVariantId) ?? skin.variants[0] ?? null;
 
   function handleAddVariant() {
+    const seed =
+      activeVariant != null
+        ? {
+            prompt: activeVariant.prompt,
+            negativePrompt: activeVariant.negativePrompt,
+            imageModel: activeVariant.imageModel,
+          }
+        : {};
     createVariant.mutate(
-      { figureId, skinId: skin.id },
+      { figureId, skinId: skin.id, ...seed },
       { onSuccess: (created) => setActiveVariantId(created.id) },
     );
   }

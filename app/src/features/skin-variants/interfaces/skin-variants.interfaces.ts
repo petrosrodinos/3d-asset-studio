@@ -51,12 +51,17 @@ export interface GenerateSkinImageResponse {
 export interface CreateSkinVariantParams {
   figureId: string;
   skinId: string;
+  name?: string;
+  /** If set, new variant starts with these values (typically copied from the active variant). */
+  prompt?: string | null;
+  negativePrompt?: string | null;
+  imageModel?: string | null;
 }
 
 export interface UpdateSkinVariantParams {
   figureId: string;
   skinId: string;
-  variantCode: string;
+  variantId: string;
   dto: UpdateSkinVariantDto;
 }
 

@@ -99,7 +99,7 @@ const imageModels: ImageModelDefinition[] = [
         },
     },
     {
-        id: "flux-2-max",
+        id: "blackforestlabs/flux-2-max",
         name: "Black Forest Labs / FLUX.2 Max",
         provider: "Black Forest Labs",
         tokens_original: usdToTokens(0.091, false),
@@ -107,7 +107,7 @@ const imageModels: ImageModelDefinition[] = [
         tokens: null,
         price: null,
         is_image_to_image: false,
-        available: true
+        available: true,
     },
     {
         id: "gpt-image-1-5",
@@ -176,7 +176,7 @@ const imageModels: ImageModelDefinition[] = [
         available: false
     },
     {
-        id: "flux-2-pro-text-to-image",
+        id: "blackforestlabs/flux-2-pro",
         name: "Black Forest Labs / FLUX.2 [pro]",
         provider: "Black Forest Labs",
         tokens_original: usdToTokens(0.039, false),
@@ -184,10 +184,10 @@ const imageModels: ImageModelDefinition[] = [
         tokens: null,
         price: null,
         is_image_to_image: false,
-        available: true
+        available: true,
     },
     {
-        id: "flux-2-text-to-image",
+        id: "blackforestlabs/flux-2",
         name: "Black Forest Labs / FLUX.2",
         provider: "Black Forest Labs",
         tokens_original: usdToTokens(0.016, false),
@@ -195,7 +195,7 @@ const imageModels: ImageModelDefinition[] = [
         tokens: null,
         price: null,
         is_image_to_image: false,
-        available: true
+        available: true,
     },
     {
         id: "gemini-3-pro-image",
@@ -649,3 +649,15 @@ export const ImageModels: ImageModel[] = imageModels.map((model) => ({
     tokens: model.tokens_original * MARKUP_FACTOR,
     price: model.price_original * MARKUP_FACTOR,
 }));
+
+/** Deprecated ids still sent by clients or stored on variants — map to current `ImageModels[].id`. */
+const LEGACY_IMAGE_MODEL_IDS: Record<string, string> = {
+    "flux-2-pro-text-to-image": "blackforestlabs/flux-2-pro",
+    "flux-2-text-to-image": "blackforestlabs/flux-2",
+    "flux-2-max": "blackforestlabs/flux-2-max",
+};
+
+export function canonicalImageModelId(modelId: string): string {
+    const t = modelId.trim();
+    return LEGACY_IMAGE_MODEL_IDS[t] ?? t;
+}

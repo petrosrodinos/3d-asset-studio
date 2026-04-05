@@ -2,7 +2,7 @@
  * AIML `/v1/images/generations` body from `ImageModels[].aiml_api` in `image-models.ts`.
  */
 
-import { ImageModels } from "../../config/models/image-models";
+import { canonicalImageModelId, ImageModels } from "../../config/models/image-models";
 
 /** AIML Qwen docs: base64 content uses a lowercase `data:image/...;base64,...` prefix. */
 function normalizeDataImageBase64Url(dataUrl: string): string {
@@ -36,7 +36,7 @@ export type AimlImageGenerationsBodyInput = {
  * Build JSON body for POST /v1/images/generations.
  */
 export function buildAimlImageGenerationsBody(input: AimlImageGenerationsBodyInput): Record<string, unknown> {
-  const id = input.internalModelId.trim();
+  const id = canonicalImageModelId(input.internalModelId.trim());
   const cfg = ImageModels.find((m) => m.id === id);
   const aimlModelId = cfg?.aiml_api?.modelId ?? id;
   const i2i = cfg?.aiml_api?.i2i;

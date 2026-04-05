@@ -68,6 +68,13 @@ export function PromptEditor({
   }, [variant.id, variant.imageModel, firstModelId, modelListKey]);
 
   useEffect(() => {
+    setPrompt(variant.prompt ?? "");
+    setNegPrompt(variant.negativePrompt ?? "");
+    setAiOpen(false);
+    setAiDescription("");
+  }, [variant.id]);
+
+  useEffect(() => {
     setSourceFile(null);
   }, [variant.id]);
 
@@ -108,7 +115,7 @@ export function PromptEditor({
     updateVariant.mutate({
       figureId,
       skinId: variant.skinId,
-      variantCode: variant.variant,
+      variantId: variant.id,
       dto: { prompt, negativePrompt: negPrompt, imageModel: model },
     });
   }

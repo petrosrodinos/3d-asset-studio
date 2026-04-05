@@ -2,6 +2,7 @@ import { AxiosInstance } from "axios";
 import FormData from "form-data";
 import { Readable } from "stream";
 import type { AxiosResponse } from "axios";
+import { canonicalImageModelId } from "../../config/models/image-models";
 import { createAimlHttpClient } from "./client";
 import { requireEnv } from "../../config/env";
 import { buildAimlImageGenerationCostsMetadata } from "../../lib/provider-costs-metadata";
@@ -76,9 +77,14 @@ export class AimlApiService {
   async generateImage(
     body: ImageGenerationRequest | Record<string, unknown>,
   ): Promise<{ data: ImageGenerationResponse; costsMetadata: Prisma.InputJsonValue }> {
+    const payload: Record<string, unknown> =
+      body && typeof body === "object" ? { ...(body as Record<string, unknown>) } : (body as Record<string, unknown>);
+    if (typeof payload.model === "string") {
+      payload.model = canonicalImageModelId(payload.model);
+    }
     const res: AxiosResponse<ImageGenerationResponse> = await this.http.post(
       "/v1/images/generations",
-      body,
+      payload,
     );
     return { data: res.data, costsMetadata: buildAimlImageGenerationCostsMetadata(res) };
   }

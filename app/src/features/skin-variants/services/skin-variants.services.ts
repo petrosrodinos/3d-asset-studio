@@ -1,6 +1,7 @@
 import { apiFetch, jsonInit } from "@/utils/apiClient";
 import type { SkinVariant } from "@/interfaces";
 import type {
+  CreateSkinVariantParams,
   GenerateAiPromptDto,
   GenerateAiPromptResponse,
   GenerateSkinImageDto,
@@ -8,20 +9,30 @@ import type {
   UpdateSkinVariantDto,
 } from "@/features/skin-variants/interfaces/skin-variants.interfaces";
 
-export async function createVariant(figureId: string, skinId: string): Promise<SkinVariant> {
+export async function createVariant(
+  figureId: string,
+  skinId: string,
+  body: Pick<CreateSkinVariantParams, "prompt" | "negativePrompt" | "imageModel" | "name"> = {},
+): Promise<SkinVariant> {
+  const { name, prompt, negativePrompt, imageModel } = body;
+  const payload: Record<string, unknown> = {};
+  if (name !== undefined) payload.name = name;
+  if (prompt !== undefined) payload.prompt = prompt;
+  if (negativePrompt !== undefined) payload.negativePrompt = negativePrompt;
+  if (imageModel !== undefined) payload.imageModel = imageModel;
   return apiFetch<SkinVariant>(`/api/figures/${figureId}/skins/${skinId}/variants`, {
     method: "POST",
-    ...jsonInit({}),
+    ...jsonInit(payload),
   });
 }
 
 export async function updateVariant(
   figureId: string,
   skinId: string,
-  variantCode: string,
+  variantId: string,
   dto: UpdateSkinVariantDto,
 ): Promise<SkinVariant> {
-  return apiFetch<SkinVariant>(`/api/figures/${figureId}/skins/${skinId}/variants/${variantCode}`, {
+  return apiFetch<SkinVariant>(`/api/figures/${figureId}/skins/${skinId}/variants/by-id/${variantId}`, {
     method: "PUT",
     ...jsonInit(dto),
   });

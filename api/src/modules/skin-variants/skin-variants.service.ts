@@ -1,12 +1,13 @@
 import { deleteGcsFiles } from "../../integrations/gcs/gcs.service";
 import { collectGcsKeysFromVariant } from "../../integrations/gcs/collectGcsAssetKeys";
-import type { CreateVariantInput, UpsertVariantInput } from "./interfaces/skin-variants.types";
+import type { CreateVariantInput, UpdateVariantByIdInput, UpsertVariantInput } from "./interfaces/skin-variants.types";
 import {
   getVariant as getVariantRepo,
   upsertVariant as upsertVariantRepo,
   createVariant as createVariantRepo,
   deleteVariantById as deleteVariantByIdRepo,
   findVariantWithGcsAssets,
+  updateVariantById as updateVariantByIdRepo,
 } from "./repositories/skin-variants.repository";
 import { getAiml } from "../../services";
 import * as skinImageSvc from "../skin-images/skin-images.service";
@@ -17,13 +18,13 @@ import {
   debitForImageModel,
   getDebitTokensForImageModel,
 } from "../tokens/tokens.service";
-import { ImageModels } from "../../config/models/image-models";
+import { canonicalImageModelId, ImageModels } from "../../config/models/image-models";
 import { buildAimlImageGenerationsBody } from "../../integrations/aimlapi/buildImageGenerationsBody";
 
 const MAX_SOURCE_IMAGE_DATA_URL_LENGTH = 12 * 1024 * 1024;
 
 function imageModelRequiresSourceImage(modelId: string): boolean {
-  return Boolean(ImageModels.find((m) => m.id === modelId)?.is_image_to_image);
+  return Boolean(ImageModels.find((m) => m.id === canonicalImageModelId(modelId))?.is_image_to_image);
 }
 
 function assertValidSourceImageDataUrl(dataUrl: string) {
@@ -37,6 +38,10 @@ function assertValidSourceImageDataUrl(dataUrl: string) {
 
 export async function upsertVariant(skinId: string, input: UpsertVariantInput) {
   return upsertVariantRepo(skinId, input);
+}
+
+export async function updateVariantById(skinId: string, variantId: string, input: UpdateVariantByIdInput) {
+  return updateVariantByIdRepo(skinId, variantId, input);
 }
 
 export async function getVariant(skinId: string, variant: string) {
@@ -68,7 +73,9 @@ export async function generateImageForVariant(
   const v = await getVariantRepo(skinId, variant);
   if (!v) throw new Error("Variant not found");
 
-  const model = (overrides.model ?? v.imageModel ?? IMAGES_CONFIG.DEFAULT_AIML_IMAGE_MODEL).trim();
+  const model = canonicalImageModelId(
+    (overrides.model ?? v.imageModel ?? IMAGES_CONFIG.DEFAULT_AIML_IMAGE_MODEL).trim(),
+  );
   const prompt = (overrides.prompt ?? v.prompt ?? "").trim();
   const neg = (overrides.negativePrompt ?? v.negativePrompt ?? "").trim();
   const sourceTrimmed = overrides.sourceImageDataUrl?.trim();

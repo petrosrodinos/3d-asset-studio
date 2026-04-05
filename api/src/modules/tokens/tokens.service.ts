@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { Prisma } from "../../generated/prisma/client";
 import { TokenUsageKind } from "../../generated/prisma/enums";
 import { prisma } from "../../integrations/db/client";
-import { ImageModels } from "../../config/models/image-models";
+import { canonicalImageModelId, ImageModels } from "../../config/models/image-models";
 import { TrippoModels } from "../../config/models/trippo-models";
 import {
   CHAT_PRICE_ORIGINAL_USD,
@@ -166,7 +166,8 @@ async function debitWithUsageTx(
 }
 
 export function getDebitTokensForImageModel(modelId: string): number {
-  const m = ImageModels.find((x) => x.id === modelId);
+  const id = canonicalImageModelId(modelId);
+  const m = ImageModels.find((x) => x.id === id);
   if (!m) {
     const err = new Error(`Unknown image model: ${modelId}`);
     (err as Error & { status?: number }).status = 400;
@@ -264,7 +265,8 @@ export async function debitForImageModel(
   idempotencyKey?: string | null,
   metadata?: Prisma.InputJsonValue | null,
 ) {
-  const m = ImageModels.find((x) => x.id === modelId);
+  const id = canonicalImageModelId(modelId);
+  const m = ImageModels.find((x) => x.id === id);
   if (!m) {
     const err = new Error(`Unknown image model: ${modelId}`);
     (err as Error & { status?: number }).status = 400;
@@ -330,7 +332,8 @@ export async function debitImageThenTrippoMesh(
   idempotencyKey?: string | null,
   metadata?: { image?: Prisma.InputJsonValue | null; trippo?: Prisma.InputJsonValue | null },
 ) {
-  const img = ImageModels.find((x) => x.id === imageModelId);
+  const resolvedImageModelId = canonicalImageModelId(imageModelId);
+  const img = ImageModels.find((x) => x.id === resolvedImageModelId);
   if (!img) {
     const err = new Error(`Unknown image model: ${imageModelId}`);
     (err as Error & { status?: number }).status = 400;

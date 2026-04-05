@@ -585,7 +585,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Optional display name\"\n}"
+              "raw": "{\n  \"name\": \"Optional display name\",\n  \"prompt\": null,\n  \"negativePrompt\": null,\n  \"imageModel\": null\n}"
             }
           }
         },
@@ -627,13 +627,13 @@
             "method": "PUT",
             "header": [{ "key": "Content-Type", "value": "application/json" }],
             "url": {
-              "raw": "{{baseUrl}}/api/figures/:figureId/skins/:skinId/variants/:variant",
+              "raw": "{{baseUrl}}/api/figures/:figureId/skins/:skinId/variants/by-id/:id",
               "host": ["{{baseUrl}}"],
-              "path": ["api", "figures", ":figureId", "skins", ":skinId", "variants", ":variant"],
+              "path": ["api", "figures", ":figureId", "skins", ":skinId", "variants", "by-id", ":id"],
               "variable": [
                 { "key": "figureId", "value": "figure-id-here" },
                 { "key": "skinId", "value": "skin-id-here" },
-                { "key": "variant", "value": "A" }
+                { "key": "id", "value": "variant-mongodb-id" }
               ]
             },
             "body": {

@@ -4,7 +4,7 @@ import { Receipt, Zap } from "lucide-react";
 import type { PurchaseRecordDto, TokenUsageRecordDto } from "@/features/billing/interfaces/billing.interfaces";
 import { cn } from "@/utils/cn";
 import { formatEur } from "@/features/billing/utils/format";
-import { formatUsageKind } from "../utils";
+import { formatUsageKind, formatUsageOperation } from "../utils";
 import { PurchaseHistoryTableSkeleton, TokenUsageTableSkeleton } from "./BillingSkeletons";
 import { BillingEmptyState } from "./BillingEmptyState";
 
@@ -135,7 +135,6 @@ export function BillingActivity({
                     <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Model</th>
                     <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Operation</th>
                     <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Tokens</th>
-                    <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Costs meta</th>
                     <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Date</th>
                   </tr>
                 </thead>
@@ -156,14 +155,8 @@ export function BillingActivity({
                       <td className="px-5 py-3.5 text-slate-400 font-mono text-xs break-all max-w-40 md:max-w-none">
                         {row.modelId}
                       </td>
-                      <td className="px-5 py-3.5 text-slate-500 text-xs">{row.operation ?? "—"}</td>
+                      <td className="px-5 py-3.5 text-slate-500 text-xs">{formatUsageOperation(row.operation)}</td>
                       <td className="px-5 py-3.5 font-mono tabular-nums text-slate-200">{row.tokens}</td>
-                      <td
-                        className="px-5 py-3.5 text-slate-500 text-xs max-w-56 truncate"
-                        title={row.metadata ? JSON.stringify(row.metadata) : undefined}
-                      >
-                        {row.metadata ? "Yes" : "—"}
-                      </td>
                       <td className="px-5 py-3.5 text-slate-500 whitespace-nowrap">
                         {new Date(row.createdAt).toLocaleString()}
                       </td>

@@ -41,7 +41,6 @@ export function TokenUsageTableSkeleton() {
         <Skeleton className="h-3 w-12" />
         <Skeleton className="h-3 w-16" />
         <Skeleton className="h-3 w-12" />
-        <Skeleton className="h-3 w-16" />
         <Skeleton className="h-3 w-10" />
       </div>
       <div className="divide-y divide-border/80">
@@ -51,7 +50,6 @@ export function TokenUsageTableSkeleton() {
             <Skeleton className="h-4 flex-1 min-w-24 max-w-48" />
             <Skeleton className="h-4 w-20" />
             <Skeleton className="h-4 w-8" />
-            <Skeleton className="h-4 w-10" />
             <Skeleton className="h-4 w-32" />
           </div>
         ))}

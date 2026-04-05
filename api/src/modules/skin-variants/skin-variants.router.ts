@@ -16,17 +16,19 @@ router.delete("/by-id/:id", async (req: Request<{ id: string }>, res: Response, 
   } catch (err) { next(err); }
 });
 
+router.put("/by-id/:id", async (req: Request<{ skinId: string; id: string }>, res: Response, next: NextFunction) => {
+  try {
+    const updated = await variantsSvc.updateVariantById(req.params.skinId, req.params.id, req.body);
+    if (!updated) return res.status(404).json({ error: "Variant not found" });
+    res.json(updated);
+  } catch (err) { next(err); }
+});
+
 router.get("/:variant", async (req: Request<{ skinId: string; variant: string }>, res: Response, next: NextFunction) => {
   try {
     const v = await variantsSvc.getVariant(req.params.skinId, req.params.variant);
     if (!v) return res.status(404).json({ error: "Variant not found" });
     res.json(v);
-  } catch (err) { next(err); }
-});
-
-router.put("/:variant", async (req: Request<{ skinId: string; variant: string }>, res: Response, next: NextFunction) => {
-  try {
-    res.json(await variantsSvc.upsertVariant(req.params.skinId, { ...req.body, variant: req.params.variant }));
   } catch (err) { next(err); }
 });
 

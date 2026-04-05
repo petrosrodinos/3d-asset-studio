@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { PromptEditor } from "@/pages/forge/components/prompt-editor";
 import { ImageGrid } from "@/pages/forge/components/image-grid";
 import { ImageUploader } from "@/pages/forge/components/image-uploader";
@@ -34,6 +34,10 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
     () => { qc.invalidateQueries({ queryKey: ["figures"] }); },
   );
 
+  useEffect(() => {
+    setName(variant.name ?? "");
+  }, [variant.id]);
+
   function handleNameBlur() {
     const trimmed = name.trim();
     const current = variant.name ?? "";
@@ -41,7 +45,7 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
     updateVariant.mutate({
       figureId,
       skinId: variant.skinId,
-      variantCode: variant.variant,
+      variantId: variant.id,
       dto: { name: trimmed || null },
     });
   }

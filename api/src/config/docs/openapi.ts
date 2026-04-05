@@ -106,7 +106,12 @@ export const OPEN_API_DOCUMENT = {
       },
       VariantCreate: {
         type: "object",
-        properties: { name: { type: "string", description: "Display name for the new variant (letter A, B, C… assigned by server)" } },
+        properties: {
+          name: { type: "string", description: "Display name for the new variant (letter A, B, C… assigned by server)" },
+          prompt: { type: "string", nullable: true },
+          negativePrompt: { type: "string", nullable: true },
+          imageModel: { type: "string", nullable: true, description: "Optional seed (e.g. copy from active variant); stored on the new row only" },
+        },
       },
       VariantUpsert: {
         type: "object",
@@ -838,7 +843,7 @@ export const OPEN_API_DOCUMENT = {
     "/api/figures/{figureId}/skins/{skinId}/variants": {
       post: {
         tags: ["Variants"],
-        summary: "Create variant (server assigns next label A, B, C, …)",
+        summary: "Create variant (server assigns next label A, B, C, …). Optional prompt/model fields seed the new row without linking variants.",
         security: [{ cookieAuth: [] }],
         parameters: [
           { name: "figureId", in: "path", required: true, schema: { type: "string" } },
@@ -849,6 +854,22 @@ export const OPEN_API_DOCUMENT = {
       },
     },
     "/api/figures/{figureId}/skins/{skinId}/variants/by-id/{id}": {
+      put: {
+        tags: ["Variants"],
+        summary: "Update variant by database id (prompt, model, name, etc.)",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: "figureId", in: "path", required: true, schema: { type: "string" } },
+          { name: "skinId", in: "path", required: true, schema: { type: "string" } },
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
+        ],
+        requestBody: { required: false, content: { "application/json": { schema: { $ref: "#/components/schemas/VariantUpsert" } } } },
+        responses: {
+          "200": jsonContent({ type: "object", additionalProperties: true }),
+          "404": errorContent("Not found"),
+          "401": errorContent("Unauthorized"),
+        },
+      },
       delete: {
         tags: ["Variants"],
         summary: "Delete variant by database id",
@@ -871,18 +892,6 @@ export const OPEN_API_DOCUMENT = {
           { name: "variant", in: "path", required: true, schema: { type: "string" } },
         ],
         responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "404": errorContent("Not found"), "401": errorContent("Unauthorized") },
-      },
-      put: {
-        tags: ["Variants"],
-        summary: "Create or update variant settings (prompt, model, etc.)",
-        security: [{ cookieAuth: [] }],
-        parameters: [
-          { name: "figureId", in: "path", required: true, schema: { type: "string" } },
-          { name: "skinId", in: "path", required: true, schema: { type: "string" } },
-          { name: "variant", in: "path", required: true, schema: { type: "string" } },
-        ],
-        requestBody: { required: false, content: { "application/json": { schema: { $ref: "#/components/schemas/VariantUpsert" } } } },
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "401": errorContent("Unauthorized") },
       },
     },
     "/api/figures/{figureId}/skins/{skinId}/variants/{variant}/generate-image": {
