@@ -1,13 +1,16 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
+import { useAuth } from "@/features/auth/hooks/use-auth.hooks";
+import { TokenPacksGrid } from "@/features/billing/components/TokenPacksGrid";
+import { BILLING_PACK_QUERY_PARAM } from "@/features/billing/constants";
+import { useCheckout, usePacks } from "@/features/billing/hooks/use-billing.hooks";
 import { usePricingCatalog } from "@/features/pricing/hooks/use-pricing.hooks";
 import type { PricingImageModelDto } from "@/features/pricing/interfaces/pricing.interfaces";
+import { LANDING_PACKS_SUBTITLE, LANDING_PACKS_TITLE } from "@/pages/landing/constants";
 import { cn } from "@/utils/cn";
-
-const eur = (amount: number) => new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(amount);
 
 const usd = (amount: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 3 }).format(amount);
 
@@ -42,9 +45,21 @@ function CatalogSkeleton() {
 }
 
 export default function PricingPage() {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const { data, isPending, isError, error, refetch } = usePricingCatalog();
+  const packsQuery = usePacks();
+  const checkoutMutation = useCheckout();
   const [query, setQuery] = useState("");
   const [availableOnly, setAvailableOnly] = useState(false);
+
+  function handlePackAction(packId: string) {
+    if (user) {
+      checkoutMutation.mutate(packId);
+      return;
+    }
+    navigate(`/register?${BILLING_PACK_QUERY_PARAM}=${encodeURIComponent(packId)}`);
+  }
 
   const filteredImageModels = useMemo(() => {
     if (!data) return [];
@@ -60,7 +75,7 @@ export default function PricingPage() {
 
   if (isPending) {
     return (
-      <div className="h-full min-h-0 min-w-0 overflow-y-auto overflow-x-hidden bg-surface">
+      <div className="flex min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-surface">
         <CatalogSkeleton />
       </div>
     );
@@ -68,7 +83,7 @@ export default function PricingPage() {
 
   if (isError || !data) {
     return (
-      <div className="h-full min-h-0 min-w-0 overflow-y-auto overflow-x-hidden flex flex-col items-center justify-center gap-4 px-6 bg-surface">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col items-center justify-center gap-4 overflow-y-auto overflow-x-hidden bg-surface px-6">
         <p className="text-sm text-slate-400 text-center max-w-sm">{error instanceof Error ? error.message : "Could not load pricing."}</p>
         <Button type="button" variant="secondary" onClick={() => void refetch()}>
           Retry
@@ -77,10 +92,10 @@ export default function PricingPage() {
     );
   }
 
-  const { rates, packs, trippoModels } = data;
+  const { rates, trippoModels } = data;
 
   return (
-    <div className="h-full min-h-0 min-w-0 overflow-y-auto overflow-x-hidden bg-surface relative">
+    <div className="relative flex min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-surface">
       <div
         className="pointer-events-none absolute inset-x-0 top-0 h-72 opacity-90"
         aria-hidden
@@ -115,31 +130,36 @@ export default function PricingPage() {
           </div>
         </section>
 
-        <section className="space-y-5">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <h2 className="text-xl font-semibold text-slate-100" style={{ fontFamily: "Syne, system-ui, sans-serif" }}>
-                Token packs
-              </h2>
-              <p className="text-xs text-slate-500 mt-1">Same packs as billing — pay in EUR via Stripe.</p>
-            </div>
-            <Link to="/settings/billing" className={cn("inline-flex items-center justify-center rounded font-medium transition-colors", "bg-panel border border-border text-slate-300 hover:bg-white/5 text-xs px-2.5 py-1 h-9")}>
-              Buy tokens
-            </Link>
+        <section
+          id="token-packs"
+          className="relative -mx-4 border-t border-border/60 bg-surface/20 px-4 py-12 sm:-mx-6 sm:px-6 sm:py-16"
+          aria-labelledby="pricing-token-packs-heading"
+        >
+          <div className="max-w-2xl">
+            <p
+              className={cn(
+                "font-mono text-xs font-medium uppercase tracking-widest text-accent-light/90",
+              )}
+            >
+              Pricing
+            </p>
+            <h2
+              id="pricing-token-packs-heading"
+              className="mt-3 text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl"
+            >
+              {LANDING_PACKS_TITLE}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-slate-400 sm:text-base">{LANDING_PACKS_SUBTITLE}</p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {packs.map((pack, i) => (
-              <article key={pack.id} className={cn("rounded-xl border bg-panel/90 px-5 py-5 flex flex-col gap-2 transition-colors hover:border-accent/30", pack.id === "creator" ? "border-accent/35 shadow-[0_0_24px_-8px_rgba(124,58,237,0.35)]" : "border-border")} style={{ animation: `msgIn 0.4s ease-out ${0.06 * i}s both` }}>
-                <div className="flex items-center justify-between gap-2">
-                  <h3 className="font-semibold text-slate-100">{pack.name}</h3>
-                  {pack.id === "creator" && <span className="text-[0.65rem] uppercase tracking-wider tag-violet px-2 py-0.5 rounded">Popular</span>}
-                </div>
-                <p className="text-2xl font-mono font-semibold tabular-nums text-slate-200 mt-1">{eur(pack.price)}</p>
-                <p className="text-sm text-slate-500">
-                  <span className="font-mono tabular-nums text-accent-light/90">{pack.tokens}</span> tokens
-                </p>
-              </article>
-            ))}
+          <div className="mt-10">
+            <TokenPacksGrid
+              packs={packsQuery.data}
+              isLoading={packsQuery.isLoading}
+              onPackAction={handlePackAction}
+              busyPackId={checkoutMutation.isPending ? checkoutMutation.variables ?? null : null}
+              isActionLocked={checkoutMutation.isPending}
+              primaryCtaLabel={user ? undefined : "Get started"}
+            />
           </div>
         </section>
 

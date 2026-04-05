@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/use-auth.hooks";
 import { Spinner } from "@/components/ui/Spinner";
 import { Shell } from "@/components/layouts/Shell";
+import { MarketingLayout } from "@/components/layouts/MarketingLayout";
 import LoginPage from "@/pages/login";
 import RegisterPage from "@/pages/register";
 import ForgePage from "@/pages/forge";
@@ -66,24 +67,24 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingRoute />} />
-      <Route
-        path="/login"
-        element={
-          <GuestOnly>
-            <LoginPage />
-          </GuestOnly>
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          <GuestOnly>
-            <RegisterPage />
-          </GuestOnly>
-        }
-      />
-      <Route path="/pricing" element={<Shell />}>
-        <Route index element={<PricingPage />} />
+      <Route element={<MarketingLayout />}>
+        <Route
+          path="/login"
+          element={
+            <GuestOnly>
+              <LoginPage />
+            </GuestOnly>
+          }
+        />
+        <Route
+          path="/register"
+          element={
+            <GuestOnly>
+              <RegisterPage />
+            </GuestOnly>
+          }
+        />
+        <Route path="/pricing" element={<PricingPage />} />
       </Route>
       <Route
         element={

@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
-import { LandingNav } from "@/pages/landing/components/LandingNav";
 
 interface AuthPageShellProps {
   title: string;
@@ -12,9 +11,8 @@ interface AuthPageShellProps {
 
 export function AuthPageShell({ title, subtitle, icon: Icon, children, footer }: AuthPageShellProps) {
   return (
-    <div className="landing-mesh relative flex min-h-svh flex-col text-slate-200">
-      <LandingNav />
-      <main className="relative flex flex-1 flex-col items-center justify-center px-4 py-10 sm:py-14">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+      <main className="relative flex min-h-0 flex-1 flex-col items-center justify-center px-4 py-10 sm:py-14">
         <div
           className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-accent/12 via-accent/5 to-transparent"
           aria-hidden

@@ -73,30 +73,35 @@ export function LandingNav() {
               {LANDING_NAV_DASHBOARD}
             </Link>
           ) : (
-            <>
+            <div
+              className="ml-1 flex items-stretch rounded-lg border border-border/80 bg-surface/50 p-0.5 shadow-sm ring-1 ring-white/[0.06]"
+              role="group"
+              aria-label="Account"
+            >
               <Link
                 to="/login"
                 className={cn(
-                  "rounded-md px-3 py-1.5 text-xs transition-colors",
+                  "flex items-center rounded-md px-3 py-1.5 text-xs transition-colors",
                   path === "/login"
-                    ? "border border-accent/45 bg-accent/15 font-medium text-accent-light"
+                    ? "bg-accent/15 font-medium text-accent-light ring-1 ring-accent/35"
                     : "text-slate-400 hover:bg-white/5 hover:text-slate-200",
                 )}
               >
                 Log in
               </Link>
+              <span className="my-1 w-px shrink-0 self-stretch bg-border/70" aria-hidden />
               <Link
                 to="/register"
                 className={cn(
-                  "rounded-md border px-3 py-1.5 text-xs font-medium transition-colors",
+                  "flex items-center rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
                   path === "/register"
-                    ? "active-mode-btn border-accent/60 text-accent-light"
-                    : "border-accent/45 bg-accent/10 text-accent-light hover:bg-accent/20",
+                    ? "bg-accent/20 text-accent-light ring-1 ring-accent/45"
+                    : "text-accent-light hover:bg-accent/15",
                 )}
               >
                 Sign up
               </Link>
-            </>
+            </div>
           )}
         </nav>
 
@@ -147,29 +152,39 @@ export function LandingNav() {
               {LANDING_NAV_DASHBOARD}
             </Link>
           ) : (
-            <>
-              <Link
-                to="/login"
-                className={cn(
-                  linkClassMobile,
-                  path === "/login" && "border border-accent/45 bg-accent/10 font-medium text-accent-light",
-                )}
-                onClick={closeMobile}
-              >
-                Log in
-              </Link>
-              <Link
-                to="/register"
-                className={cn(
-                  linkClassMobile,
-                  "border border-accent/45 bg-accent/15 font-medium text-accent-light",
-                  path === "/register" && "bg-accent/20",
-                )}
-                onClick={closeMobile}
-              >
-                Sign up
-              </Link>
-            </>
+            <div
+              className="mt-2 border-t border-border/50 pt-2"
+              role="group"
+              aria-label="Account"
+            >
+              <div className="flex gap-0.5 rounded-xl border border-border/80 bg-surface/50 p-1 ring-1 ring-white/[0.06]">
+                <Link
+                  to="/login"
+                  className={cn(
+                    "flex flex-1 items-center justify-center rounded-lg px-3 py-2.5 text-sm transition-colors",
+                    path === "/login"
+                      ? "bg-accent/15 font-medium text-accent-light ring-1 ring-accent/35"
+                      : "text-slate-300 hover:bg-white/5 hover:text-slate-100",
+                  )}
+                  onClick={closeMobile}
+                >
+                  Log in
+                </Link>
+                <span className="my-1.5 w-px shrink-0 self-stretch bg-border/70" aria-hidden />
+                <Link
+                  to="/register"
+                  className={cn(
+                    "flex flex-1 items-center justify-center rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                    path === "/register"
+                      ? "bg-accent/20 text-accent-light ring-1 ring-accent/45"
+                      : "text-accent-light hover:bg-accent/15",
+                  )}
+                  onClick={closeMobile}
+                >
+                  Sign up
+                </Link>
+              </div>
+            </div>
           )}
         </nav>
       </div>

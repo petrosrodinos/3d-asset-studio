@@ -38,7 +38,11 @@ app.use(
         callback(null, true);
         return;
       }
-      callback(null, env.corsAllowedOrigins.includes(origin));
+      const allowed = env.corsAllowedOrigins.includes(origin);
+      if (!allowed) {
+        console.log("[cors] blocked origin:", origin);
+      }
+      callback(null, allowed);
     },
     credentials: true,
   }),
