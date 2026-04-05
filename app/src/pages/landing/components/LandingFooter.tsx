@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LANDING_BRAND, LANDING_FOOTER_TAGLINE } from "@/pages/landing/constants";
+import { LANDING_BRAND, LANDING_FOOTER_TAGLINE, PRICING_NAV_PATH } from "@/pages/landing/constants";
 
 export function LandingFooter() {
   return (
@@ -16,7 +16,7 @@ export function LandingFooter() {
           <a href="#use-cases" className="text-slate-500 transition-colors hover:text-accent-light">
             Use cases
           </a>
-          <Link to="/pricing" className="text-slate-500 transition-colors hover:text-accent-light">
+          <Link to={PRICING_NAV_PATH} className="text-slate-500 transition-colors hover:text-accent-light">
             Pricing
           </Link>
           <Link to="/login" className="text-slate-500 transition-colors hover:text-accent-light">

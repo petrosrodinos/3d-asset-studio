@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import type { MouseEvent, RefObject } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/use-auth.hooks";
@@ -8,12 +9,82 @@ import {
   LANDING_BRAND,
   LANDING_NAV_ANCHORS,
   LANDING_NAV_DASHBOARD,
+  PRICING_NAV_PATH,
 } from "@/pages/landing/constants";
+
+function useLandingSectionSpy(enabled: boolean, headerRef: RefObject<HTMLElement | null>) {
+  const [activeHash, setActiveHash] = useState<string | null>(null);
+  const rafRef = useRef<number>(0);
+
+  const updateActive = useCallback(() => {
+    if (!enabled) return;
+    const header = headerRef.current;
+    const headerBottom = header?.getBoundingClientRect().bottom ?? 56;
+    const vh = typeof window !== "undefined" ? window.innerHeight : 800;
+    // Horizontal "reading line" below the nav — which section contains this Y wins (avoids highlighting the previous section while the next one is already on screen).
+    const readingY = Math.min(headerBottom + vh * 0.22, vh * 0.42);
+
+    let next: string | null = null;
+    for (const item of LANDING_NAV_ANCHORS) {
+      const el = document.getElementById(item.href.slice(1));
+      if (!el) continue;
+      const { top, bottom } = el.getBoundingClientRect();
+      if (top <= readingY && bottom >= readingY) {
+        next = item.href;
+        break;
+      }
+    }
+
+    if (next === null) {
+      let lastAbove: string | null = null;
+      for (const item of LANDING_NAV_ANCHORS) {
+        const el = document.getElementById(item.href.slice(1));
+        if (!el) continue;
+        if (el.getBoundingClientRect().top <= readingY) {
+          lastAbove = item.href;
+        }
+      }
+      next = lastAbove;
+    }
+
+    setActiveHash((prev) => (prev === next ? prev : next));
+  }, [enabled, headerRef]);
+
+  useEffect(() => {
+    if (!enabled) {
+      setActiveHash(null);
+      return;
+    }
+    updateActive();
+    const onScrollOrResize = () => {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(updateActive);
+    };
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize);
+    const ro =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(onScrollOrResize)
+        : null;
+    const el = headerRef.current;
+    if (ro && el) ro.observe(el);
+    return () => {
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
+      cancelAnimationFrame(rafRef.current);
+      ro?.disconnect();
+    };
+  }, [enabled, headerRef, updateActive]);
+
+  return activeHash;
+}
 
 export function LandingNav() {
   const path = useLocation().pathname;
   const { user, loading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const headerRef = useRef<HTMLElement | null>(null);
+  const activeSectionHash = useLandingSectionSpy(path === "/", headerRef);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -30,16 +101,37 @@ export function LandingNav() {
 
   const linkClassMobile = "rounded-lg px-3 py-2.5 text-sm text-slate-300 transition-colors hover:bg-white/5 hover:text-slate-100";
   const linkClassDesktop = "rounded-md px-2 py-1.5 text-xs text-slate-500 transition-colors hover:bg-white/5 hover:text-slate-200 sm:px-3";
+  const sectionLinkActive =
+    "bg-accent/15 font-medium text-accent-light ring-1 ring-accent/30 shadow-[0_0_0_1px_rgba(124,58,237,0.12)]";
 
   const closeMobile = () => setMobileOpen(false);
 
+  function handlePricingNavClick(e: MouseEvent<HTMLAnchorElement>) {
+    closeMobile();
+    if (path === "/pricing") {
+      e.preventDefault();
+      document.getElementById("token-packs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.replaceState(null, "", PRICING_NAV_PATH);
+    }
+  }
+
   return (
-    <header className="sticky top-0 z-40 border-b border-border/80 bg-panel/80 backdrop-blur-md supports-[backdrop-filter]:bg-panel/65">
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-40 border-b border-border/80 bg-panel/80 backdrop-blur-md supports-[backdrop-filter]:bg-panel/65"
+    >
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
         <Link
-          to="/"
+          to="/#hero"
           className="min-w-0 shrink-0 font-sans text-sm font-semibold tracking-tight text-accent-light transition-colors hover:text-slate-100"
-          onClick={closeMobile}
+          onClick={(e) => {
+            closeMobile();
+            if (path === "/") {
+              e.preventDefault();
+              document.getElementById("hero")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              window.history.replaceState(null, "", "/#hero");
+            }
+          }}
         >
           {LANDING_BRAND}
         </Link>
@@ -47,13 +139,19 @@ export function LandingNav() {
         <nav className="hidden items-center justify-end gap-1 md:flex md:gap-2" aria-label="Marketing">
           {path === "/" &&
             LANDING_NAV_ANCHORS.map((item) => (
-              <a key={item.href} href={item.href} className={linkClassDesktop}>
+              <a
+                key={item.href}
+                href={item.href}
+                className={cn(linkClassDesktop, activeSectionHash === item.href && sectionLinkActive)}
+                aria-current={activeSectionHash === item.href ? "location" : undefined}
+              >
                 {item.label}
               </a>
             ))}
           <Link
-            to="/pricing"
+            to={PRICING_NAV_PATH}
             className="rounded-md px-3 py-1.5 text-xs text-slate-400 transition-colors hover:bg-white/5 hover:text-slate-200"
+            onClick={handlePricingNavClick}
           >
             Pricing
           </Link>
@@ -127,11 +225,17 @@ export function LandingNav() {
         <nav className="flex flex-col gap-0.5 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]" aria-label="Marketing mobile">
           {path === "/" &&
             LANDING_NAV_ANCHORS.map((item) => (
-              <a key={item.href} href={item.href} className={linkClassMobile} onClick={closeMobile}>
+              <a
+                key={item.href}
+                href={item.href}
+                className={cn(linkClassMobile, activeSectionHash === item.href && sectionLinkActive)}
+                aria-current={activeSectionHash === item.href ? "location" : undefined}
+                onClick={closeMobile}
+              >
                 {item.label}
               </a>
             ))}
-          <Link to="/pricing" className={linkClassMobile} onClick={closeMobile}>
+          <Link to={PRICING_NAV_PATH} className={linkClassMobile} onClick={handlePricingNavClick}>
             Pricing
           </Link>
           {loading ? (

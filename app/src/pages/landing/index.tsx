@@ -1,4 +1,5 @@
-import { Link } from "react-router-dom";
+import { useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import { LandingNav } from "@/pages/landing/components/LandingNav";
 import { LandingHeroVisual } from "@/pages/landing/components/LandingHeroVisual";
 import { LandingFeatureSections } from "@/pages/landing/components/LandingFeatureSections";
@@ -13,6 +14,17 @@ import { cn } from "@/utils/cn";
 import { LANDING_CTA_PRIMARY, LANDING_CTA_SECONDARY, LANDING_HERO_BADGE, LANDING_HERO_SUBTITLE, LANDING_HERO_TITLE, LANDING_SIGN_IN_LINK, LANDING_SIGN_IN_PROMPT } from "@/pages/landing/constants";
 
 export default function LandingPage() {
+  const location = useLocation();
+
+  useEffect(() => {
+    if (location.hash !== "#hero") return;
+    const el = document.getElementById("hero");
+    if (!el) return;
+    requestAnimationFrame(() => {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [location.pathname, location.hash]);
+
   return (
     <div className="landing-mesh relative flex min-h-svh flex-col text-slate-200">
       <LandingHead />
@@ -25,7 +37,11 @@ export default function LandingPage() {
           <div className="absolute -left-32 top-1/4 h-72 w-72 rounded-full bg-accent/5 blur-3xl" />
           <div className="absolute -right-24 bottom-1/4 h-64 w-64 rounded-full bg-accent-light/5 blur-3xl" />
         </div>
-        <section className="relative z-10 mx-auto grid w-full min-w-0 max-w-6xl flex-1 items-center gap-10 px-3 py-10 sm:gap-16 sm:px-6 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] lg:items-start lg:gap-14 lg:py-20" aria-labelledby="hero-title">
+        <section
+          id="hero"
+          className="relative z-10 mx-auto grid w-full min-w-0 max-w-6xl flex-1 scroll-mt-14 items-center gap-10 px-3 py-10 sm:gap-16 sm:px-6 sm:py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.12fr)] lg:items-start lg:gap-14 lg:py-20"
+          aria-labelledby="hero-title"
+        >
           <div className="min-w-0 max-w-xl lg:max-w-none">
             <p className={cn("landing-rise font-mono text-xs font-medium uppercase tracking-widest text-accent-light/90")}>{LANDING_HERO_BADGE}</p>
             <h1 id="hero-title" className="landing-rise landing-rise-delay-1 mt-4 font-sans text-3xl font-bold leading-[1.08] tracking-tight text-slate-50 sm:text-4xl sm:leading-[1.06] lg:text-[2.75rem]">

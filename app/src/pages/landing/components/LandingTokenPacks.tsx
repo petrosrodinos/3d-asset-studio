@@ -22,7 +22,7 @@ export function LandingTokenPacks() {
 
   return (
     <section
-      id="token-packs"
+      id="pricing"
       className="relative z-10 border-t border-border/60 bg-surface/20"
       aria-labelledby="token-packs-heading"
     >

@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -46,12 +46,12 @@ function CatalogSkeleton() {
 
 export default function PricingPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { data, isPending, isError, error, refetch } = usePricingCatalog();
   const packsQuery = usePacks();
   const checkoutMutation = useCheckout();
   const [query, setQuery] = useState("");
-  const [availableOnly, setAvailableOnly] = useState(false);
 
   function handlePackAction(packId: string) {
     if (user) {
@@ -65,13 +65,21 @@ export default function PricingPage() {
     if (!data) return [];
     const q = query.trim().toLowerCase();
     return data.imageModels.filter((m) => {
-      if (availableOnly && !m.available) return false;
       if (!q) return true;
       return m.name.toLowerCase().includes(q) || m.provider.toLowerCase().includes(q) || m.id.toLowerCase().includes(q);
     });
-  }, [data, query, availableOnly]);
+  }, [data, query]);
 
   const grouped = useMemo(() => groupModelsByProvider(filteredImageModels), [filteredImageModels]);
+
+  useEffect(() => {
+    if (location.hash !== "#token-packs") return;
+    if (isPending || isError) return;
+    const run = () => {
+      document.getElementById("token-packs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    requestAnimationFrame(() => requestAnimationFrame(run));
+  }, [location.pathname, location.hash, isPending, isError]);
 
   if (isPending) {
     return (
@@ -114,9 +122,7 @@ export default function PricingPage() {
       <div className="relative max-w-6xl mx-auto min-w-0 px-4 sm:px-6 py-10 pb-16 space-y-14">
         <header className="space-y-4">
           <p className="text-[0.65rem] uppercase tracking-[0.35em] text-slate-500 font-medium">Wallet &amp; models</p>
-          <h1 className="text-3xl sm:text-4xl font-bold text-slate-100 tracking-tight leading-tight" style={{ fontFamily: "Syne, system-ui, sans-serif" }}>
-            Pricing &amp; token rates
-          </h1>
+          <h1 className="text-3xl sm:text-4xl font-bold text-slate-100 tracking-tight leading-tight">Pricing &amp; token rates</h1>
           <p className="text-slate-400 text-sm max-w-2xl leading-relaxed">Every action debits wallet tokens. Top up with packs, then spend on image models, mesh/rig steps, and chat. Listed EUR figures are indicative provider cost; packs are charged in EUR at checkout.</p>
         </header>
 
@@ -125,48 +131,26 @@ export default function PricingPage() {
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-1">
               <p className="text-2xl font-mono font-semibold tabular-nums text-accent-light">{rates.tokensPerUsd}</p>
-              <p className="text-xs text-slate-500">tokens per 1 EUR (reference rate)</p>
+              <p className="text-xs text-slate-500">tokens per 1 EUR</p>
             </div>
           </div>
         </section>
 
-        <section
-          id="token-packs"
-          className="relative -mx-4 border-t border-border/60 bg-surface/20 px-4 py-12 sm:-mx-6 sm:px-6 sm:py-16"
-          aria-labelledby="pricing-token-packs-heading"
-        >
+        <section id="token-packs" className="relative -mx-4 scroll-mt-14 border-t border-border/60 bg-surface/20 px-4 py-12 sm:-mx-6 sm:px-6 sm:py-16" aria-labelledby="pricing-token-packs-heading">
           <div className="max-w-2xl">
-            <p
-              className={cn(
-                "font-mono text-xs font-medium uppercase tracking-widest text-accent-light/90",
-              )}
-            >
-              Pricing
-            </p>
-            <h2
-              id="pricing-token-packs-heading"
-              className="mt-3 text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl"
-            >
+            <p className={cn("font-mono text-xs font-medium uppercase tracking-widest text-accent-light/90")}>Pricing</p>
+            <h2 id="pricing-token-packs-heading" className="mt-3 text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">
               {LANDING_PACKS_TITLE}
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-slate-400 sm:text-base">{LANDING_PACKS_SUBTITLE}</p>
           </div>
           <div className="mt-10">
-            <TokenPacksGrid
-              packs={packsQuery.data}
-              isLoading={packsQuery.isLoading}
-              onPackAction={handlePackAction}
-              busyPackId={checkoutMutation.isPending ? checkoutMutation.variables ?? null : null}
-              isActionLocked={checkoutMutation.isPending}
-              primaryCtaLabel={user ? undefined : "Get started"}
-            />
+            <TokenPacksGrid packs={packsQuery.data} isLoading={packsQuery.isLoading} onPackAction={handlePackAction} busyPackId={checkoutMutation.isPending ? (checkoutMutation.variables ?? null) : null} isActionLocked={checkoutMutation.isPending} primaryCtaLabel={user ? undefined : "Get started"} />
           </div>
         </section>
 
         <section className="space-y-4">
-          <h2 className="text-xl font-semibold text-slate-100" style={{ fontFamily: "Syne, system-ui, sans-serif" }}>
-            Tripo / mesh steps
-          </h2>
+          <h2 className="text-xl font-semibold text-slate-100">3D asset studio actions</h2>
           <div className="rounded-xl border border-border overflow-hidden -mx-1 min-w-0 sm:mx-0">
             <div className="overflow-x-auto overscroll-x-contain touch-pan-x">
               <table className="w-full min-w-max text-sm">
@@ -180,15 +164,9 @@ export default function PricingPage() {
                 <tbody className="divide-y divide-border">
                   {trippoModels.map((m) => (
                     <tr key={m.id} className="bg-panel/40 hover:bg-panel/70 transition-colors">
-                      <td className="px-3 py-3 text-slate-200 capitalize break-words sm:px-4 max-w-xs sm:max-w-md">
-                        {humanizeTrippoId(m.id)}
-                      </td>
-                      <td className="px-3 py-3 text-right font-mono tabular-nums text-accent-light whitespace-nowrap sm:px-4">
-                        {m.tokens}
-                      </td>
-                      <td className="px-3 py-3 text-right font-mono tabular-nums text-slate-500 text-xs whitespace-nowrap sm:px-4 hidden sm:table-cell">
-                        {usd(m.priceUsd)}
-                      </td>
+                      <td className="px-3 py-3 text-slate-200 capitalize break-words sm:px-4 max-w-xs sm:max-w-md">{humanizeTrippoId(m.id)}</td>
+                      <td className="px-3 py-3 text-right font-mono tabular-nums text-accent-light whitespace-nowrap sm:px-4">{m.tokens}</td>
+                      <td className="px-3 py-3 text-right font-mono tabular-nums text-slate-500 text-xs whitespace-nowrap sm:px-4 hidden sm:table-cell">{usd(m.priceUsd)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -200,16 +178,10 @@ export default function PricingPage() {
         <section className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
-              <h2 className="text-xl font-semibold text-slate-100" style={{ fontFamily: "Syne, system-ui, sans-serif" }}>
-                Image generation models
-              </h2>
+              <h2 className="text-xl font-semibold text-slate-100">Image generation models</h2>
               <p className="text-xs text-slate-500 mt-1">Per-generation token debit. Filter by name or provider.</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-              <label className="flex items-center gap-2 text-xs text-slate-400 cursor-pointer select-none">
-                <input type="checkbox" checked={availableOnly} onChange={(e) => setAvailableOnly(e.target.checked)} className="rounded border-border bg-surface text-accent focus:ring-accent/40" />
-                Available only
-              </label>
               <div className="relative">
                 <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-500" />
                 <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search…" className="w-full sm:w-56 pl-8 pr-3 py-1.5 text-xs rounded-lg border border-border bg-surface text-slate-200 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent/50" />
@@ -242,19 +214,9 @@ export default function PricingPage() {
                                 <p className="text-slate-200 text-xs leading-snug break-words">{m.name}</p>
                                 <p className="text-[0.65rem] font-mono text-slate-600 break-all mt-0.5">{m.id}</p>
                               </td>
-                              <td className="px-3 py-2.5 text-xs text-slate-500 align-top whitespace-nowrap">
-                                {m.imageToImage ? (
-                                  <span className="tag-cyan whitespace-nowrap">Image-to-image</span>
-                                ) : (
-                                  <span className="text-slate-600">Text-to-image</span>
-                                )}
-                              </td>
-                              <td className="px-3 py-2.5 text-right font-mono tabular-nums text-accent-light text-xs whitespace-nowrap align-top">
-                                {m.tokens}
-                              </td>
-                              <td className="px-3 py-2.5 text-right font-mono tabular-nums text-slate-500 text-xs whitespace-nowrap align-top hidden md:table-cell">
-                                {usd(m.priceUsd)}
-                              </td>
+                              <td className="px-3 py-2.5 text-xs text-slate-500 align-top whitespace-nowrap">{m.imageToImage ? <span className="tag-cyan whitespace-nowrap">Image-to-image</span> : <span className="text-slate-600">Text-to-image</span>}</td>
+                              <td className="px-3 py-2.5 text-right font-mono tabular-nums text-accent-light text-xs whitespace-nowrap align-top">{m.tokens}</td>
+                              <td className="px-3 py-2.5 text-right font-mono tabular-nums text-slate-500 text-xs whitespace-nowrap align-top hidden md:table-cell">{usd(m.priceUsd)}</td>
                             </tr>
                           ))}
                         </tbody>

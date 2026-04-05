@@ -40,15 +40,18 @@ export const LANDING_SIGN_IN_LINK = "Sign in";
 
 export const LANDING_NAV_DASHBOARD = "Dashboard";
 
+/** Navbar "Pricing" → full rates page, scrolled to token packs (id `token-packs` on `/pricing`). */
+export const PRICING_NAV_PATH = "/pricing#token-packs";
+
 export const LANDING_NAV_ANCHORS = [
   { href: "#features", label: "Features" },
   { href: "#samples", label: "Samples" },
-  { href: "#token-packs", label: "Token packs" },
+  { href: "#pricing", label: "Plans" },
   { href: "#use-cases", label: "Use cases" },
   { href: "#how-it-works", label: "How it works" },
 ] as const;
 
-export const LANDING_PACKS_TITLE = "Token packs";
+export const LANDING_PACKS_TITLE = "Pricing";
 
 export const LANDING_PACKS_SUBTITLE =
   "Pick a pack to start with — create an account and pay securely through Stripe.";
@@ -250,8 +253,8 @@ export const LANDING_HOW_IT_WORKS = [
 
 
 export const LANDING_MID_CTA = {
-  title: "Ready to generate 3D characters AI can iterate with your team?",
-  body: "Create an account, run a batch pass, and export when your art and engineering leads sign off.",
+  title: "Ready to build 3D characters for your game?",
+  body: "Create a free account, describe your character in plain language or upload a reference image, then preview meshes, rigs, and animations in the studio. Adjust prompts until it looks right, and export when you are ready to drop it into your engine.",
   primary: "Generate assets now",
   secondary: "View pricing",
 } as const;

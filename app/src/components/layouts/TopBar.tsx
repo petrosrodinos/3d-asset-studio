@@ -1,3 +1,4 @@
+import type { MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import { Coins, Menu, MessageSquare, MoreHorizontal } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
@@ -6,6 +7,7 @@ import { useBalance } from "@/features/billing/hooks/use-billing.hooks";
 import { useForgeStore } from "@/store/forgeStore";
 import { cn } from "@/utils/cn";
 import { TopBarUserMenu } from "@/components/layouts/TopBarUserMenu";
+import { PRICING_NAV_PATH } from "@/pages/landing/constants";
 
 type TopBarMobileNavProps = {
   user: ReturnType<typeof useAuth>["user"];
@@ -13,6 +15,7 @@ type TopBarMobileNavProps = {
   isPricing: boolean;
   hideUserChrome: boolean;
   onForgeNav: () => void;
+  onPricingNavClick: (e: MouseEvent<HTMLAnchorElement>) => void;
 };
 
 function TopBarMobileNav({
@@ -21,6 +24,7 @@ function TopBarMobileNav({
   isPricing,
   hideUserChrome,
   onForgeNav,
+  onPricingNavClick,
 }: TopBarMobileNavProps) {
   const [open, setOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -80,9 +84,12 @@ function TopBarMobileNav({
             </button>
           )}
           <Link
-            to="/pricing"
+            to={PRICING_NAV_PATH}
             role="menuitem"
-            onClick={() => setOpen(false)}
+            onClick={(e) => {
+              setOpen(false);
+              onPricingNavClick(e);
+            }}
             className={cn(
               "block px-3 py-2 text-xs transition-colors",
               isPricing
@@ -145,6 +152,14 @@ export function TopBar() {
     if (!isForge) navigate("/forge");
   }
 
+  function handlePricingNavClick(e: MouseEvent<HTMLAnchorElement>) {
+    if (location.pathname === "/pricing") {
+      e.preventDefault();
+      document.getElementById("token-packs")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.history.replaceState(null, "", PRICING_NAV_PATH);
+    }
+  }
+
   return (
     <header className="h-12 flex items-center gap-1.5 sm:gap-3 px-2 sm:px-4 border-b border-border bg-panel shrink-0 min-w-0">
       {isForge && (
@@ -171,7 +186,7 @@ export function TopBar() {
         </button>
       )}
       <Link
-        to="/"
+        to="/#hero"
         className="text-xs sm:text-sm font-semibold text-accent-light truncate min-w-0 shrink hover:text-slate-100 transition-colors"
       >
         Forge
@@ -191,7 +206,8 @@ export function TopBar() {
           </button>
         )}
         <Link
-          to="/pricing"
+          to={PRICING_NAV_PATH}
+          onClick={handlePricingNavClick}
           className={cn(
             "text-xs px-3 py-1.5 rounded transition-colors border",
             location.pathname === "/pricing"
@@ -219,6 +235,7 @@ export function TopBar() {
                 isPricing={isPricing}
                 hideUserChrome={hideUserChrome}
                 onForgeNav={handleForgeClick}
+                onPricingNavClick={handlePricingNavClick}
               />
             </>
           ) : (
@@ -243,6 +260,7 @@ export function TopBar() {
                 isPricing={isPricing}
                 hideUserChrome={hideUserChrome}
                 onForgeNav={handleForgeClick}
+                onPricingNavClick={handlePricingNavClick}
               />
             </>
           )
@@ -265,6 +283,7 @@ export function TopBar() {
               isPricing={isPricing}
               hideUserChrome={hideUserChrome}
               onForgeNav={handleForgeClick}
+              onPricingNavClick={handlePricingNavClick}
             />
             <TopBarUserMenu />
           </>
@@ -275,6 +294,7 @@ export function TopBar() {
             isPricing={isPricing}
             hideUserChrome={hideUserChrome}
             onForgeNav={handleForgeClick}
+            onPricingNavClick={handlePricingNavClick}
           />
         )}
       </div>

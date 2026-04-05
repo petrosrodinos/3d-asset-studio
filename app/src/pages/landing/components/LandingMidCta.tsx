@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { cn } from "@/utils/cn";
-import { LANDING_MID_CTA } from "@/pages/landing/constants";
+import { LANDING_MID_CTA, PRICING_NAV_PATH } from "@/pages/landing/constants";
 
 export function LandingMidCta() {
   return (
@@ -30,7 +30,7 @@ export function LandingMidCta() {
               {LANDING_MID_CTA.primary}
             </Link>
             <Link
-              to="/pricing"
+              to={PRICING_NAV_PATH}
               className={cn(
                 "inline-flex items-center justify-center rounded-md border border-border bg-panel/70 px-5 py-2.5 text-sm font-medium text-slate-300",
                 "transition-colors hover:border-slate-600 hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-500",
