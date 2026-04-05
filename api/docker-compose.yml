@@ -33,8 +33,27 @@ services:
     command: [
       "bash",
       "-lc",
-      "mongosh --host mongodb:27017 --quiet --eval \"try { rs.status(); } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'localhost:27017' }] }); }\""
+      "mongosh --host mongodb:27017 --quiet --eval \"try { rs.status(); } catch (e) { rs.initiate({ _id: 'rs0', members: [{ _id: 0, host: 'mongodb:27017' }] }); }\""
     ]
+
+  api:
+    build: .
+    container_name: "3d-figures-api"
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Prisma requires a replica set for writes; compose Mongo is started with --replSet rs0.
+      DATABASE_URL: mongodb://mongodb:27017/3d-figures?replicaSet=rs0
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      mongodb-init:
+        condition: service_completed_successfully
 
 volumes:
   mongodb-data:

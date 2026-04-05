@@ -1,5 +1,5 @@
 {
-  "name": "3d-figures",
+  "name": "3d-asset-studio",
   "version": "1.0.0",
   "description": "Tripo 3D Generation API client",
   "main": "dist/index.js",
@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "start": "node dist/server.js",
     "dev": "ts-node src/index.ts",
     "agent": "ts-node src/cli.ts",
     "server": "nodemon --watch src --ext ts --exec ts-node src/server.ts",

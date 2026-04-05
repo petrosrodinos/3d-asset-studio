@@ -1,0 +1,83 @@
+# Build the API Docker image, push to GitHub Container Registry (GHCR), and
+# trigger a Render deploy for an image-backed web service.
+#
+# Render setup (dashboard):
+# 1. New Web Service → Existing Image → use the same image name this workflow
+#    pushes (see "Container image name" step): ghcr.io/<owner>/<repo>/api
+# 2. For private GHCR images: Workspace Settings → Container Registry Credentials
+#    → add GitHub PAT with read:packages.
+# 3. GitHub repo → Settings → Secrets → Actions → RENDER_DEPLOY_HOOK_URL
+#    (service Settings → Deploy Hook). Optional: omit secret to only build/push.
+#
+# https://render.com/docs/deploying-an-image
+# https://render.com/docs/deploy-hooks
+
+name: API — Docker (GHCR) + Render
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "api/**"
+      - ".github/workflows/api-docker-render.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Container image name (GHCR, lowercase)
+        run: |
+          owner_repo=$(echo "${GITHUB_REPOSITORY}" | tr "[:upper:]" "[:lower:]")
+          echo "IMAGE_NAME=ghcr.io/${owner_repo}/api" >> "${GITHUB_ENV}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata (tags)
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=sha,prefix=git-,format=long
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/main' }}
+
+      - name: Build and push
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./api
+          file: ./api/Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Deploy to Render
+        if: github.ref == 'refs/heads/main'
+        env:
+          DEPLOY_HOOK: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+          IMAGE_REF: ${{ env.IMAGE_NAME }}:git-${{ github.sha }}
+        run: |
+          if [ -z "${DEPLOY_HOOK}" ]; then
+            echo "RENDER_DEPLOY_HOOK_URL is not set; skipping Render deploy."
+            exit 0
+          fi
+          enc=$(python3 -c "import urllib.parse, sys; print(urllib.parse.quote(sys.argv[1], safe=''))" "${IMAGE_REF}")
+          curl -fsS "${DEPLOY_HOOK}&imgURL=${enc}"
