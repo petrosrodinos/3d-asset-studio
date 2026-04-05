@@ -357,8 +357,17 @@ export const OPEN_API_DOCUMENT = {
         tags: ["Pricing"],
         summary: "Token costs by feature (fixed + variable references)",
         description:
-          "Stable keys for UI. Fixed `tokens` match wallet debits; variable items point at `imageModels` in /api/pricing/catalog.",
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }) },
+          "Stable keys for UI. Payload is `{ version, byKey }` where each cost entry is keyed by its `key` field (same data as the internal items list). Fixed `tokens` match wallet debits; variable items point at `imageModels` in /api/pricing/catalog.",
+        responses: {
+          "200": jsonContent({
+            type: "object",
+            required: ["version", "byKey"],
+            properties: {
+              version: { type: "integer", enum: [1] },
+              byKey: { type: "object", additionalProperties: true },
+            },
+          }),
+        },
       },
     },
     "/api/admin/metrics": {

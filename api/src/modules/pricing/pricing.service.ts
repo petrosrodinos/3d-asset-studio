@@ -36,14 +36,14 @@ export function getPricingCatalog() {
     trippoModels: TrippoModels.map((m) => ({
       id: m.id,
       tokens: Math.ceil(Number(m.tokens)),
-      priceUsd: Number(m.price),
+      priceEur: Number(m.price),
     })),
     imageModels: ImageModels.filter((m) => m.available).map((m) => ({
       id: m.id,
       name: m.name,
       provider: m.provider,
       tokens: Math.ceil(Number(m.tokens)),
-      priceUsd: Number(m.price),
+      priceEur: Number(m.price),
       available: m.available,
       imageToImage: m.is_image_to_image,
     })),

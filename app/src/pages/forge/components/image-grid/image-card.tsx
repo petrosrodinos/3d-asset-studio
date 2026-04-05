@@ -24,6 +24,20 @@ function bestModelStatus(models: SkinImage["models"]): string {
   return models[0].status;
 }
 
+/** URL the browser can load in `<img>` (excludes placeholders like `upload://local`). */
+function rasterPreviewUrl(image: SkinImage): string | null {
+  if (image.gcsUrl) return image.gcsUrl;
+  const s = image.sourceUrl ?? "";
+  if (/^https?:\/\//i.test(s) || s.startsWith("data:")) return s;
+  return null;
+}
+
+function canRunPipelineOnImage(image: SkinImage): boolean {
+  if (image.gcsUrl) return true;
+  const s = image.sourceUrl ?? "";
+  return /^https?:\/\//i.test(s);
+}
+
 interface ImageCardProps {
   image: SkinImage;
   isRunning: boolean;
@@ -35,19 +49,11 @@ interface ImageCardProps {
   deletePending?: boolean;
 }
 
-export function ImageCard({
-  image,
-  isRunning,
-  onRunPipeline,
-  onSelect,
-  onDelete,
-  selected,
-  deletePending = false,
-}: ImageCardProps) {
+export function ImageCard({ image, isRunning, onRunPipeline, onSelect, onDelete, selected, deletePending = false }: ImageCardProps) {
   const status = bestModelStatus(image.models);
   const isProcessing = status === "processing";
   const { data: pricingCosts } = usePricingCosts();
-  const pipelineTokenCost = getFixedCostTokens(pricingCosts, PRICING_COST_KEYS.FORGE_PIPELINE_MESH_RIG);
+  const pipelineTokenCost = getFixedCostTokens(pricingCosts, PRICING_COST_KEYS.TRIPPO_MESH_STANDALONE);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const deleteStartedRef = useRef(false);
 
@@ -63,20 +69,28 @@ export function ImageCard({
   }, [deletePending, confirmOpen]);
   const [expandOpen, setExpandOpen] = useState(false);
   const [imgLoaded, setImgLoaded] = useState(false);
-  const previewSrc = image.gcsUrl ?? image.sourceUrl;
+  const previewSrc = rasterPreviewUrl(image);
+  const pipelineAllowed = canRunPipelineOnImage(image);
+
+  useEffect(() => {
+    setImgLoaded(false);
+  }, [image.id, image.gcsUrl, image.sourceUrl]);
 
   const imageMenuItems = [
     {
       id: "extend",
       label: "Extend",
       icon: Maximize2,
+      disabled: !previewSrc,
       onSelect: () => setExpandOpen(true),
     },
     {
       id: "download",
       label: "Download",
       icon: Download,
+      disabled: !previewSrc,
       onSelect: () => {
+        if (!previewSrc) return;
         const ext = fileExtensionFromUrl(previewSrc) || ".png";
         void downloadUrlAsFile(previewSrc, `image-${image.id.slice(0, 8)}${ext}`);
       },
@@ -92,18 +106,19 @@ export function ImageCard({
 
   return (
     <>
-      <div
-        className={cn(
-          "cursor-pointer overflow-hidden rounded-xl border bg-panel/30 ring-1 ring-white/5 transition-all",
-          selected
-            ? "border-accent/50 ring-2 ring-accent/35 shadow-md shadow-accent/10"
-            : "border-border/80 hover:border-accent/25 hover:ring-accent/10",
-        )}
-        onClick={() => onSelect(image)}
-      >
+      <div className={cn("cursor-pointer overflow-hidden rounded-xl border bg-panel/30 ring-1 ring-white/5 transition-all", selected ? "border-accent/50 ring-2 ring-accent/35 shadow-md shadow-accent/10" : "border-border/80 hover:border-accent/25 hover:ring-accent/10")} onClick={() => onSelect(image)}>
         <div className="relative aspect-square w-full bg-surface/80">
-          {!imgLoaded && <Skeleton className="absolute inset-0 rounded-none" />}
-          <img src={previewSrc} alt="" onLoad={() => setImgLoaded(true)} className={`w-full h-full object-cover transition-opacity duration-200 ${imgLoaded ? "opacity-100" : "opacity-0"}`} />
+          {previewSrc ? (
+            <>
+              {!imgLoaded && <Skeleton className="absolute inset-0 z-[1] rounded-none" />}
+              <img src={previewSrc} alt="" onLoad={() => setImgLoaded(true)} onError={() => setImgLoaded(true)} className={`relative z-0 w-full h-full object-cover transition-opacity duration-200 ${imgLoaded ? "opacity-100" : "opacity-0"}`} />
+            </>
+          ) : (
+            <div className="absolute inset-0 z-[1] flex flex-col items-center justify-center gap-1.5 px-3 text-center">
+              <p className="text-xs font-medium text-amber-400/95">No image file</p>
+              <p className="text-[10px] leading-snug text-slate-500">Upload did not finish or storage failed. Delete this card and try again.</p>
+            </div>
+          )}
           <OptionsMenu className="absolute top-1.5 right-1.5 z-10" triggerVariant="secondary" triggerClassName="h-6 w-6 shadow-md bg-panel/95 backdrop-blur-sm border-border" menuLabel="Image options" items={imageMenuItems} />
         </div>
 
@@ -118,7 +133,7 @@ export function ImageCard({
               variant="secondary"
               size="sm"
               className="px-2 py-1 gap-1"
-              disabled={isRunning || isProcessing}
+              disabled={isRunning || isProcessing || !pipelineAllowed}
               onClick={(e) => {
                 e.stopPropagation();
                 onRunPipeline(image);
@@ -149,7 +164,7 @@ export function ImageCard({
       />
 
       <Modal open={expandOpen} onClose={() => setExpandOpen(false)} title="Image preview">
-        <img src={previewSrc} alt="" className="max-h-[min(85vh,900px)] w-full object-contain rounded-lg" />
+        {previewSrc ? <img src={previewSrc} alt="" className="max-h-[min(85vh,900px)] w-full object-contain rounded-lg" /> : <p className="text-sm text-slate-500 py-8 text-center">No preview available.</p>}
       </Modal>
     </>
   );

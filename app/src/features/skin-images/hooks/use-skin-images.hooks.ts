@@ -25,9 +25,11 @@ export function useUploadSkinImage() {
     mutationFn: (params: UploadSkinImageParams) => uploadSkinImage(params),
     onSuccess: () => {
       toast.success("Image uploaded");
-      void qc.invalidateQueries({ queryKey: ["figures"] });
     },
     onError: (error) =>
       toast.error(error instanceof Error ? error.message : "Could not upload image"),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: ["figures"] });
+    },
   });
 }

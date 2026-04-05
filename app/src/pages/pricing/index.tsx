@@ -190,7 +190,7 @@ export default function PricingPage() {
                     <tr key={m.id} className="bg-panel/40 hover:bg-panel/70 transition-colors">
                       <td className="px-3 py-3 text-slate-200 capitalize break-words sm:px-4 max-w-xs sm:max-w-md">{humanizeTrippoId(m.id)}</td>
                       <td className="px-3 py-3 text-right font-mono tabular-nums text-accent-light whitespace-nowrap sm:px-4">{m.tokens}</td>
-                      <td className="px-3 py-3 text-right font-mono tabular-nums text-slate-500 text-xs whitespace-nowrap sm:px-4 hidden sm:table-cell">{usd(m.priceUsd)}</td>
+                      <td className="px-3 py-3 text-right font-mono tabular-nums text-slate-500 text-xs whitespace-nowrap sm:px-4 hidden sm:table-cell">{usd(m.priceEur)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -240,7 +240,7 @@ export default function PricingPage() {
                               </td>
                               <td className="px-3 py-2.5 text-xs text-slate-500 align-top whitespace-nowrap">{m.imageToImage ? <span className="tag-cyan whitespace-nowrap">Image-to-image</span> : <span className="text-slate-600">Text-to-image</span>}</td>
                               <td className="px-3 py-2.5 text-right font-mono tabular-nums text-accent-light text-xs whitespace-nowrap align-top">{m.tokens}</td>
-                              <td className="px-3 py-2.5 text-right font-mono tabular-nums text-slate-500 text-xs whitespace-nowrap align-top hidden md:table-cell">{usd(m.priceUsd)}</td>
+                              <td className="px-3 py-2.5 text-right font-mono tabular-nums text-slate-500 text-xs whitespace-nowrap align-top hidden md:table-cell">{usd(m.priceEur)}</td>
                             </tr>
                           ))}
                         </tbody>

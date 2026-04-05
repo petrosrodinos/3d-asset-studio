@@ -6,7 +6,6 @@ import { getTokenOperationDebit } from "../../config/models/token-operations";
  */
 export const PRICING_COST_KEYS = {
   AGENT_CHAT: "agent_chat",
-  FORGE_PIPELINE_MESH_RIG: "forge_pipeline_mesh_rig",
   TRIPPO_MESH_STANDALONE: "trippo_mesh_standalone",
   RIGGING: "rigging",
   ANIMATION_RETARGET: "animation_retarget",
@@ -39,6 +38,12 @@ export type PricingCostsDto = {
   items: PricingCostItemDto[];
 };
 
+/** HTTP payload: same entries as `buildPricingCosts().items`, keyed by `item.key`. */
+export type PricingCostsByKeyDto = {
+  version: 1;
+  byKey: Record<string, PricingCostItemDto>;
+};
+
 export function buildPricingCosts(): PricingCostsDto {
   return {
     version: 1,
@@ -49,13 +54,6 @@ export function buildPricingCosts(): PricingCostsDto {
         label: "AI variant prompt & Forge chat",
         unit: "per_request",
         tokens: getTokenOperationDebit("chat"),
-      },
-      {
-        kind: "fixed",
-        key: PRICING_COST_KEYS.FORGE_PIPELINE_MESH_RIG,
-        label: "Forge 3D pipeline (image → mesh + rig step)",
-        unit: "per_run",
-        tokens: getTokenOperationDebit("pipeline"),
       },
       {
         kind: "fixed",
@@ -88,4 +86,13 @@ export function buildPricingCosts(): PricingCostsDto {
       },
     ],
   };
+}
+
+export function buildPricingCostsApiResponse(): PricingCostsByKeyDto {
+  const { version, items } = buildPricingCosts();
+  const byKey: Record<string, PricingCostItemDto> = {};
+  for (const item of items) {
+    byKey[item.key] = item;
+  }
+  return { version, byKey };
 }

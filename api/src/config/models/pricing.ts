@@ -1,4 +1,5 @@
 export const TOKENS_PER_EUR = 100;
+export const TOKENS_PER_EUR_TRIPPO = 87;
 export const MARKUP_FACTOR = 1.1;
 
 /** Wallet tokens debited per agent chat request (post-markup units). */

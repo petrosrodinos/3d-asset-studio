@@ -19,5 +19,6 @@ export type PricingCostItemDto = PricingCostItemFixedDto | PricingCostItemVariab
 
 export type PricingCostsDto = {
   version: 1;
-  items: PricingCostItemDto[];
+  /** Cost entries keyed by the same string as each item’s `key` field. */
+  byKey: Record<string, PricingCostItemDto>;
 };

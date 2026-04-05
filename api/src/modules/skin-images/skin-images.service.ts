@@ -20,11 +20,16 @@ export async function createSkinImageFromUpload(
   const ext = mimeType === "image/jpeg" ? "jpg" : "png";
   const image = await createSkinImageRecord(variantId, figureId, "upload://local");
   const gcsKey = `images/figures/${figureId}/${variantId}/${image.id}.${ext}`;
-  const { gcsUrl, gcsBucket } = await uploadBuffer(buffer, gcsKey, mimeType);
-  return prisma.skinImage.update({
-    where: { id: image.id },
-    data: { gcsUrl, gcsBucket, gcsKey, sourceUrl: gcsUrl },
-  });
+  try {
+    const { gcsUrl, gcsBucket } = await uploadBuffer(buffer, gcsKey, mimeType);
+    return prisma.skinImage.update({
+      where: { id: image.id },
+      data: { gcsUrl, gcsBucket, gcsKey, sourceUrl: gcsUrl },
+    });
+  } catch (err) {
+    await prisma.skinImage.delete({ where: { id: image.id } }).catch(() => {});
+    throw err;
+  }
 }
 
 export async function createSkinImage(

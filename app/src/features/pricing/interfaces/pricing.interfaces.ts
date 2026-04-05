@@ -19,7 +19,7 @@ export type PricingOperationDto = {
 export type PricingTrippoModelDto = {
   id: string;
   tokens: number;
-  priceUsd: number;
+  priceEur: number;
 };
 
 export type PricingImageModelDto = {
@@ -27,7 +27,7 @@ export type PricingImageModelDto = {
   name: string;
   provider: string;
   tokens: number;
-  priceUsd: number;
+  priceEur: number;
   available: boolean;
   imageToImage: boolean;
 };

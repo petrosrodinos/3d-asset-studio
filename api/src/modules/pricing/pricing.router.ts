@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as pricing from "./pricing.service";
-import { buildPricingCosts } from "./pricing-costs";
+import { buildPricingCostsApiResponse } from "./pricing-costs";
 
 const router = Router();
 
@@ -14,7 +14,7 @@ router.get("/catalog", (_req, res, next) => {
 
 router.get("/costs", (_req, res, next) => {
   try {
-    res.json(buildPricingCosts());
+    res.json(buildPricingCostsApiResponse());
   } catch (e) {
     next(e);
   }
