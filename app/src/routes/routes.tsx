@@ -66,10 +66,11 @@ function RequireAdmin({ children }: PropsWithChildren) {
 export function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<LandingRoute />} />
-      <Route element={<MarketingLayout />}>
+      {/* One marketing shell: same navbar + mesh for /, /pricing, /login, /register */}
+      <Route path="/" element={<MarketingLayout />}>
+        <Route index element={<LandingRoute />} />
         <Route
-          path="/login"
+          path="login"
           element={
             <GuestOnly>
               <LoginPage />
@@ -77,14 +78,14 @@ export function AppRoutes() {
           }
         />
         <Route
-          path="/register"
+          path="register"
           element={
             <GuestOnly>
               <RegisterPage />
             </GuestOnly>
           }
         />
-        <Route path="/pricing" element={<PricingPage />} />
+        <Route path="pricing" element={<PricingPage />} />
       </Route>
       <Route
         element={

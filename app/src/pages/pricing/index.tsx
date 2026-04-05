@@ -31,15 +31,42 @@ function groupModelsByProvider(models: PricingImageModelDto[]) {
 
 function CatalogSkeleton() {
   return (
-    <div className="space-y-10 px-4 py-8 max-w-6xl mx-auto" aria-hidden>
-      <Skeleton className="h-14 w-2/3 max-w-md rounded-lg" />
-      <Skeleton className="h-24 w-full rounded-2xl" />
-      <div className="grid gap-4 sm:grid-cols-3">
-        {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-40 rounded-xl" />
-        ))}
+    <div
+      className="relative w-full min-w-0 max-w-6xl mx-auto px-4 py-10 pb-16 sm:px-6 space-y-14"
+      aria-hidden
+    >
+      <header className="space-y-4">
+        <Skeleton className="h-3 w-36 rounded" />
+        <Skeleton className="h-10 w-full max-w-md rounded-lg sm:h-11" />
+        <Skeleton className="h-14 w-full max-w-2xl rounded-lg" />
+      </header>
+      <Skeleton className="h-28 w-full rounded-2xl sm:h-32" />
+      <div className="space-y-6 border-t border-border/40 pt-10">
+        <div className="space-y-3 max-w-2xl">
+          <Skeleton className="h-3 w-24 rounded" />
+          <Skeleton className="h-8 w-full max-w-sm rounded-lg" />
+          <Skeleton className="h-12 w-full rounded-lg" />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-40 w-full min-h-[10rem] rounded-xl" />
+          ))}
+        </div>
       </div>
-      <Skeleton className="h-48 w-full rounded-xl" />
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-48 rounded-md" />
+        <Skeleton className="h-36 w-full rounded-xl sm:h-40" />
+      </div>
+      <div className="space-y-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-6 w-56 rounded-md" />
+            <Skeleton className="h-3 w-72 max-w-full rounded" />
+          </div>
+          <Skeleton className="h-8 w-full sm:w-56 rounded-lg shrink-0" />
+        </div>
+        <Skeleton className="h-52 w-full rounded-xl" />
+      </div>
     </div>
   );
 }
@@ -83,7 +110,7 @@ export default function PricingPage() {
 
   if (isPending) {
     return (
-      <div className="flex min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-surface">
+      <div className="relative flex w-full min-h-0 min-w-0 flex-1 flex-col overflow-y-auto overflow-x-hidden bg-surface">
         <CatalogSkeleton />
       </div>
     );

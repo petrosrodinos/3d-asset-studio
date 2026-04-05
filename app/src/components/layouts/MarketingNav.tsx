@@ -21,7 +21,6 @@ function useLandingSectionSpy(enabled: boolean, headerRef: RefObject<HTMLElement
     const header = headerRef.current;
     const headerBottom = header?.getBoundingClientRect().bottom ?? 56;
     const vh = typeof window !== "undefined" ? window.innerHeight : 800;
-    // Horizontal "reading line" below the nav — which section contains this Y wins (avoids highlighting the previous section while the next one is already on screen).
     const readingY = Math.min(headerBottom + vh * 0.22, vh * 0.42);
 
     let next: string | null = null;
@@ -79,12 +78,16 @@ function useLandingSectionSpy(enabled: boolean, headerRef: RefObject<HTMLElement
   return activeHash;
 }
 
-export function LandingNav() {
+/** Sticky marketing header for the landing page, pricing, login, and register. */
+export function MarketingNav() {
   const path = useLocation().pathname;
   const { user, loading } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const headerRef = useRef<HTMLElement | null>(null);
   const activeSectionHash = useLandingSectionSpy(path === "/", headerRef);
+  /** Same section links as on `/` — on other marketing routes they jump home with a hash. */
+  const showLandingSectionLinks =
+    path === "/" || path === "/pricing" || path === "/login" || path === "/register";
 
   useEffect(() => {
     setMobileOpen(false);
@@ -137,17 +140,27 @@ export function LandingNav() {
         </Link>
 
         <nav className="hidden items-center justify-end gap-1 md:flex md:gap-2" aria-label="Marketing">
-          {path === "/" &&
-            LANDING_NAV_ANCHORS.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className={cn(linkClassDesktop, activeSectionHash === item.href && sectionLinkActive)}
-                aria-current={activeSectionHash === item.href ? "location" : undefined}
-              >
-                {item.label}
-              </a>
-            ))}
+          {showLandingSectionLinks &&
+            LANDING_NAV_ANCHORS.map((item) =>
+              path === "/" ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={cn(linkClassDesktop, activeSectionHash === item.href && sectionLinkActive)}
+                  aria-current={activeSectionHash === item.href ? "location" : undefined}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.href}
+                  to={`/${item.href}`}
+                  className={linkClassDesktop}
+                >
+                  {item.label}
+                </Link>
+              ),
+            )}
           <Link
             to={PRICING_NAV_PATH}
             className="rounded-md px-3 py-1.5 text-xs text-slate-400 transition-colors hover:bg-white/5 hover:text-slate-200"
@@ -207,7 +220,7 @@ export function LandingNav() {
           type="button"
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-white/5 hover:text-slate-200 md:hidden"
           aria-expanded={mobileOpen}
-          aria-controls="landing-nav-mobile"
+          aria-controls="marketing-nav-mobile"
           aria-label={mobileOpen ? "Close menu" : "Open menu"}
           onClick={() => setMobileOpen((o) => !o)}
         >
@@ -216,25 +229,36 @@ export function LandingNav() {
       </div>
 
       <div
-        id="landing-nav-mobile"
+        id="marketing-nav-mobile"
         className={cn(
           "max-h-[min(70vh,calc(100dvh-3.5rem))] overflow-y-auto border-t border-border/60 bg-panel/95 backdrop-blur-lg md:hidden",
           !mobileOpen && "hidden",
         )}
       >
         <nav className="flex flex-col gap-0.5 px-3 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]" aria-label="Marketing mobile">
-          {path === "/" &&
-            LANDING_NAV_ANCHORS.map((item) => (
-              <a
-                key={item.href}
-                href={item.href}
-                className={cn(linkClassMobile, activeSectionHash === item.href && sectionLinkActive)}
-                aria-current={activeSectionHash === item.href ? "location" : undefined}
-                onClick={closeMobile}
-              >
-                {item.label}
-              </a>
-            ))}
+          {showLandingSectionLinks &&
+            LANDING_NAV_ANCHORS.map((item) =>
+              path === "/" ? (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  className={cn(linkClassMobile, activeSectionHash === item.href && sectionLinkActive)}
+                  aria-current={activeSectionHash === item.href ? "location" : undefined}
+                  onClick={closeMobile}
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <Link
+                  key={item.href}
+                  to={`/${item.href}`}
+                  className={linkClassMobile}
+                  onClick={closeMobile}
+                >
+                  {item.label}
+                </Link>
+              ),
+            )}
           <Link to={PRICING_NAV_PATH} className={linkClassMobile} onClick={handlePricingNavClick}>
             Pricing
           </Link>

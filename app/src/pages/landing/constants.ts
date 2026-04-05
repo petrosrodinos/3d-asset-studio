@@ -32,8 +32,6 @@ export const LANDING_HERO_SUBTITLE =
 
 export const LANDING_CTA_PRIMARY = "Generate assets now";
 
-export const LANDING_CTA_SECONDARY = "See examples";
-
 export const LANDING_SIGN_IN_PROMPT = "Already have an account?";
 
 export const LANDING_SIGN_IN_LINK = "Sign in";
@@ -45,7 +43,6 @@ export const PRICING_NAV_PATH = "/pricing#token-packs";
 
 export const LANDING_NAV_ANCHORS = [
   { href: "#features", label: "Features" },
-  { href: "#samples", label: "Samples" },
   { href: "#pricing", label: "Plans" },
   { href: "#use-cases", label: "Use cases" },
   { href: "#how-it-works", label: "How it works" },
@@ -129,11 +126,6 @@ export const LANDING_3D_SAMPLES = [
   },
 ] as const;
 
-export const LANDING_SAMPLES_SECTION = {
-  id: "samples",
-  title: "Explore real 3D examples",
-  subtitle: "These models load right in your browser—drag to rotate and scroll to zoom, same as in the app.",
-} as const;
 
 export const LANDING_FOOTER_TAGLINE =
   "AI 3D game assets, auto rigging, and batch-ready exports—dark-mode native workspace for shipping characters faster.";
