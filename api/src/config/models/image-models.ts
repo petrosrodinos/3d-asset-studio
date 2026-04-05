@@ -1,5 +1,5 @@
-import { usdToTokens } from "../../lib/models-cost";
-import { MARKUP_FACTOR, DOLLARS_TO_EUR_RATE } from "./pricing";
+import { usdToTokens, walletTokensFromProviderEur } from "../../lib/models-cost";
+import { DOLLARS_TO_EUR_RATE, MARKUP_FACTOR } from "./pricing";
 
 /** How AIML `/v1/images/generations` expects the reference image for this model */
 export type AimlI2iSourceKey = "image" | "image_url" | "image_urls";
@@ -647,7 +647,8 @@ export type ImageModel = Omit<ImageModelDefinition, "tokens" | "price"> & { toke
 
 export const ImageModels: ImageModel[] = imageModels.map((model) => ({
     ...model,
-    tokens: model.tokens_original * MARKUP_FACTOR,
+    /** Matches one ceiling on provider EUR × token rate × markup (not `ceil(providerTokens) * markup`). */
+    tokens: walletTokensFromProviderEur(model.price_original),
     price: model.price_original * MARKUP_FACTOR,
 }));
 

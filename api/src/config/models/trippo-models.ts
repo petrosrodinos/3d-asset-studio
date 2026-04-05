@@ -1,39 +1,27 @@
-import { tokensToEur } from "../../lib/models-cost";
+import { trippoProviderCreditsToEur } from "../../lib/models-cost";
 import { MARKUP_FACTOR } from "./pricing";
 
-const trippoModels = [
-    {
-        id: "animate_prerigcheck",
-        tokens_original: 0,
-        price_original: tokensToEur(0, false).toFixed(2),
-        tokens: null,
-        price: null,
-    },
-    {
-        id: "animate_retarget",
-        tokens_original: 10,
-        price_original: tokensToEur(10, false).toFixed(2),
-        tokens: null,
-        price: null,
-    },
-    {
-        id: "animate_rig",
-        tokens_original: 25,
-        price_original: tokensToEur(25, false).toFixed(2),
-        tokens: null,
-        price: null,
-    },
-    {
-        id: "image_to_model",
-        tokens_original: 30,
-        price_original: tokensToEur(30, false).toFixed(2),
-        tokens: null,
-        price: null,
-    }
+type TrippoModelRow = {
+  id: string;
+  /** Tripo fixed credit cost (pre-markup). */
+  tokens_original: number;
+};
+
+const trippoModelRows: TrippoModelRow[] = [
+  { id: "animate_prerigcheck", tokens_original: 0 },
+  { id: "animate_retarget", tokens_original: 10 },
+  { id: "animate_rig", tokens_original: 25 },
+  { id: "image_to_model", tokens_original: 30 },
 ];
 
-export const TrippoModels = trippoModels.map((model: any) => ({
-    ...model,
-    tokens: model.tokens_original * MARKUP_FACTOR,
-    price: model.price_original * MARKUP_FACTOR,
-}));
+export const TrippoModels = trippoModelRows.map((m) => {
+  const price_original = trippoProviderCreditsToEur(m.tokens_original);
+  const isFree = m.tokens_original <= 0;
+  return {
+    id: m.id,
+    tokens_original: m.tokens_original,
+    price_original,
+    tokens: isFree ? 0 : Math.ceil(m.tokens_original * MARKUP_FACTOR),
+    price: isFree ? 0 : price_original * MARKUP_FACTOR,
+  };
+});

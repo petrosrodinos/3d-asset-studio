@@ -1,4 +1,5 @@
 import { CHAT_DEBIT_TOKENS, TOKENS_PER_EUR } from "../../config/models/pricing";
+
 import { TOKEN_PACKS } from "../../config/models/tokenPacks";
 import {
   getTokenOperationDebit,
@@ -7,6 +8,7 @@ import {
 } from "../../config/models/token-operations";
 import { TrippoModels } from "../../config/models/trippo-models";
 import { ImageModels } from "../../config/models/image-models";
+import { roundEur } from "../../lib/models-cost";
 
 type ListedTokenOperation = Exclude<TokenOperation, "pipeline">;
 
@@ -36,14 +38,14 @@ export function getPricingCatalog() {
     trippoModels: TrippoModels.map((m) => ({
       id: m.id,
       tokens: Math.ceil(Number(m.tokens)),
-      priceEur: Number(m.price),
+      priceEur: roundEur(Number(m.price)),
     })),
     imageModels: ImageModels.filter((m) => m.available).map((m) => ({
       id: m.id,
       name: m.name,
       provider: m.provider,
       tokens: Math.ceil(Number(m.tokens)),
-      priceEur: Number(m.price),
+      priceEur: roundEur(Number(m.price)),
       available: m.available,
       imageToImage: m.is_image_to_image,
     })),
