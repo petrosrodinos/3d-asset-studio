@@ -23,9 +23,9 @@ export const LANDING_SEO = {
 
 export const LANDING_BRAND = "Forge";
 
-export const LANDING_HERO_BADGE = "AI game asset pipeline";
+export const LANDING_HERO_BADGE = "AI game asset studio";
 
-export const LANDING_HERO_TITLE = "AI 3D Game Asset Generator for real-time games";
+export const LANDING_HERO_TITLE = "AI 3D Game Asset Studio for real-time games";
 
 export const LANDING_HERO_SUBTITLE =
   "Turn prompts and reference images into rigged characters, preset animations, and export-ready meshes—built for indie studios, Unity and Unreal teams, modders, and 3D artists who need volume without losing quality.";

@@ -2,108 +2,20 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { CreditCard, RefreshCw, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/Button";
-import { Skeleton } from "@/components/ui/Skeleton";
-import {
-  useBalance,
-  useCheckout,
-  usePacks,
-  usePurchaseHistory,
-  useTokenUsage,
-} from "@/features/billing/hooks/use-billing.hooks";
+import { useBalance, useCheckout, usePacks, usePurchaseHistory, useTokenUsage } from "@/features/billing/hooks/use-billing.hooks";
 import { useAuthStore } from "@/store/authStore";
 import { cn } from "@/utils/cn";
-
-const eur = (amount: number, fromCents: boolean) =>
-  new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(fromCents ? amount / 100 : amount);
-
-function formatUsageKind(kind: string) {
-  const map: Record<string, string> = { image: "Image", trippo: "Tripo", chat: "Chat" };
-  return map[kind] ?? kind;
-}
-
-type ActivityTab = "purchases" | "usage";
-
-function BalanceSkeleton() {
-  return (
-    <div className="space-y-3" aria-hidden>
-      <Skeleton className="h-11 w-52 max-w-full rounded-md" />
-      <Skeleton className="h-3 w-40 rounded-md" />
-    </div>
-  );
-}
-
-function TokenPacksSkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-3" aria-hidden>
-      {[0, 1, 2].map((i) => (
-        <div key={i} className="rounded-xl border border-border bg-panel p-5 flex flex-col gap-3">
-          <Skeleton className="h-5 w-28 rounded-md" />
-          <Skeleton className="h-4 w-36 rounded-md" />
-          <Skeleton className="h-7 w-24 rounded-md" />
-          <Skeleton className="h-9 w-full mt-auto rounded-md" />
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function PurchaseHistoryTableSkeleton() {
-  return (
-    <div className="rounded-lg border border-border overflow-hidden" aria-hidden>
-      <div className="bg-surface px-4 py-3 flex flex-wrap gap-6">
-        <Skeleton className="h-3 w-14" />
-        <Skeleton className="h-3 w-14" />
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-3 w-12" />
-      </div>
-      <div className="divide-y divide-border">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className="px-4 py-3 flex flex-wrap gap-6 items-center bg-panel/50">
-            <Skeleton className="h-4 w-24 sm:flex-1 sm:max-w-[10rem]" />
-            <Skeleton className="h-4 w-10" />
-            <Skeleton className="h-4 w-16" />
-            <Skeleton className="h-4 w-36" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function TokenUsageTableSkeleton() {
-  return (
-    <div className="rounded-lg border border-border overflow-hidden" aria-hidden>
-      <div className="bg-surface px-4 py-3 flex flex-wrap gap-4">
-        <Skeleton className="h-3 w-10" />
-        <Skeleton className="h-3 w-12" />
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-3 w-12" />
-        <Skeleton className="h-3 w-16" />
-        <Skeleton className="h-3 w-10" />
-      </div>
-      <div className="divide-y divide-border">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <div key={i} className="px-4 py-3 flex flex-wrap gap-4 items-center bg-panel/50">
-            <Skeleton className="h-4 w-14" />
-            <Skeleton className="h-4 flex-1 min-w-[6rem] max-w-[12rem]" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-4 w-8" />
-            <Skeleton className="h-4 w-10" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+import { BillingActivity, type BillingActivityTab } from "./components/BillingActivity";
+import { BalanceSkeleton, TokenPacksSkeleton } from "./components/BillingSkeletons";
+import { TokenPackCard } from "./components/TokenPackCard";
 
 export default function SettingsBillingPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const fetchMe = useAuthStore((s) => s.fetchMe);
-  const [activityTab, setActivityTab] = useState<ActivityTab>("purchases");
+  const [activityTab, setActivityTab] = useState<BillingActivityTab>("purchases");
 
   const balanceQuery = useBalance();
   const packsQuery = usePacks();
@@ -130,7 +42,8 @@ export default function SettingsBillingPage() {
     }
   }, [searchParams, setSearchParams, queryClient, fetchMe]);
 
-  const packNameById = new Map((packsQuery.data ?? []).map((p) => [p.id, p.name]));
+  const packs = packsQuery.data ?? [];
+  const packNameById = new Map(packs.map((p) => [p.id, p.name]));
 
   const lastUpdated =
     balanceQuery.dataUpdatedAt > 0
@@ -141,172 +54,83 @@ export default function SettingsBillingPage() {
       : null;
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl space-y-10">
-      <div>
-        <h1 className="text-lg font-semibold text-slate-100 mb-1">Billing</h1>
-        <p className="text-sm text-slate-400">Buy token packs, then review purchases or token usage below.</p>
-      </div>
+    <div className="relative min-h-full">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-48 bg-gradient-to-b from-accent/12 via-accent/5 to-transparent" aria-hidden />
+      <div className="relative p-6 md:p-8 max-w-5xl space-y-12 pb-16">
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex gap-4">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-accent/15 text-accent-light ring-1 ring-accent/25">
+              <CreditCard className="h-5 w-5" aria-hidden />
+            </div>
+            <div>
+              <h1 className="text-xl font-semibold tracking-tight text-slate-100">Billing</h1>
+              <p className="text-sm text-slate-500 mt-1 max-w-lg leading-relaxed">Top up your token balance for generations and 3D workflow. Secure checkout via Stripe.</p>
+            </div>
+          </div>
+        </header>
 
-      <section className="rounded-xl border border-border bg-panel p-6">
-        <h2 className="text-sm font-medium text-slate-300 mb-4">Balance</h2>
-        {balanceQuery.isLoading ? (
-          <BalanceSkeleton />
-        ) : (
-          <div className="space-y-1">
-            <p className="text-4xl font-mono font-semibold tabular-nums text-accent-light">
-              {balanceQuery.data?.balance ?? "—"}
-              <span className="text-lg font-sans font-normal text-slate-500 ml-2">tokens</span>
+        <section className="relative overflow-hidden rounded-2xl border border-border bg-panel ring-1 ring-white/5 shadow-lg shadow-black/20">
+          <div className="pointer-events-none absolute -right-16 -top-24 h-48 w-48 rounded-full bg-accent/20 blur-3xl" aria-hidden />
+          <div className="relative p-6 md:p-8">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between mb-6">
+              <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
+                <Wallet className="h-4 w-4 text-accent-light shrink-0" aria-hidden />
+                Token balance
+              </div>
+              <Button type="button" variant="ghost" size="sm" className="self-start text-slate-500 hover:text-slate-300" disabled={balanceQuery.isFetching} onClick={() => void balanceQuery.refetch()}>
+                <RefreshCw className={cn("h-3.5 w-3.5", balanceQuery.isFetching && "animate-spin")} aria-hidden />
+                Refresh
+              </Button>
+            </div>
+
+            {balanceQuery.isLoading ? (
+              <BalanceSkeleton />
+            ) : (
+              <div className="space-y-2">
+                <p className="text-xs font-medium uppercase tracking-wider text-slate-500">Available now</p>
+                <p className="text-4xl md:text-5xl font-semibold tabular-nums tracking-tight text-slate-50">
+                  <span className="font-mono text-accent-light">{balanceQuery.data?.balance ?? "—"}</span>
+                  <span className="text-lg md:text-xl font-sans font-normal text-slate-500 ml-3">tokens</span>
+                </p>
+                {lastUpdated ? (
+                  <p className="text-xs text-slate-500 pt-2 flex items-center gap-1.5">
+                    <span className="inline-block h-1.5 w-1.5 rounded-full bg-accent-light/90" aria-hidden />
+                    Updated {lastUpdated}
+                  </p>
+                ) : null}
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="space-y-5">
+          <div>
+            <h2 className="text-sm font-semibold tracking-tight text-slate-100">Token packs</h2>
+            <p className="text-sm text-slate-500 mt-1 max-w-2xl leading-relaxed">
+              The second pack is highlighted as our recommended tier. Checkout opens in a secure Stripe session.
             </p>
-            {lastUpdated && <p className="text-xs text-slate-500">Last updated {lastUpdated}</p>}
           </div>
-        )}
-      </section>
 
-      <section>
-        <h2 className="text-sm font-medium text-slate-300 mb-4">Token packs</h2>
-        {packsQuery.isLoading ? (
-          <TokenPacksSkeleton />
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-3">
-            {(packsQuery.data ?? []).map((pack) => {
-              const busy = checkoutMutation.isPending && checkoutMutation.variables === pack.id;
-              return (
-                <div key={pack.id} className="rounded-xl border border-border bg-panel p-5 flex flex-col gap-3">
-                  <div>
-                    <p className="font-medium text-slate-100">{pack.name}</p>
-                    <p className="text-sm text-slate-400 mt-1">{pack.tokens.toLocaleString()} tokens</p>
-                    <p className="text-lg font-mono tabular-nums text-slate-200 mt-2">{eur(pack.price, false)}</p>
-                  </div>
-                  <Button className="mt-auto w-full" disabled={checkoutMutation.isPending} onClick={() => checkoutMutation.mutate(pack.id)}>
-                    {busy ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin shrink-0" aria-hidden />
-                        Redirecting…
-                      </>
-                    ) : (
-                      "Buy"
-                    )}
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+          {packsQuery.isLoading ? (
+            <TokenPacksSkeleton />
+          ) : (
+            <div className="grid auto-rows-fr gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              {packs.map((pack, index) => (
+                <TokenPackCard
+                  key={pack.id}
+                  pack={pack}
+                  showFeaturedBadge={packs.length >= 2 && index === 1}
+                  isCheckoutBusy={checkoutMutation.isPending && checkoutMutation.variables === pack.id}
+                  isCheckoutLocked={checkoutMutation.isPending}
+                  onBuy={() => checkoutMutation.mutate(pack.id)}
+                />
+              ))}
+            </div>
+          )}
+        </section>
 
-      <section>
-        <h2 className="text-sm font-medium text-slate-300 mb-3">Activity</h2>
-        <div className="flex gap-1 border-b border-border mb-4" role="tablist" aria-label="Billing activity">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activityTab === "purchases"}
-            className={cn(
-              "px-3 py-2 text-sm font-medium rounded-t-md border-b-2 -mb-px transition-colors",
-              activityTab === "purchases"
-                ? "text-accent-light border-accent-light bg-surface/80"
-                : "text-slate-500 border-transparent hover:text-slate-300",
-            )}
-            onClick={() => setActivityTab("purchases")}
-          >
-            Purchase history
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={activityTab === "usage"}
-            className={cn(
-              "px-3 py-2 text-sm font-medium rounded-t-md border-b-2 -mb-px transition-colors",
-              activityTab === "usage"
-                ? "text-accent-light border-accent-light bg-surface/80"
-                : "text-slate-500 border-transparent hover:text-slate-300",
-            )}
-            onClick={() => setActivityTab("usage")}
-          >
-            Token usage
-          </button>
-        </div>
-
-        {activityTab === "purchases" && (
-          <>
-            {historyQuery.isLoading ? (
-              <PurchaseHistoryTableSkeleton />
-            ) : (historyQuery.data?.length ?? 0) === 0 ? (
-              <p className="text-sm text-slate-500 rounded-lg border border-dashed border-border px-4 py-8 text-center">
-                No purchases yet.
-              </p>
-            ) : (
-              <div className="overflow-x-auto rounded-lg border border-border">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-surface text-slate-400 text-xs uppercase tracking-wide">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">Pack</th>
-                      <th className="px-4 py-3 font-medium">Tokens</th>
-                      <th className="px-4 py-3 font-medium">Amount</th>
-                      <th className="px-4 py-3 font-medium">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {historyQuery.data!.map((row) => (
-                      <tr key={row.id} className="bg-panel/50">
-                        <td className="px-4 py-3 text-slate-200">{packNameById.get(row.packId) ?? row.packId}</td>
-                        <td className="px-4 py-3 font-mono tabular-nums text-slate-300">{row.tokens}</td>
-                        <td className="px-4 py-3 font-mono tabular-nums text-slate-300">{eur(row.amountCents, true)}</td>
-                        <td className="px-4 py-3 text-slate-400">{new Date(row.createdAt).toLocaleString()}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
-        )}
-
-        {activityTab === "usage" && (
-          <>
-            {usageQuery.isLoading ? (
-              <TokenUsageTableSkeleton />
-            ) : (usageQuery.data?.length ?? 0) === 0 ? (
-              <p className="text-sm text-slate-500 rounded-lg border border-dashed border-border px-4 py-8 text-center">
-                No token usage recorded yet.
-              </p>
-            ) : (
-              <div className="overflow-x-auto rounded-lg border border-border">
-                <table className="w-full text-sm text-left">
-                  <thead className="bg-surface text-slate-400 text-xs uppercase tracking-wide">
-                    <tr>
-                      <th className="px-4 py-3 font-medium">Kind</th>
-                      <th className="px-4 py-3 font-medium">Model</th>
-                      <th className="px-4 py-3 font-medium">Operation</th>
-                      <th className="px-4 py-3 font-medium">Tokens</th>
-                      <th className="px-4 py-3 font-medium">Costs meta</th>
-                      <th className="px-4 py-3 font-medium">Date</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border">
-                    {usageQuery.data!.map((row) => (
-                      <tr key={row.id} className="bg-panel/50">
-                        <td className="px-4 py-3 text-slate-200">{formatUsageKind(row.usageKind)}</td>
-                        <td className="px-4 py-3 text-slate-300 font-mono text-xs break-all max-w-[10rem] md:max-w-none">
-                          {row.modelId}
-                        </td>
-                        <td className="px-4 py-3 text-slate-400 text-xs">{row.operation ?? "—"}</td>
-                        <td className="px-4 py-3 font-mono tabular-nums text-slate-300">{row.tokens}</td>
-                        <td className="px-4 py-3 text-slate-500 text-xs max-w-[14rem] truncate" title={row.metadata ? JSON.stringify(row.metadata) : undefined}>
-                          {row.metadata ? "Yes" : "—"}
-                        </td>
-                        <td className="px-4 py-3 text-slate-400 whitespace-nowrap">
-                          {new Date(row.createdAt).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </>
-        )}
-      </section>
+        <BillingActivity activityTab={activityTab} onTabChange={setActivityTab} historyQuery={historyQuery} usageQuery={usageQuery} packNameById={packNameById} />
+      </div>
     </div>
   );
 }

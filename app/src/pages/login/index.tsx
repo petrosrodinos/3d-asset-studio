@@ -1,10 +1,14 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "@/features/auth/hooks/use-auth.hooks";
-import { LandingNav } from "@/pages/landing/components/LandingNav";
-import { Input } from "@/components/ui/Input";
+import { Link, useNavigate } from "react-router-dom";
+import { LogIn } from "lucide-react";
+import { AuthPageShell } from "@/components/layouts/AuthPageShell";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
+import { useAuth } from "@/features/auth/hooks/use-auth.hooks";
+
+const fieldClass =
+  "rounded-lg border-border/80 bg-surface/50 py-2.5 transition-colors focus:border-accent/50 focus:bg-surface/70";
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -29,43 +33,57 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="landing-mesh flex min-h-svh flex-col text-slate-200">
-      <LandingNav />
-      <main className="flex flex-1 flex-col items-center justify-center px-4 py-10">
-        <div className="w-full max-w-sm p-8 bg-panel border border-border rounded-lg shadow-lg shadow-black/20">
-          <h1 className="text-xl font-semibold text-slate-100 mb-6">Sign in</h1>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <Input
-              id="email"
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-            />
-            <Input
-              id="password"
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
-            {error && <p className="text-xs text-red-400">{error}</p>}
-            <Button type="submit" disabled={loading} className="w-full mt-2">
-              {loading ? <Spinner className="w-3.5 h-3.5" /> : "Sign in"}
-            </Button>
-          </form>
-          <p className="mt-4 text-xs text-slate-500 text-center">
-            No account?{" "}
-            <Link to="/register" className="text-accent-light hover:underline">
-              Register
-            </Link>
-          </p>
-        </div>
-      </main>
-    </div>
+    <AuthPageShell
+      title="Sign in"
+      subtitle="Welcome back — use your email and password to open the forge."
+      icon={LogIn}
+      footer={
+        <>
+          No account yet?{" "}
+          <Link
+            to="/register"
+            className="font-medium text-accent-light underline-offset-2 hover:underline"
+          >
+            Create an account
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <Input
+          id="email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className={fieldClass}
+          required
+        />
+        <Input
+          id="password"
+          label="Password"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          className={fieldClass}
+          required
+        />
+        {error ? (
+          <div
+            className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-300"
+            role="alert"
+          >
+            {error}
+          </div>
+        ) : null}
+        <Button type="submit" size="lg" className="w-full" disabled={loading}>
+          {loading ? <Spinner className="h-4 w-4" /> : "Sign in"}
+        </Button>
+      </form>
+    </AuthPageShell>
   );
 }

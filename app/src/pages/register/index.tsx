@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useRegister } from "@/features/auth/hooks/use-auth.hooks";
-import { LandingNav } from "@/pages/landing/components/LandingNav";
-import { useAuthStore } from "@/store/authStore";
-import { Input } from "@/components/ui/Input";
+import { Link, useNavigate } from "react-router-dom";
+import { UserPlus } from "lucide-react";
+import { AuthPageShell } from "@/components/layouts/AuthPageShell";
 import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 import { Spinner } from "@/components/ui/Spinner";
+import { useRegister } from "@/features/auth/hooks/use-auth.hooks";
+import { useAuthStore } from "@/store/authStore";
+
+const fieldClass =
+  "rounded-lg border-border/80 bg-surface/50 py-2.5 transition-colors focus:border-accent/50 focus:bg-surface/70";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -29,52 +33,66 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="landing-mesh flex min-h-svh flex-col text-slate-200">
-      <LandingNav />
-      <main className="flex flex-1 flex-col items-center justify-center px-4 py-10">
-        <div className="w-full max-w-sm p-8 bg-panel border border-border rounded-lg shadow-lg shadow-black/20">
-          <h1 className="text-xl font-semibold text-slate-100 mb-6">Create account</h1>
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-            <Input
-              id="displayName"
-              label="Display name"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              placeholder="Your name"
-            />
-            <Input
-              id="email"
-              label="Email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@example.com"
-              required
-            />
-            <Input
-              id="password"
-              label="Password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              required
-            />
-            {register.isError && (
-              <p className="text-xs text-red-400">{(register.error as Error).message}</p>
-            )}
-            <Button type="submit" disabled={register.isPending} className="w-full mt-2">
-              {register.isPending ? <Spinner className="w-3.5 h-3.5" /> : "Create account"}
-            </Button>
-          </form>
-          <p className="mt-4 text-xs text-slate-500 text-center">
-            Have an account?{" "}
-            <Link to="/login" className="text-accent-light hover:underline">
-              Sign in
-            </Link>
-          </p>
-        </div>
-      </main>
-    </div>
+    <AuthPageShell
+      title="Create account"
+      subtitle="Set up your profile — you will land in the forge as soon as you are signed in."
+      icon={UserPlus}
+      footer={
+        <>
+          Already registered?{" "}
+          <Link
+            to="/login"
+            className="font-medium text-accent-light underline-offset-2 hover:underline"
+          >
+            Sign in instead
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <Input
+          id="displayName"
+          label="Display name"
+          autoComplete="name"
+          value={displayName}
+          onChange={(e) => setDisplayName(e.target.value)}
+          placeholder="How we should greet you"
+          className={fieldClass}
+        />
+        <Input
+          id="email"
+          label="Email"
+          type="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className={fieldClass}
+          required
+        />
+        <Input
+          id="password"
+          label="Password"
+          type="password"
+          autoComplete="new-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="Choose a strong password"
+          className={fieldClass}
+          required
+        />
+        {register.isError ? (
+          <div
+            className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 text-sm text-red-300"
+            role="alert"
+          >
+            {(register.error as Error).message}
+          </div>
+        ) : null}
+        <Button type="submit" size="lg" className="w-full" disabled={register.isPending}>
+          {register.isPending ? <Spinner className="h-4 w-4" /> : "Create account"}
+        </Button>
+      </form>
+    </AuthPageShell>
   );
 }
