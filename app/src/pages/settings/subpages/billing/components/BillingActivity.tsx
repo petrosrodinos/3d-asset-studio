@@ -1,7 +1,8 @@
 import type { UseQueryResult } from "@tanstack/react-query";
 import type { LucideIcon } from "lucide-react";
 import { Receipt, Zap } from "lucide-react";
-import type { PurchaseRecordDto, TokenUsageRecordDto } from "@/features/billing/interfaces/billing.interfaces";
+import type { PurchaseRecordDto, TokenUsagePageDto } from "@/features/billing/interfaces/billing.interfaces";
+import { Pagination } from "@/components/ui/Pagination";
 import { cn } from "@/utils/cn";
 import { formatEur } from "@/features/billing/utils/format";
 import { formatUsageKind, formatUsageOperation } from "../utils";
@@ -14,8 +15,11 @@ interface BillingActivityProps {
   activityTab: BillingActivityTab;
   onTabChange: (tab: BillingActivityTab) => void;
   historyQuery: UseQueryResult<PurchaseRecordDto[] | undefined, Error>;
-  usageQuery: UseQueryResult<TokenUsageRecordDto[] | undefined, Error>;
+  usageQuery: UseQueryResult<TokenUsagePageDto | undefined, Error>;
   packNameById: Map<string, string>;
+  usagePage: number;
+  usagePageSize: number;
+  onUsagePageChange: (page: number) => void;
 }
 
 export function BillingActivity({
@@ -24,6 +28,9 @@ export function BillingActivity({
   historyQuery,
   usageQuery,
   packNameById,
+  usagePage,
+  usagePageSize,
+  onUsagePageChange,
 }: BillingActivityProps) {
   const tabs: { id: BillingActivityTab; label: string; icon: LucideIcon }[] = [
     { id: "purchases", label: "Purchase history", icon: Receipt },
@@ -120,50 +127,62 @@ export function BillingActivity({
         <>
           {usageQuery.isLoading ? (
             <TokenUsageTableSkeleton />
-          ) : (usageQuery.data?.length ?? 0) === 0 ? (
+          ) : (usageQuery.data?.total ?? 0) === 0 ? (
             <BillingEmptyState
               icon={Zap}
               title="No usage recorded"
               description="Token deductions from image generation, 3D, and chat will appear here."
             />
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-border bg-panel/40 ring-1 ring-white/5">
-              <table className="w-full text-sm text-left">
-                <thead>
-                  <tr className="border-b border-border bg-surface/70 text-slate-500">
-                    <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Kind</th>
-                    <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Model</th>
-                    <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Operation</th>
-                    <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Tokens</th>
-                    <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Date</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/70">
-                  {usageQuery.data!.map((row, i) => (
-                    <tr
-                      key={row.id}
-                      className={cn(
-                        "transition-colors hover:bg-surface/50",
-                        i % 2 === 1 ? "bg-surface/25" : "bg-transparent",
-                      )}
-                    >
-                      <td className="px-5 py-3.5 text-slate-200">
-                        <span className="tag-violet inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium">
-                          {formatUsageKind(row.usageKind)}
-                        </span>
-                      </td>
-                      <td className="px-5 py-3.5 text-slate-400 font-mono text-xs break-all max-w-40 md:max-w-none">
-                        {row.modelId}
-                      </td>
-                      <td className="px-5 py-3.5 text-slate-500 text-xs">{formatUsageOperation(row.operation)}</td>
-                      <td className="px-5 py-3.5 font-mono tabular-nums text-slate-200">{row.tokens}</td>
-                      <td className="px-5 py-3.5 text-slate-500 whitespace-nowrap">
-                        {new Date(row.createdAt).toLocaleString()}
-                      </td>
+            <div className="rounded-xl border border-border bg-panel/40 ring-1 ring-white/5 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead>
+                    <tr className="border-b border-border bg-surface/70 text-slate-500">
+                      <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Kind</th>
+                      <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Model</th>
+                      <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Operation</th>
+                      <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Tokens</th>
+                      <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Date</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-border/70">
+                    {(usageQuery.data?.items ?? []).map((row, i) => (
+                      <tr
+                        key={row.id}
+                        className={cn(
+                          "transition-colors hover:bg-surface/50",
+                          i % 2 === 1 ? "bg-surface/25" : "bg-transparent",
+                        )}
+                      >
+                        <td className="px-5 py-3.5 text-slate-200">
+                          <span className="tag-violet inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium">
+                            {formatUsageKind(row.usageKind)}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-slate-400 font-mono text-xs break-all max-w-40 md:max-w-none">
+                          {row.modelId}
+                        </td>
+                        <td className="px-5 py-3.5 text-slate-500 text-xs">{formatUsageOperation(row.operation)}</td>
+                        <td className="px-5 py-3.5 font-mono tabular-nums text-slate-200">{row.tokens}</td>
+                        <td className="px-5 py-3.5 text-slate-500 whitespace-nowrap">
+                          {new Date(row.createdAt).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <div className="px-5 pb-4 pt-1 bg-panel/40">
+                <Pagination
+                  page={usagePage}
+                  pageSize={usagePageSize}
+                  totalItems={usageQuery.data?.total ?? 0}
+                  onPageChange={onUsagePageChange}
+                  disabled={usageQuery.isFetching}
+                  ariaLabel="Token usage pages"
+                />
+              </div>
             </div>
           )}
         </>

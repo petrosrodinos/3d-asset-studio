@@ -40,7 +40,7 @@ router.get("/usage", requireAuth, (req, res, next) => {
   const parsed = usageQuerySchema.safeParse(req.query);
   if (!parsed.success) return res.status(400).json({ error: "Invalid query", details: parsed.error.flatten() });
   billing
-    .getUsageHistory(req.userId, parsed.data.limit)
+    .getUsageHistory(req.userId, parsed.data.limit, parsed.data.offset)
     .then((out) => res.json(out))
     .catch(next);
 });

@@ -122,10 +122,13 @@
           "request": {
             "method": "GET",
             "url": {
-              "raw": "{{baseUrl}}/api/billing/usage?limit=50",
+              "raw": "{{baseUrl}}/api/billing/usage?limit=20&offset=0",
               "host": ["{{baseUrl}}"],
               "path": ["api", "billing", "usage"],
-              "query": [{ "key": "limit", "value": "50" }]
+              "query": [
+                { "key": "limit", "value": "20" },
+                { "key": "offset", "value": "0" }
+              ]
             }
           }
         }

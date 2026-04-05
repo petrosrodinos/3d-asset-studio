@@ -298,30 +298,46 @@ export const OPEN_API_DOCUMENT = {
     "/api/billing/usage": {
       get: {
         tags: ["Billing"],
-        summary: "Token usage history",
+        summary: "Token usage history (paginated)",
         security: [{ cookieAuth: [] }],
         parameters: [
           {
             name: "limit",
             in: "query",
             required: false,
-            schema: { type: "integer", minimum: 1, maximum: 100, default: 50 },
-            description: "Max rows to return",
+            schema: { type: "integer", minimum: 1, maximum: 100, default: 20 },
+            description: "Page size (max rows per page)",
+          },
+          {
+            name: "offset",
+            in: "query",
+            required: false,
+            schema: { type: "integer", minimum: 0, default: 0 },
+            description: "Number of rows to skip (for offset pagination)",
           },
         ],
         responses: {
           "200": jsonContent({
-            type: "array",
-            items: {
-              type: "object",
-              properties: {
-                id: { type: "string" },
-                usageKind: { type: "string" },
-                modelId: { type: "string", nullable: true },
-                operation: { type: "string", nullable: true },
-                tokens: { type: "number" },
-                createdAt: { type: "string", format: "date-time" },
+            type: "object",
+            required: ["items", "total", "limit", "offset"],
+            properties: {
+              items: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    id: { type: "string" },
+                    usageKind: { type: "string" },
+                    modelId: { type: "string", nullable: true },
+                    operation: { type: "string", nullable: true },
+                    tokens: { type: "number" },
+                    createdAt: { type: "string", format: "date-time" },
+                  },
+                },
               },
+              total: { type: "integer", minimum: 0 },
+              limit: { type: "integer" },
+              offset: { type: "integer", minimum: 0 },
             },
           }),
           "400": errorContent("Invalid query"),

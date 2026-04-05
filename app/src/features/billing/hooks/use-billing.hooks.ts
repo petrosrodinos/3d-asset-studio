@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { checkout, getBalance, getHistory, getPacks, getUsage } from "@/features/billing/services/billing.services";
 
 export function useBalance(options?: { enabled?: boolean }) {
@@ -18,12 +18,15 @@ export function usePurchaseHistory() {
   return useQuery({ queryKey: ["billing", "history"], queryFn: getHistory });
 }
 
-export function useTokenUsage(options?: { enabled?: boolean; limit?: number }) {
-  const limit = options?.limit ?? 50;
+export function useTokenUsage(options?: { enabled?: boolean; page?: number; pageSize?: number }) {
+  const pageSize = options?.pageSize ?? 20;
+  const page = options?.page ?? 1;
+  const offset = (page - 1) * pageSize;
   return useQuery({
-    queryKey: ["billing", "usage", limit],
-    queryFn: () => getUsage(limit),
+    queryKey: ["billing", "usage", pageSize, offset],
+    queryFn: () => getUsage({ limit: pageSize, offset }),
     enabled: options?.enabled ?? true,
+    placeholderData: keepPreviousData,
   });
 }
 

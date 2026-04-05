@@ -23,3 +23,10 @@ export interface TokenUsageRecordDto {
   /** Provider cost snapshots when available (`providerCosts.aimlapi` / `providerCosts.trippo`). */
   metadata: unknown | null;
 }
+
+export interface TokenUsagePageDto {
+  items: TokenUsageRecordDto[];
+  total: number;
+  limit: number;
+  offset: number;
+}

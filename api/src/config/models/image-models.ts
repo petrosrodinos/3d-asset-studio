@@ -1,30 +1,30 @@
 import { usdToTokens } from "../../lib/models-cost";
-import { MARKUP_FACTOR } from "./pricing";
+import { MARKUP_FACTOR, DOLLARS_TO_EUR_RATE } from "./pricing";
 
 /** How AIML `/v1/images/generations` expects the reference image for this model */
 export type AimlI2iSourceKey = "image" | "image_url" | "image_urls";
 
 export type ImageModelDefinition = {
-  id: string;
-  name: string;
-  provider: string;
-  tokens_original: number;
-  price_original: number;
-  tokens: null;
-  price: null;
-  is_image_to_image: boolean;
-  available: boolean;
-  /** AIML wiring; omit when `id` matches AIML and defaults suffice */
-  aiml_api?: {
-    modelId?: string;
-    i2i?: {
-      sourceKey: AimlI2iSourceKey;
-      negativeStyle: "inline" | "negative_prompt_field";
-      mergedPromptMax?: number;
-      promptMax?: number;
-      negativeMax?: number;
+    id: string;
+    name: string;
+    provider: string;
+    tokens_original: number;
+    price_original: number;
+    tokens: null;
+    price: null;
+    is_image_to_image: boolean;
+    available: boolean;
+    /** AIML wiring; omit when `id` matches AIML and defaults suffice */
+    aiml_api?: {
+        modelId?: string;
+        i2i?: {
+            sourceKey: AimlI2iSourceKey;
+            negativeStyle: "inline" | "negative_prompt_field";
+            mergedPromptMax?: number;
+            promptMax?: number;
+            negativeMax?: number;
+        };
     };
-  };
 };
 
 const imageModels: ImageModelDefinition[] = [
@@ -33,7 +33,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "xAI / Grok Imagine Image Pro",
         provider: "xAI",
         tokens_original: usdToTokens(0.091, false),
-        price_original: 0.091,
+        price_original: 0.091 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -44,7 +44,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "xAI / Grok Imagine",
         provider: "xAI",
         tokens_original: usdToTokens(0.026, false),
-        price_original: 0.026,
+        price_original: 0.026 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -55,7 +55,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "ByteDance / Seadream 5.0 Lite",
         provider: "ByteDance",
         tokens_original: usdToTokens(0.046, false),
-        price_original: 0.046,
+        price_original: 0.046 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -66,7 +66,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Google / Gemini 3.1 Flash Image (Nano Banana 2)",
         provider: "Google",
         tokens_original: usdToTokens(0.325, false),
-        price_original: 0.325,
+        price_original: 0.325 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -77,7 +77,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Alibaba Cloud / Wan 2.6",
         provider: "Alibaba Cloud",
         tokens_original: usdToTokens(0.039, false),
-        price_original: 0.039,
+        price_original: 0.039 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -88,7 +88,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Black Forest Labs / FLUX.2 Max Edit",
         provider: "Black Forest Labs",
         tokens_original: usdToTokens(0.091, false),
-        price_original: 0.091,
+        price_original: 0.091 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: true,
@@ -103,7 +103,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Black Forest Labs / FLUX.2 Max",
         provider: "Black Forest Labs",
         tokens_original: usdToTokens(0.091, false),
-        price_original: 0.091,
+        price_original: 0.091 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -114,7 +114,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "OpenAI / GPT Image 1.5",
         provider: "OpenAI",
         tokens_original: usdToTokens(6.5, false),
-        price_original: 6.5,
+        price_original: 6.5 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -125,7 +125,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "ByteDance / Seedream 4.5",
         provider: "ByteDance",
         tokens_original: usdToTokens(0.052, false),
-        price_original: 0.052,
+        price_original: 0.052 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -136,7 +136,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Kling AI / Kling Image O1",
         provider: "Kling AI",
         tokens_original: usdToTokens(0.036, false),
-        price_original: 0.036,
+        price_original: 0.036 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -147,7 +147,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Alibaba Cloud / Z-Image Turbo LoRA",
         provider: "Alibaba Cloud",
         tokens_original: usdToTokens(0.011, false),
-        price_original: 0.011,
+        price_original: 0.011 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -158,7 +158,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Alibaba Cloud / Z-Image Turbo",
         provider: "Alibaba Cloud",
         tokens_original: usdToTokens(0.007, false),
-        price_original: 0.007,
+        price_original: 0.007 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -169,7 +169,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Black Forest Labs / Flux 2 LoRA",
         provider: "Black Forest Labs",
         tokens_original: usdToTokens(0.027, false),
-        price_original: 0.027,
+        price_original: 0.027 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -180,7 +180,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Black Forest Labs / FLUX.2 [pro]",
         provider: "Black Forest Labs",
         tokens_original: usdToTokens(0.039, false),
-        price_original: 0.039,
+        price_original: 0.039 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -191,7 +191,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Black Forest Labs / FLUX.2",
         provider: "Black Forest Labs",
         tokens_original: usdToTokens(0.016, false),
-        price_original: 0.016,
+        price_original: 0.016 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -202,7 +202,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Google / Gemini 3 Pro Image (Nano Banana Pro)",
         provider: "Google",
         tokens_original: usdToTokens(0.195, false),
-        price_original: 0.195,
+        price_original: 0.195 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -213,7 +213,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "OpenAI / GPT Image 1 Mini",
         provider: "OpenAI",
         tokens_original: usdToTokens(0.007, false),
-        price_original: 0.007,
+        price_original: 0.007 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -224,7 +224,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Tencent / Hunyuan3D Part",
         provider: "Tencent",
         tokens_original: usdToTokens(0.052, false),
-        price_original: 0.052,
+        price_original: 0.052 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -235,7 +235,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Alibaba Cloud / Wan 2.2 Flash",
         provider: "Alibaba Cloud",
         tokens_original: usdToTokens(0.033, false),
-        price_original: 0.033,
+        price_original: 0.033 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -246,7 +246,7 @@ const imageModels: ImageModelDefinition[] = [
         name: "Alibaba Cloud / Wan 2.2 Plus",
         provider: "Alibaba Cloud",
         tokens_original: usdToTokens(0.065, false),
-        price_original: 0.065,
+        price_original: 0.065 * DOLLARS_TO_EUR_RATE,
         tokens: null,
         price: null,
         is_image_to_image: false,
@@ -256,7 +256,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "wan-2-5-t2i-preview",
         name: "Alibaba Cloud / Wan 2.5 Preview",
         provider: "Alibaba Cloud",
-        price_original: 0.039,
+        price_original: 0.039 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.039, false),
         tokens: null,
         price: null,
@@ -267,7 +267,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "hunyuanimage-3-0",
         name: "Tencent / HunyuanImage 3.0",
         provider: "Tencent",
-        price_original: 0.13,
+        price_original: 0.13 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.13, false),
         tokens: null,
         price: null,
@@ -278,7 +278,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "reve-remix-image",
         name: "Reve / Reve Remix Image",
         provider: "Reve",
-        price_original: 0.052,
+        price_original: 0.052 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.052, false),
         tokens: null,
         price: null,
@@ -293,7 +293,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "reve-edit-image",
         name: "Reve / Reve Edit Image",
         provider: "Reve",
-        price_original: 0.052,
+        price_original: 0.052 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.052, false),
         tokens: null,
         price: null,
@@ -308,7 +308,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "reve-create-image",
         name: "Reve / Reve Create Image",
         provider: "Reve",
-        price_original: 0.031,
+        price_original: 0.031 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.031, false),
         tokens: null,
         price: null,
@@ -319,7 +319,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "qwen-image-edit",
         name: "Alibaba Cloud / Qwen Image Edit",
         provider: "Alibaba Cloud",
-        price_original: 0.059,
+        price_original: 0.059 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.059, false),
         tokens: null,
         price: null,
@@ -339,7 +339,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "flux-1-srpo-i2i",
         name: "Black Forest Labs / Flux SRPO Image‑to‑Image",
         provider: "Black Forest Labs",
-        price_original: 0.033,
+        price_original: 0.033 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.033, false),
         tokens: null,
         price: null,
@@ -354,7 +354,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "flux-1-srpo-t2i",
         name: "Black Forest Labs / Flux SRPO",
         provider: "Black Forest Labs",
-        price_original: 0.033,
+        price_original: 0.033 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.033, false),
         tokens: null,
         price: null,
@@ -365,7 +365,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "imagen-4-0-fast-generate-001",
         name: "Google / Imagen 4.0 Fast Generate",
         provider: "Google",
-        price_original: 0.026,
+        price_original: 0.026 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.026, false),
         tokens: null,
         price: null,
@@ -376,7 +376,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "imagen-4-0-generate-001",
         name: "Google / Imagen 4.0 Generate",
         provider: "Google",
-        price_original: 0.052,
+        price_original: 0.052 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.052, false),
         tokens: null,
         price: null,
@@ -387,7 +387,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "uso",
         name: "ByteDance / USO",
         provider: "ByteDance",
-        price_original: 0.13,
+        price_original: 0.13 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.13, false),
         tokens: null,
         price: null,
@@ -398,7 +398,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "seedream-4-edit",
         name: "ByteDance / Seedream 4 Edit",
         provider: "ByteDance",
-        price_original: 0.039,
+        price_original: 0.039 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.039, false),
         tokens: null,
         price: null,
@@ -413,7 +413,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "seedream-4",
         name: "ByteDance / Seedream 4 Text-to-Image",
         provider: "ByteDance",
-        price_original: 0.032,
+        price_original: 0.032 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.032, false),
         tokens: null,
         price: null,
@@ -424,7 +424,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "gemini-2-5-flash-image",
         name: "Google / Gemini 2.5 Flash Image (Nano Banana)",
         provider: "Google",
-        price_original: 0.051,
+        price_original: 0.051 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.051, false),
         tokens: null,
         price: null,
@@ -435,7 +435,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "qwen-image",
         name: "Alibaba Cloud / Qwen Image",
         provider: "Alibaba Cloud",
-        price_original: 0.026,
+        price_original: 0.026 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.026, false),
         tokens: null,
         price: null,
@@ -446,7 +446,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "imagen-4-ultra",
         name: "Google / Imagen 4 Ultra",
         provider: "Google",
-        price_original: 0.078,
+        price_original: 0.078 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.078, false),
         tokens: null,
         price: null,
@@ -457,7 +457,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "seedream-3-0",
         name: "ByteDance / Seedream 3.0 AI",
         provider: "ByteDance",
-        price_original: 0.032,
+        price_original: 0.032 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.032, false),
         tokens: null,
         price: null,
@@ -468,7 +468,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "gpt-image-1",
         name: "OpenAI / GPT Image 1 Model",
         provider: "OpenAI",
-        price_original: 0.012,
+        price_original: 0.012 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.012, false),
         tokens: null,
         price: null,
@@ -479,7 +479,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "flux-1-kontext-pro",
         name: "Black Forest Labs / Flux.1 Kontext [pro]",
         provider: "Black Forest Labs",
-        price_original: 0.052,
+        price_original: 0.052 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.052, false),
         tokens: null,
         price: null,
@@ -490,7 +490,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "flux-1-kontext-max",
         name: "Black Forest Labs / FLUX.1 Kontext [max]",
         provider: "Black Forest Labs",
-        price_original: 0.104,
+        price_original: 0.104 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.104, false),
         tokens: null,
         price: null,
@@ -501,7 +501,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "imagen-4-preview",
         name: "Google / Imagen 4 Preview | Text to Image",
         provider: "Google",
-        price_original: 0.052,
+        price_original: 0.052 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.052, false),
         tokens: null,
         price: null,
@@ -512,7 +512,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "imagen-3-api",
         name: "Google / Imagen 3",
         provider: "Google",
-        price_original: 0.039,
+        price_original: 0.039 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.039, false),
         tokens: null,
         price: null,
@@ -523,7 +523,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "flux-pro/v1.1-ultra",
         name: "Black Forest Labs / Flux pro 1.1 ultra",
         provider: "Black Forest Labs",
-        price_original: 0.078,
+        price_original: 0.078 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.078, false),
         tokens: null,
         price: null,
@@ -534,7 +534,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "recraft-v3",
         name: "RecraftAI / Recraft V3",
         provider: "RecraftAI",
-        price_original: 0.052,
+        price_original: 0.052 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.052, false),
         tokens: null,
         price: null,
@@ -545,7 +545,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "stable-diffusion-3-5-large-api",
         name: "Stability AI / Stable Diffusion 3.5 Large",
         provider: "Stability AI",
-        price_original: 0.085,
+        price_original: 0.085 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.085, false),
         tokens: null,
         price: null,
@@ -556,7 +556,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "flux-pro/v1.1",
         name: "Black Forest Labs / Flux pro 1.1",
         provider: "Black Forest Labs",
-        price_original: 0.052,
+        price_original: 0.052 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.052, false),
         tokens: null,
         price: null,
@@ -567,7 +567,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "openai-dall-e-2-api",
         name: "OpenAI / OpenAI DALL·E 2",
         provider: "OpenAI",
-        price_original: 0.026,
+        price_original: 0.026 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.026, false),
         tokens: null,
         price: null,
@@ -578,7 +578,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "stable-diffusion-3-api",
         name: "Stability AI / Stable Diffusion 3",
         provider: "Stability AI",
-        price_original: 0.046,
+        price_original: 0.046 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.046, false),
         tokens: null,
         price: null,
@@ -589,7 +589,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "flux-realism-lora-api",
         name: "Black Forest Labs / Flux realism",
         provider: "Black Forest Labs",
-        price_original: 0.046,
+        price_original: 0.046 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.046, false),
         tokens: null,
         price: null,
@@ -600,7 +600,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "flux-1-schnell-api",
         name: "Black Forest Labs / Flux Schnell",
         provider: "Black Forest Labs",
-        price_original: 0.004,
+        price_original: 0.004 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.004, false),
         tokens: null,
         price: null,
@@ -611,7 +611,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "flux-1-dev-api",
         name: "Black Forest Labs / Flux dev",
         provider: "Black Forest Labs",
-        price_original: 0.033,
+        price_original: 0.033 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.033, false),
         tokens: null,
         price: null,
@@ -622,7 +622,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "flux-pro",
         name: "Black Forest Labs / Flux pro",
         provider: "Black Forest Labs",
-        price_original: 0.065,
+        price_original: 0.065 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.065, false),
         tokens: null,
         price: null,
@@ -633,7 +633,7 @@ const imageModels: ImageModelDefinition[] = [
         id: "openai-dall-e-3",
         name: "OpenAI / OpenAI DALL·E 3",
         provider: "OpenAI",
-        price_original: 0.052,
+        price_original: 0.052 * DOLLARS_TO_EUR_RATE,
         tokens_original: usdToTokens(0.052, false),
         tokens: null,
         price: null,
@@ -641,6 +641,7 @@ const imageModels: ImageModelDefinition[] = [
         available: true
     }
 ];
+
 
 export type ImageModel = Omit<ImageModelDefinition, "tokens" | "price"> & { tokens: number; price: number };
 

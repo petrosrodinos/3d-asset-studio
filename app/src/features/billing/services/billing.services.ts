@@ -1,5 +1,5 @@
 import { apiFetch, jsonInit } from "@/utils/apiClient";
-import type { PurchaseRecordDto, TokenPackDto, TokenUsageRecordDto } from "@/features/billing/interfaces/billing.interfaces";
+import type { PurchaseRecordDto, TokenPackDto, TokenUsagePageDto } from "@/features/billing/interfaces/billing.interfaces";
 
 export function getBalance() {
   return apiFetch<{ balance: number }>("/api/billing/balance");
@@ -13,9 +13,12 @@ export function getHistory() {
   return apiFetch<PurchaseRecordDto[]>("/api/billing/history");
 }
 
-export function getUsage(limit = 50) {
-  const q = new URLSearchParams({ limit: String(limit) });
-  return apiFetch<TokenUsageRecordDto[]>(`/api/billing/usage?${q.toString()}`);
+export function getUsage(params: { limit: number; offset: number }) {
+  const q = new URLSearchParams({
+    limit: String(params.limit),
+    offset: String(params.offset),
+  });
+  return apiFetch<TokenUsagePageDto>(`/api/billing/usage?${q.toString()}`);
 }
 
 export function checkout(packId: string) {

@@ -24,3 +24,10 @@ export interface UsageRecord {
   /** Provider response snapshots (AimlAPI / Tripo) for cost reconciliation. */
   metadata: unknown | null;
 }
+
+export interface UsageHistoryPage {
+  items: UsageRecord[];
+  total: number;
+  limit: number;
+  offset: number;
+}

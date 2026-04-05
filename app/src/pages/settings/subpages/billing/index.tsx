@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -11,16 +11,33 @@ import { TokenPacksGrid } from "@/features/billing/components/TokenPacksGrid";
 import { BillingActivity, type BillingActivityTab } from "./components/BillingActivity";
 import { BalanceSkeleton } from "./components/BillingSkeletons";
 
+const USAGE_PAGE_SIZE = 20;
+
 export default function SettingsBillingPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const fetchMe = useAuthStore((s) => s.fetchMe);
   const [activityTab, setActivityTab] = useState<BillingActivityTab>("purchases");
+  const [usagePage, setUsagePage] = useState(1);
 
   const balanceQuery = useBalance();
   const packsQuery = usePacks();
   const historyQuery = usePurchaseHistory();
-  const usageQuery = useTokenUsage({ enabled: activityTab === "usage" });
+  const usageQuery = useTokenUsage({
+    enabled: activityTab === "usage",
+    page: usagePage,
+    pageSize: USAGE_PAGE_SIZE,
+  });
+
+  const usageTotal = usageQuery.data?.total ?? 0;
+  const usagePageCount = useMemo(
+    () => Math.max(1, Math.ceil(usageTotal / USAGE_PAGE_SIZE)),
+    [usageTotal],
+  );
+
+  useEffect(() => {
+    if (usagePage > usagePageCount) setUsagePage(usagePageCount);
+  }, [usagePage, usagePageCount]);
   const checkoutMutation = useCheckout();
 
   useEffect(() => {
@@ -120,7 +137,16 @@ export default function SettingsBillingPage() {
           />
         </section>
 
-        <BillingActivity activityTab={activityTab} onTabChange={setActivityTab} historyQuery={historyQuery} usageQuery={usageQuery} packNameById={packNameById} />
+        <BillingActivity
+          activityTab={activityTab}
+          onTabChange={setActivityTab}
+          historyQuery={historyQuery}
+          usageQuery={usageQuery}
+          packNameById={packNameById}
+          usagePage={usagePage}
+          usagePageSize={USAGE_PAGE_SIZE}
+          onUsagePageChange={setUsagePage}
+        />
       </div>
     </div>
   );

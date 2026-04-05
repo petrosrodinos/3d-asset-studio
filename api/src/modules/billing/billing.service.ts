@@ -2,7 +2,7 @@ import { stripe } from "../../integrations/stripe/stripe.client";
 import { prisma } from "../../integrations/db/client";
 import { env } from "../../config/env/env-validation";
 import { getPackById, TOKEN_PACKS } from "../../config/models/tokenPacks";
-import type { PurchaseRecord, UsageRecord } from "./billing.types";
+import type { PurchaseRecord, UsageHistoryPage, UsageRecord } from "./billing.types";
 
 function httpError(status: number, message: string): Error {
   const e = new Error(message);
@@ -54,13 +54,26 @@ export async function getPurchaseHistory(userId: string): Promise<PurchaseRecord
   }));
 }
 
-export async function getUsageHistory(userId: string, limit: number): Promise<UsageRecord[]> {
-  const rows = await prisma.tokenUsage.findMany({
-    where: { userId },
-    orderBy: { createdAt: "desc" },
-    take: Math.min(Math.max(limit, 1), 100),
-  });
-  return rows.map((r) => ({
+export async function getUsageHistory(
+  userId: string,
+  limit: number,
+  offset: number,
+): Promise<UsageHistoryPage> {
+  const take = Math.min(Math.max(limit, 1), 100);
+  const skip = Math.max(offset, 0);
+  const where = { userId };
+
+  const [rows, total] = await prisma.$transaction([
+    prisma.tokenUsage.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      skip,
+      take,
+    }),
+    prisma.tokenUsage.count({ where }),
+  ]);
+
+  const items: UsageRecord[] = rows.map((r) => ({
     id: r.id,
     usageKind: r.usageKind,
     modelId: r.modelId,
@@ -69,6 +82,8 @@ export async function getUsageHistory(userId: string, limit: number): Promise<Us
     createdAt: r.createdAt.toISOString(),
     metadata: r.metadata ?? null,
   }));
+
+  return { items, total, limit: take, offset: skip };
 }
 
 export function getTokenPacks() {
