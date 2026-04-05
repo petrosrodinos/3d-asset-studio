@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { MongoClient, ObjectId } from "mongodb";
 
-type VariantKey = "A" | "B";
+type VariantKey = "Light" | "Dark";
 
 function now() {
   return new Date();

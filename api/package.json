@@ -12,7 +12,7 @@
     "dev": "ts-node src/index.ts",
     "agent": "ts-node src/cli.ts",
     "server": "nodemon --watch src --ext ts --exec ts-node src/server.ts",
-    "tripo:image-to-animated-glb": "ts-node src/scripts/tripoImageToAnimatedGlb.ts",
+    "figurines:batch-generate": "ts-node src/scripts/batchFigurineGenerateAndMesh.ts",
     "db:push": "npx prisma db push",
     "db:seed": "npx prisma db seed",
     "db:generate": "npx prisma generate",
