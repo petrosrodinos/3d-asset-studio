@@ -124,6 +124,13 @@ export default function ForgePage() {
           onClick={() => setFigurePanelOpen(false)}
         />
       )}
+      {chatPanelOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/60 md:hidden"
+          onClick={() => setChatPanelOpen(false)}
+          aria-hidden
+        />
+      )}
 
       <div className="flex h-full overflow-hidden">
         {/* Left sidebar — drawer on mobile, inline on desktop */}
@@ -191,17 +198,25 @@ export default function ForgePage() {
         </div>
 
         <button
+          type="button"
           onClick={() => setChatPanelOpen(!chatPanelOpen)}
-          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center w-4 h-8 bg-panel border border-border rounded-l text-slate-400 hover:text-slate-200 hover:bg-surface transition-colors"
+          className="absolute right-0 top-1/2 -translate-y-1/2 z-10 hidden md:flex items-center justify-center w-4 h-8 bg-panel border border-border rounded-l text-slate-400 hover:text-slate-200 hover:bg-surface transition-colors"
+          aria-label={chatPanelOpen ? "Collapse chat panel" : "Expand chat panel"}
         >
           {chatPanelOpen ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
         </button>
 
-        {chatPanelOpen && (
-          <aside className="w-80 shrink-0 border-l border-border bg-panel overflow-hidden flex flex-col">
-            <ChatPanel />
-          </aside>
-        )}
+        <aside
+          className={cn(
+            "flex flex-col shrink-0 border-l border-border bg-panel overflow-hidden w-80 max-w-[min(100vw,20rem)]",
+            "fixed top-0 bottom-0 right-0 z-40 transition-transform duration-200 ease-out",
+            chatPanelOpen ? "translate-x-0" : "translate-x-full",
+            "md:relative md:top-auto md:bottom-auto md:right-auto md:z-auto md:max-w-none md:translate-x-0",
+            !chatPanelOpen && "md:hidden",
+          )}
+        >
+          <ChatPanel />
+        </aside>
       </div>
 
       {addSkinOpen && (
