@@ -12,6 +12,13 @@ export async function updateModel3DProcessing(id: string, taskIds: TaskIds) {
   });
 }
 
+export async function updateModel3DTaskIds(id: string, taskIds: Partial<TaskIds>) {
+  return prisma.model3D.update({
+    where: { id },
+    data: taskIds,
+  });
+}
+
 export async function setModel3DSuccess(args: {
   id: string;
   tripoUrls: TripoModelUrls;

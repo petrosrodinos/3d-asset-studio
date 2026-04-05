@@ -32,3 +32,7 @@ export async function listAnimations(model3dId: string) {
   return prisma.animation.findMany({ where: { model3dId }, orderBy: { createdAt: "asc" } });
 }
 
+export async function deleteAnimationById(id: string) {
+  return prisma.animation.delete({ where: { id } });
+}
+

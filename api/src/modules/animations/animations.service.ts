@@ -1,6 +1,8 @@
-import { archiveRemoteUrl } from "../../integrations/gcs/gcs.service";
+import { prisma } from "../../integrations/db/client";
+import { archiveRemoteUrl, deleteGcsFiles } from "../../integrations/gcs/gcs.service";
 import {
   createAnimation as createAnimationRepo,
+  deleteAnimationById,
   listAnimations as listAnimationsRepo,
   setAnimationFailed,
   setAnimationSuccess,
@@ -30,4 +32,32 @@ export async function failAnimation(id: string, error: string) {
 
 export async function listAnimations(model3dId: string) {
   return listAnimationsRepo(model3dId);
+}
+
+function httpError(status: number, message: string): Error {
+  const e = new Error(message);
+  (e as Error & { status: number }).status = status;
+  return e;
+}
+
+export async function deleteAnimationForUser(userId: string, model3dId: string, animationId: string) {
+  const anim = await prisma.animation.findUnique({
+    where: { id: animationId },
+    include: {
+      model3d: {
+        include: {
+          image: { include: { variant: { include: { skin: true } } } },
+        },
+      },
+    },
+  });
+
+  if (!anim || anim.model3dId !== model3dId) throw httpError(404, "Animation not found");
+
+  const figureId = anim.model3d.image.variant.skin.figureId;
+  const figure = await prisma.figure.findFirst({ where: { id: figureId, userId } });
+  if (!figure) throw httpError(404, "Animation not found");
+
+  if (anim.gcsGlbKey) await deleteGcsFiles([anim.gcsGlbKey]);
+  await deleteAnimationById(animationId);
 }

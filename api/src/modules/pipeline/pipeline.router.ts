@@ -2,6 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import { sseHeaders, sseWrite } from "../../lib/sse";
 import { runPipeline } from "./pipeline.service";
+import { runRigPipeline } from "./rig.service";
 import { streamAnimatePipeline } from "./animate-stream";
 import { TRIPO_CONFIG } from "../tripo/config/tripo.config";
 import { PIPELINE_CONFIG } from "./config/pipeline.config";
@@ -96,6 +97,45 @@ router.post("/mesh", upload.single("image"), async (req, res, next) => {
     res.end();
   }
 });
+
+// POST /api/pipeline/rig
+// Body (JSON): { model3dId }
+router.post(
+  "/rig",
+  (req, res, next) => {
+    const model3dId = (req.body as { model3dId?: string }).model3dId;
+    if (!model3dId || typeof model3dId !== "string") {
+      return res.status(400).json({ error: "model3dId is required" });
+    }
+    next();
+  },
+  requireTokens("rig", (req) => {
+    const id = (req.body as { model3dId?: string }).model3dId;
+    return typeof id === "string" && id ? `rig:${id}` : undefined;
+  }),
+  async (req, res) => {
+    const { model3dId } = req.body as { model3dId: string };
+    sseHeaders(res);
+    try {
+      await runRigPipeline({
+        model3dId,
+        userId: req.userId,
+        emitProgress: ({ step, status, data = {} }) => {
+          sseWrite(res, PIPELINE_CONFIG.PIPELINE_SSE_EVENTS.PROGRESS, { step, status, ...data });
+        },
+        emitEvent: (event, data) => {
+          sseWrite(res, event, data);
+        },
+      });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      console.error("[pipeline/rig]", msg);
+      sseWrite(res, PIPELINE_CONFIG.PIPELINE_SSE_EVENTS.ERROR, { message: msg });
+    } finally {
+      res.end();
+    }
+  },
+);
 
 // POST /api/pipeline/animate
 // Body (JSON): { model3dId, animations[] }

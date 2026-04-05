@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import type { Prisma } from "../../generated/prisma/client";
 import { TokenUsageKind } from "../../generated/prisma/enums";
 import { prisma } from "../../integrations/db/client";
@@ -68,8 +69,10 @@ async function debitWithUsageTx(
 
   if (cost <= 0) return;
 
-  if (idempotencyKey) {
-    const existing = await tx.tokenUsage.findUnique({ where: { idempotencyKey } });
+  const persistKey = idempotencyKey?.trim() ? idempotencyKey.trim() : `auto:${randomUUID()}`;
+
+  if (idempotencyKey?.trim()) {
+    const existing = await tx.tokenUsage.findUnique({ where: { idempotencyKey: persistKey } });
     if (existing) return;
   }
 
@@ -97,7 +100,7 @@ async function debitWithUsageTx(
       price,
       markupFactor,
       balanceAfter: userAfter?.tokenBalance ?? undefined,
-      idempotencyKey: idempotencyKey ?? undefined,
+      idempotencyKey: persistKey,
       metadata: metadata ?? undefined,
     },
   });
