@@ -20,7 +20,10 @@ const schema = z.object({
   STRIPE_SECRET_KEY: z.string().min(1),
   STRIPE_WEBHOOK_SECRET: z.string().min(1),
   STRIPE_PUBLISHABLE_KEY: z.string().min(1),
+  /** Frontend base URL (Stripe redirects, primary CORS origin). Not the API host. */
   APP_URL: z.string().url().default("http://localhost:5173"),
+  /** Optional comma-separated extra browser origins allowed by CORS (e.g. preview deploys, localhost). */
+  CORS_ORIGINS: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);
@@ -29,4 +32,13 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-export const env = parsed.data;
+function parseCommaList(s: string | undefined): string[] {
+  return s?.split(",").map((x) => x.trim()).filter(Boolean) ?? [];
+}
+
+const data = parsed.data;
+const corsAllowedOrigins = [
+  ...new Set([data.APP_URL, ...parseCommaList(data.CORS_ORIGINS)]),
+];
+
+export const env = { ...data, corsAllowedOrigins };

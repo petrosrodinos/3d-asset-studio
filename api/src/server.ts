@@ -32,7 +32,13 @@ const app = express();
 
 app.use(
   cors({
-    origin: env.APP_URL,
+    origin: (origin, callback) => {
+      if (!origin) {
+        callback(null, true);
+        return;
+      }
+      callback(null, env.corsAllowedOrigins.includes(origin));
+    },
     credentials: true,
   }),
 );
