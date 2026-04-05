@@ -12,7 +12,11 @@ RUN npm ci
 COPY tsconfig.json ./
 COPY src ./src
 
-RUN npx prisma generate && npm run build && npm prune --omit=dev
+# Copy Prisma .node query engines into dist/ (tsc does not emit them).
+RUN npx prisma generate && npm run build && \
+    mkdir -p dist/generated/prisma && \
+    find src/generated/prisma -maxdepth 1 -type f -name '*.node' -exec cp -t dist/generated/prisma/ {} + && \
+    npm prune --omit=dev
 
 FROM node:22-alpine AS runner
 
