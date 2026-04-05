@@ -9,6 +9,7 @@ export async function getAdminMetrics(): Promise<AdminMetricsDto> {
   const purchases = await prisma.tokenPurchase.findMany({
     select: { amountCents: true, stripeFeeCents: true },
   });
+  const totalStripeFeeCents = purchases.reduce((sum, p) => sum + (p.stripeFeeCents ?? 0), 0);
   const netPurchaseCents = purchases.reduce(
     (sum, p) => sum + p.amountCents - (p.stripeFeeCents ?? 0),
     0,
@@ -27,6 +28,7 @@ export async function getAdminMetrics(): Promise<AdminMetricsDto> {
 
   return {
     netPurchaseCents,
+    totalStripeFeeCents,
     tokenUsagePriceTotal,
     tokenUsagePriceOriginalTotal,
     tokenUsageMarginTotal,

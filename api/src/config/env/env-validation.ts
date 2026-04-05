@@ -12,6 +12,8 @@ const schema = z.object({
   GCS_BUCKET: z.string().min(1).optional(),
   GCS_PROJECT_ID: z.string().min(1).optional(),
   GCS_KEY_FILE: z.string().optional(),
+  /** Base64-encoded service account JSON. */
+  GCS_CREDENTIALS_JSON_BASE64: z.string().optional(),
   GCS_PUBLIC_BASE_URL: z.string().url().optional(),
   JWT_ACCESS_SECRET: z.string().min(5),
   JWT_REFRESH_SECRET: z.string().min(5),
@@ -20,9 +22,7 @@ const schema = z.object({
   STRIPE_SECRET_KEY: z.string().min(1),
   STRIPE_WEBHOOK_SECRET: z.string().min(1),
   STRIPE_PUBLISHABLE_KEY: z.string().min(1),
-  /** Frontend base URL (Stripe redirects, primary CORS origin). Not the API host. */
   APP_URL: z.string().url().default("http://localhost:5173"),
-  /** Optional comma-separated extra browser origins allowed by CORS (e.g. preview deploys, localhost). */
   CORS_ORIGINS: z.string().optional(),
 });
 

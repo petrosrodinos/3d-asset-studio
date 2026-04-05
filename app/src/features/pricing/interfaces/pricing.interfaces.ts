@@ -1,5 +1,5 @@
 export type PricingRatesDto = {
-  tokensPerUsd: number;
+  tokensPerEur: number;
   chatDebitTokens: number;
 };
 

@@ -31,10 +31,7 @@ function groupModelsByProvider(models: PricingImageModelDto[]) {
 
 function CatalogSkeleton() {
   return (
-    <div
-      className="relative w-full min-w-0 max-w-6xl mx-auto px-4 py-10 pb-16 sm:px-6 space-y-14"
-      aria-hidden
-    >
+    <div className="relative w-full min-w-0 max-w-6xl mx-auto px-4 py-10 pb-16 sm:px-6 space-y-14" aria-hidden>
       <header className="space-y-4">
         <Skeleton className="h-3 w-36 rounded" />
         <Skeleton className="h-10 w-full max-w-md rounded-lg sm:h-11" />
@@ -157,7 +154,7 @@ export default function PricingPage() {
           <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-4">How tokens work</h2>
           <div className="grid gap-6 sm:grid-cols-2">
             <div className="space-y-1">
-              <p className="text-2xl font-mono font-semibold tabular-nums text-accent-light">{rates.tokensPerUsd}</p>
+              <p className="text-2xl font-mono font-semibold tabular-nums text-accent-light">{rates.tokensPerEur}</p>
               <p className="text-xs text-slate-500">tokens per 1 EUR</p>
             </div>
           </div>

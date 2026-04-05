@@ -1,5 +1,6 @@
 export interface AdminMetricsDto {
   netPurchaseCents: number;
+  totalStripeFeeCents: number;
   tokenUsagePriceTotal: number;
   tokenUsagePriceOriginalTotal: number;
   tokenUsageMarginTotal: number;

@@ -96,3 +96,14 @@ export async function creditTokensFromWebhook(
     }),
   ]);
 }
+
+/** Backfill or refresh Stripe fee from BalanceTransaction (e.g. after `charge.updated`). */
+export async function updatePurchaseStripeFeeBySession(
+  stripeSessionId: string,
+  stripeFeeCents: number,
+): Promise<void> {
+  await prisma.tokenPurchase.updateMany({
+    where: { stripeSessionId },
+    data: { stripeFeeCents },
+  });
+}

@@ -62,6 +62,14 @@ export default function SettingsAdminPage() {
             value={
               metricsQuery.data != null ? formatEur(metricsQuery.data.netPurchaseCents, true) : null
             }
+            secondary={
+              metricsQuery.data != null
+                ? {
+                    label: "Total Stripe fees",
+                    value: formatEur(metricsQuery.data.totalStripeFeeCents, true),
+                  }
+                : null
+            }
           />
           <TokenUsageLedgerCard
             loading={metricsQuery.isLoading}
@@ -189,12 +197,14 @@ function MetricCard({
   title,
   subtitle,
   value,
+  secondary,
   loading,
   error,
 }: {
   title: string;
   subtitle: string;
   value: string | null;
+  secondary?: { label: string; value: string } | null;
   loading: boolean;
   error: boolean;
 }) {
@@ -205,6 +215,12 @@ function MetricCard({
       <p className="mt-4 text-2xl font-semibold tabular-nums tracking-tight text-slate-100">
         {loading ? "…" : error ? "—" : value}
       </p>
+      {secondary != null && !loading && !error ? (
+        <p className="mt-3 text-sm text-slate-400 tabular-nums">
+          <span className="text-slate-500">{secondary.label}: </span>
+          {secondary.value}
+        </p>
+      ) : null}
     </div>
   );
 }

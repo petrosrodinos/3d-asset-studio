@@ -1,4 +1,4 @@
-import { CHAT_DEBIT_TOKENS, TOKEN_PER_USD } from "../../config/models/pricing";
+import { CHAT_DEBIT_TOKENS, TOKENS_PER_EUR } from "../../config/models/pricing";
 import { TOKEN_PACKS } from "../../config/models/tokenPacks";
 import {
   getTokenOperationDebit,
@@ -24,7 +24,7 @@ function isListedOperation(id: TokenOperation): id is ListedTokenOperation {
 export function getPricingCatalog() {
   return {
     rates: {
-      tokensPerUsd: TOKEN_PER_USD,
+      tokensPerEur: TOKENS_PER_EUR,
       chatDebitTokens: CHAT_DEBIT_TOKENS,
     },
     packs: TOKEN_PACKS.map(({ id, name, tokens, price }) => ({ id, name, tokens, price })),

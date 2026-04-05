@@ -8,7 +8,7 @@ import {
   CHAT_PRICE_ORIGINAL_USD,
   CHAT_TOKENS_ORIGINAL,
   MARKUP_FACTOR,
-  TOKEN_PER_USD,
+  TOKENS_PER_EUR,
 } from "../../config/models/pricing";
 import {
   getTokenOperationDebit,
@@ -198,8 +198,8 @@ export async function debitForOperation(
   let usageKind: (typeof TokenUsageKind)[keyof typeof TokenUsageKind] = TokenUsageKind.trippo;
   let modelId = "trippo";
   let tokensOriginal = cost;
-  let priceOriginal = cost / TOKEN_PER_USD;
-  let price = cost / TOKEN_PER_USD;
+  let priceOriginal = cost / TOKENS_PER_EUR;
+  let price = cost / TOKENS_PER_EUR;
 
   if (operation === "chat") {
     usageKind = TokenUsageKind.chat;
