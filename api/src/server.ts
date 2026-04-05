@@ -37,6 +37,10 @@ app.use(
   }),
 );
 
+app.get("/health", (_req, res) => {
+  res.status(200).json({ ok: true });
+});
+
 app.use("/api", stripeWebhookRouter);
 
 app.use(express.json({ limit: "50mb" }));
