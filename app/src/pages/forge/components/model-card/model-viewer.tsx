@@ -9,6 +9,8 @@ interface ModelViewerProps {
   className?: string;
   /** Applied to the inner `model-viewer` element (e.g. `h-full` for flexible layouts). */
   viewerClassName?: string;
+  /** Ground shadow strength (0 = none). Default `"1"`. */
+  shadowIntensity?: string;
 }
 
 type ModelViewerPlayback = HTMLElement & {
@@ -29,7 +31,13 @@ async function ensureModelViewerDefined(): Promise<void> {
   await customElements.whenDefined("model-viewer");
 }
 
-export function ModelViewer({ src, animationName, className, viewerClassName }: ModelViewerProps) {
+export function ModelViewer({
+  src,
+  animationName,
+  className,
+  viewerClassName,
+  shadowIntensity = "1",
+}: ModelViewerProps) {
   const viewerRef = useRef<HTMLElement | null>(null);
   const [playing, setPlaying] = useState(false);
 
@@ -83,7 +91,7 @@ export function ModelViewer({ src, animationName, className, viewerClassName }: 
         src={src}
         auto-rotate=""
         camera-controls=""
-        shadow-intensity="1"
+        shadow-intensity={shadowIntensity}
         animation-name={animationName}
         className={cn("w-full h-[360px] bg-panel", viewerClassName)}
       />

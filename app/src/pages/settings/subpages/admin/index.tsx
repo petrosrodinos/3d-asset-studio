@@ -1,6 +1,7 @@
 import { Shield } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/use-auth.hooks";
 import { useAdminMetrics, useAdminUsers } from "@/features/admin/hooks/use-admin.hooks";
+import type { AdminMetricsDto } from "@/features/admin/interfaces/admin.interfaces";
 import { formatEur } from "@/features/billing/utils/format";
 import { cn } from "@/utils/cn";
 
@@ -42,14 +43,11 @@ export default function SettingsAdminPage() {
               metricsQuery.data != null ? formatEur(metricsQuery.data.netPurchaseCents, true) : null
             }
           />
-          <MetricCard
-            title="Token usage margin"
-            subtitle="Σ (price − priceOriginal) on usage ledger (USD-equivalent units)."
+          <TokenUsageLedgerCard
             loading={metricsQuery.isLoading}
             error={metricsQuery.isError}
-            value={
-              metricsQuery.data != null ? formatUsdLedger(metricsQuery.data.tokenUsageMarginTotal) : null
-            }
+            data={metricsQuery.data}
+            formatUsd={formatUsdLedger}
           />
         </section>
 
@@ -152,6 +150,47 @@ function MetricCard({
       <p className="mt-4 text-2xl font-semibold tabular-nums tracking-tight text-slate-100">
         {loading ? "…" : error ? "—" : value}
       </p>
+    </div>
+  );
+}
+
+function TokenUsageLedgerCard({
+  loading,
+  error,
+  data,
+  formatUsd,
+}: {
+  loading: boolean;
+  error: boolean;
+  data: AdminMetricsDto | undefined;
+  formatUsd: (n: number) => string;
+}) {
+  return (
+    <div className="rounded-2xl border border-border bg-panel/80 ring-1 ring-white/5 p-5 md:p-6">
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Token usage (ledger)</p>
+      <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+        Totals over all <code className="text-slate-500">TokenUsage</code> rows (USD-equivalent units).
+      </p>
+      {loading || error || !data ? (
+        <p className="mt-4 text-2xl font-semibold tabular-nums tracking-tight text-slate-100">
+          {loading ? "…" : "—"}
+        </p>
+      ) : (
+        <dl className="mt-4 space-y-3">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <dt className="text-xs text-slate-500">Σ price</dt>
+            <dd className="text-lg font-semibold tabular-nums text-slate-100">{formatUsd(data.tokenUsagePriceTotal)}</dd>
+          </div>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <dt className="text-xs text-slate-500">Σ priceOriginal</dt>
+            <dd className="text-lg font-semibold tabular-nums text-slate-200">{formatUsd(data.tokenUsagePriceOriginalTotal)}</dd>
+          </div>
+          <div className="border-t border-border/80 pt-3 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <dt className="text-xs font-medium text-violet-300/90">Net margin (Σ price − Σ priceOriginal)</dt>
+            <dd className="text-xl font-semibold tabular-nums text-violet-200">{formatUsd(data.tokenUsageMarginTotal)}</dd>
+          </div>
+        </dl>
+      )}
     </div>
   );
 }

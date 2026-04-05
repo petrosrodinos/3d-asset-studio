@@ -13,9 +13,20 @@ export async function getAdminMetrics(): Promise<AdminMetricsDto> {
   const usages = await prisma.tokenUsage.findMany({
     select: { price: true, priceOriginal: true },
   });
-  const tokenUsageMarginTotal = usages.reduce((sum, u) => sum + (u.price - u.priceOriginal), 0);
+  let tokenUsagePriceTotal = 0;
+  let tokenUsagePriceOriginalTotal = 0;
+  for (const u of usages) {
+    tokenUsagePriceTotal += u.price;
+    tokenUsagePriceOriginalTotal += u.priceOriginal;
+  }
+  const tokenUsageMarginTotal = tokenUsagePriceTotal - tokenUsagePriceOriginalTotal;
 
-  return { netPurchaseCents, tokenUsageMarginTotal };
+  return {
+    netPurchaseCents,
+    tokenUsagePriceTotal,
+    tokenUsagePriceOriginalTotal,
+    tokenUsageMarginTotal,
+  };
 }
 
 export async function listUsersForAdmin(): Promise<AdminUserRowDto[]> {

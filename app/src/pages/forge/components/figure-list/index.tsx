@@ -92,8 +92,7 @@ export const FigureList = forwardRef<FigureListHandle, FigureListProps>(function
     if (!modal || !modal.name.trim()) return;
     if (modal.mode === "create") {
       const created = await createFigure.mutateAsync({ name: modal.name.trim(), type: modal.type });
-      setActiveFigure(created);
-      setActiveSkin(null);
+      handleSelect(created);
     } else if (modal.figure) {
       await updateFigure.mutateAsync({ id: modal.figure.id, dto: { name: modal.name.trim(), type: modal.type } });
     }

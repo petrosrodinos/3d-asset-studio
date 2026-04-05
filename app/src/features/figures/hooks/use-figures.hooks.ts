@@ -7,6 +7,7 @@ import {
   updateFigure,
 } from "@/features/figures/services/figures.services";
 import type { CreateFigureDto, UpdateFigureParams } from "@/features/figures/interfaces/figure.interfaces";
+import type { Figure } from "@/interfaces";
 
 export function useFigures() {
   return useQuery({ queryKey: ["figures"], queryFn: listFigures });
@@ -16,8 +17,17 @@ export function useCreateFigure() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (dto: CreateFigureDto) => createFigure(dto),
-    onSuccess: () => {
+    onSuccess: (created) => {
       toast.success("Figure created");
+      // Keep list in sync immediately so forge's "active figure must exist in list" effect
+      // does not reset selection to figures[0] while the refetch is still in flight.
+      qc.setQueryData<Figure[]>(["figures"], (old) => {
+        if (!old) return [created];
+        if (old.some((f) => f.id === created.id)) {
+          return old.map((f) => (f.id === created.id ? created : f));
+        }
+        return [created, ...old];
+      });
       void qc.invalidateQueries({ queryKey: ["figures"] });
     },
     onError: (error) =>

@@ -53,7 +53,58 @@ export const LANDING_PACKS_TITLE = "Token packs";
 export const LANDING_PACKS_SUBTITLE =
   "Pick a pack to start with — create an account and pay securely through Stripe.";
 
-export const LANDING_VISUAL_CAPTION = "Image → mesh → rig → animate";
+/** Base URL for batch-exported hero GLBs (`app/public/3d-samples/generated-by-figure-type/...`). */
+export const LANDING_HERO_GENERATED_GLBS_BASE = "/3d-samples/generated-by-figure-type";
+
+/** One hero tile; omit `url`, or set `""` / `null`, to hide that generation in the landing grid. */
+export type LandingHeroGlbSlot = {
+  generationIndex: number;
+  url?: string | null;
+};
+
+/**
+ * GLB paths per forge figure type, matching batch output: `{type}/generation {n}/mesh.glb`.
+ * Align `value` keys with `FIGURE_TYPES` in `figure-list/index.tsx`.
+ */
+export const LANDING_HERO_GENERATED_GLBS_BY_TYPE = [
+  { value: "creature", label: "Creature" },
+  { value: "npc", label: "NPC" },
+  { value: "humanoid", label: "Humanoid" },
+  { value: "obstacle", label: "Obstacle" },
+  { value: "weapon", label: "Weapon" },
+  // { value: "armor", label: "Armor" },
+  { value: "vehicle", label: "Vehicle" },
+  { value: "mount", label: "Mount" },
+  { value: "building", label: "Building" },
+  // { value: "environment_prop", label: "Environment Prop" },
+  { value: "item", label: "Item / Collectible" },
+  { value: "projectile", label: "Projectile" },
+  { value: "effect", label: "Effect" },
+].map(({ value, label }) => {
+  const generations = [1, 2, 3] as const;
+  return {
+    type: value,
+    label,
+    glbs: generations.map(
+      (generationIndex): LandingHeroGlbSlot => ({
+        generationIndex,
+        /** Absolute path from site root (Vite `public/`). */
+        url: `${LANDING_HERO_GENERATED_GLBS_BASE}/${value}/${encodeURIComponent(`generation ${generationIndex}`)}/mesh.glb`,
+      }),
+    ),
+  };
+});
+
+/**
+ * Lookup: figure type → `{ label, glbs: [{ generationIndex, url }] }`.
+ * Same data as `LANDING_HERO_GENERATED_GLBS_BY_TYPE`, keyed by `type` for quick access.
+ */
+export const LANDING_HERO_GENERATED_GLBS_MAP = Object.fromEntries(
+  LANDING_HERO_GENERATED_GLBS_BY_TYPE.map((entry) => [entry.type, { label: entry.label, glbs: entry.glbs }]),
+) as Record<
+  (typeof LANDING_HERO_GENERATED_GLBS_BY_TYPE)[number]["type"],
+  { label: string; glbs: LandingHeroGlbSlot[] }
+>;
 
 /** Static GLB files in `app/public/3d-samples` (served at `/3d-samples/...`). */
 export const LANDING_3D_SAMPLES = [

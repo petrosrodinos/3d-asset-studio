@@ -350,16 +350,23 @@ export const OPEN_API_DOCUMENT = {
         tags: ["Admin"],
         summary: "Admin revenue metrics",
         description:
-          "Net Stripe checkout volume after fees (`netPurchaseCents`) and cumulative usage ledger margin Σ(price − priceOriginal).",
+          "Net Stripe checkout volume after fees (`netPurchaseCents`) and usage ledger totals: Σ price, Σ priceOriginal, and net margin.",
         security: [{ cookieAuth: [] }],
         responses: {
           "200": jsonContent({
             type: "object",
             properties: {
               netPurchaseCents: { type: "number" },
+              tokenUsagePriceTotal: { type: "number" },
+              tokenUsagePriceOriginalTotal: { type: "number" },
               tokenUsageMarginTotal: { type: "number" },
             },
-            required: ["netPurchaseCents", "tokenUsageMarginTotal"],
+            required: [
+              "netPurchaseCents",
+              "tokenUsagePriceTotal",
+              "tokenUsagePriceOriginalTotal",
+              "tokenUsageMarginTotal",
+            ],
           }),
           "401": errorContent("Unauthorized"),
           "403": errorContent("Forbidden"),
