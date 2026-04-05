@@ -10,6 +10,7 @@ import SettingsPage from "@/pages/settings";
 import SettingsAccountPage from "@/pages/settings/subpages/account";
 import SettingsBillingPage from "@/pages/settings/subpages/billing";
 import PricingPage from "@/pages/pricing";
+import LandingPage from "@/pages/landing";
 
 function RequireAuth({ children }: PropsWithChildren) {
   const { user, loading } = useAuth();
@@ -22,23 +23,34 @@ function RequireAuth({ children }: PropsWithChildren) {
   return <>{children}</>;
 }
 
+function LandingRoute() {
+  const { loading } = useAuth();
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-surface">
+        <Spinner className="w-6 h-6" />
+      </div>
+    );
+  }
+  return <LandingPage />;
+}
+
 export function AppRoutes() {
   return (
     <Routes>
+      <Route path="/" element={<LandingRoute />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/pricing" element={<Shell />}>
         <Route index element={<PricingPage />} />
       </Route>
       <Route
-        path="/"
         element={
           <RequireAuth>
             <Shell />
           </RequireAuth>
         }
       >
-        <Route index element={<Navigate to="/forge" replace />} />
         <Route path="forge" element={<ForgePage />} />
         <Route path="billing" element={<Navigate to="/settings/billing" replace />} />
         <Route path="settings" element={<SettingsPage />}>

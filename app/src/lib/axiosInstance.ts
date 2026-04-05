@@ -2,7 +2,12 @@ import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { API_BASE_URL } from "@/utils/constants";
 
 function authRedirectAllowedPath(pathname: string) {
-  return pathname === "/login" || pathname === "/register" || pathname === "/pricing";
+  return (
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname === "/register" ||
+    pathname === "/pricing"
+  );
 }
 
 export const axiosInstance = axios.create({

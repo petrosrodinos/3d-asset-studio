@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Box, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { cn } from "@/utils/cn";
 import { useFigures } from "@/features/figures/hooks/use-figures.hooks";
 import { useCreateSkin, useDeleteSkin } from "@/features/skins/hooks/use-skins.hooks";
 import { useForgeStore } from "@/store/forgeStore";
-import { FigureList } from "@/pages/forge/components/figure-list";
+import { FigureList, type FigureListHandle } from "@/pages/forge/components/figure-list";
 import { SkinTabs } from "@/pages/forge/components/skin-tabs";
 import { SkinPanel } from "@/pages/forge/components/skin-panel";
 import { ChatPanel } from "@/pages/forge/components/chat-panel";
@@ -64,6 +64,7 @@ export default function ForgePage() {
 
   const activeFigureId = activeFigure?.id;
 
+  const figureListRef = useRef<FigureListHandle>(null);
   const [addSkinOpen, setAddSkinOpen] = useState(false);
   const [newSkinName, setNewSkinName] = useState("");
 
@@ -147,7 +148,7 @@ export default function ForgePage() {
             figurePanelOpen ? "md:w-52" : "md:w-[3.25rem]",
           )}
         >
-          <FigureList collapsed={!figurePanelOpen} />
+          <FigureList ref={figureListRef} collapsed={!figurePanelOpen} />
         </aside>
 
         <div className="flex-1 flex flex-col overflow-hidden min-w-0 relative">
@@ -190,9 +191,32 @@ export default function ForgePage() {
                 ) : null}
               </div>
             </>
+          ) : Array.isArray(figures) && figures.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full px-6 py-12 text-center">
+              <div
+                className="mb-5 flex h-[5.5rem] w-[5.5rem] items-center justify-center rounded-2xl border border-border bg-gradient-to-b from-surface to-panel shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] ring-1 ring-accent/20"
+                aria-hidden
+              >
+                <Box className="h-10 w-10 text-accent-light/90" strokeWidth={1.35} />
+              </div>
+              <h2 className="text-lg font-semibold tracking-tight text-slate-100 mb-2">No figures yet</h2>
+              <p className="text-sm text-slate-500 max-w-xs mb-7 leading-relaxed">
+                Create a figure to organize skins, textures, and 3D models for your character or asset.
+              </p>
+              <Button
+                type="button"
+                size="lg"
+                onClick={() => figureListRef.current?.openCreateModal()}
+                className="shadow-md shadow-accent/15"
+              >
+                <Plus size={18} strokeWidth={2} aria-hidden />
+                Create figure
+              </Button>
+            </div>
           ) : (
-            <div className="flex items-center justify-center h-full text-sm text-slate-500">
-              Select a figure from the left panel to start
+            <div className="flex flex-col items-center justify-center h-full gap-2 px-6 text-center text-sm text-slate-500">
+              <Box className="h-8 w-8 text-slate-600 opacity-80" strokeWidth={1.25} aria-hidden />
+              <p>Select a figure from the left panel to start</p>
             </div>
           )}
         </div>

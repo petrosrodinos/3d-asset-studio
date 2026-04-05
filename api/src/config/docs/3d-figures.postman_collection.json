@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "3D Figures API",
-    "description": "API for auth, image/model generation, Tripo pipeline, and figure domain resources.",
+    "description": "API for auth, billing, image/model generation, Tripo pipeline, and figure domain resources.\n\n**Auth:** Log in with *Login* first; Postman stores the `access_token` cookie for `{{baseUrl}}` and sends it on later requests. Protected routes need that session (and enough token balance where noted).",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -12,6 +12,25 @@
     }
   ],
   "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "Liveness",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/health", "host": ["{{baseUrl}}"], "path": ["health"] }
+          }
+        },
+        {
+          "name": "OpenAPI JSON",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/openapi.json", "host": ["{{baseUrl}}"], "path": ["api", "openapi.json"] }
+          }
+        }
+      ]
+    },
     {
       "name": "Auth",
       "item": [
@@ -58,6 +77,68 @@
           "request": {
             "method": "GET",
             "url": { "raw": "{{baseUrl}}/api/auth/me", "host": ["{{baseUrl}}"], "path": ["api", "auth", "me"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Billing",
+      "item": [
+        {
+          "name": "List token packs",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/billing/packs", "host": ["{{baseUrl}}"], "path": ["api", "billing", "packs"] }
+          }
+        },
+        {
+          "name": "Create Stripe checkout session",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/billing/checkout", "host": ["{{baseUrl}}"], "path": ["api", "billing", "checkout"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"packId\": \"your-pack-id\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Token balance",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/billing/balance", "host": ["{{baseUrl}}"], "path": ["api", "billing", "balance"] }
+          }
+        },
+        {
+          "name": "Purchase history",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/billing/history", "host": ["{{baseUrl}}"], "path": ["api", "billing", "history"] }
+          }
+        },
+        {
+          "name": "Usage history",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/api/billing/usage?limit=50",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "billing", "usage"],
+              "query": [{ "key": "limit", "value": "50" }]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pricing",
+      "item": [
+        {
+          "name": "Pricing catalog",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/api/pricing/catalog", "host": ["{{baseUrl}}"], "path": ["api", "pricing", "catalog"] }
           }
         }
       ]
@@ -253,7 +334,7 @@
             "url": { "raw": "{{baseUrl}}/api/tripo/start-retarget", "host": ["{{baseUrl}}"], "path": ["api", "tripo", "start-retarget"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"rigTaskId\": \"rig-task-id-here\",\n  \"animation\": \"walk\"\n}"
+              "raw": "{\n  \"rigTaskId\": \"rig-task-id-here\",\n  \"animation\": \"preset:walk\"\n}"
             }
           }
         },
@@ -265,7 +346,7 @@
             "url": { "raw": "{{baseUrl}}/api/start-retarget", "host": ["{{baseUrl}}"], "path": ["api", "start-retarget"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"rigTaskId\": \"rig-task-id-here\",\n  \"animation\": \"walk\"\n}"
+              "raw": "{\n  \"rigTaskId\": \"rig-task-id-here\",\n  \"animation\": \"preset:walk\"\n}"
             }
           }
         }
@@ -325,7 +406,7 @@
             "url": { "raw": "{{baseUrl}}/api/figures", "host": ["{{baseUrl}}"], "path": ["api", "figures"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Warrior\",\n  \"type\": \"humanoid\",\n  \"metadata\": {}\n}"
+              "raw": "{\n  \"name\": \"Warrior\",\n  \"type\": \"figure\",\n  \"metadata\": {}\n}"
             }
           }
         },
@@ -354,7 +435,7 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Updated Warrior\",\n  \"type\": \"humanoid\",\n  \"metadata\": {}\n}"
+              "raw": "{\n  \"name\": \"Updated Warrior\",\n  \"type\": \"figure\",\n  \"metadata\": {}\n}"
             }
           }
         },
@@ -395,7 +476,7 @@
             "url": { "raw": "{{baseUrl}}/api/figures/ai-variant", "host": ["{{baseUrl}}"], "path": ["api", "figures", "ai-variant"] },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"description\": \"A powerful warrior\",\n  \"variant\": \"Hero armor\",\n  \"context\": {},\n  \"availableModels\": [\n    { \"id\": \"flux/schnell\", \"label\": \"Flux Schnell\" }\n  ]\n}"
+              "raw": "{\n  \"description\": \"A powerful warrior\",\n  \"variant\": \"Hero armor\",\n  \"context\": {\n    \"figureName\": \"Warrior\",\n    \"figureType\": \"figure\",\n    \"skinName\": \"Base\"\n  },\n  \"availableModels\": [\n    { \"id\": \"flux/schnell\", \"label\": \"Flux Schnell\" }\n  ]\n}"
             }
           }
         }
@@ -430,6 +511,26 @@
             "body": {
               "mode": "raw",
               "raw": "{\n  \"name\": \"Default Skin\",\n  \"isBase\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Rename skin",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/figures/:figureId/skins/:skinId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "figures", ":figureId", "skins", ":skinId"],
+              "variable": [
+                { "key": "figureId", "value": "figure-id-here" },
+                { "key": "skinId", "value": "skin-id-here" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Renamed skin\"\n}"
             }
           }
         },
@@ -469,6 +570,42 @@
       "name": "Variants",
       "item": [
         {
+          "name": "Create variant",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/figures/:figureId/skins/:skinId/variants",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "figures", ":figureId", "skins", ":skinId", "variants"],
+              "variable": [
+                { "key": "figureId", "value": "figure-id-here" },
+                { "key": "skinId", "value": "skin-id-here" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Optional display name\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Delete variant by id",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/figures/:figureId/skins/:skinId/variants/by-id/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "figures", ":figureId", "skins", ":skinId", "variants", "by-id", ":id"],
+              "variable": [
+                { "key": "figureId", "value": "figure-id-here" },
+                { "key": "skinId", "value": "skin-id-here" },
+                { "key": "id", "value": "variant-mongodb-id" }
+              ]
+            }
+          }
+        },
+        {
           "name": "Get variant",
           "request": {
             "method": "GET",
@@ -501,7 +638,28 @@
             },
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"prompt\": \"Updated prompt\"\n}"
+              "raw": "{\n  \"name\": \"Variant A\",\n  \"prompt\": \"A fierce warrior portrait\",\n  \"negativePrompt\": \"blurry\",\n  \"imageModel\": \"flux/schnell\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Generate image for variant",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/figures/:figureId/skins/:skinId/variants/:variant/generate-image",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "figures", ":figureId", "skins", ":skinId", "variants", ":variant", "generate-image"],
+              "variable": [
+                { "key": "figureId", "value": "figure-id-here" },
+                { "key": "skinId", "value": "skin-id-here" },
+                { "key": "variant", "value": "A" }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"prompt\": \"Optional override\",\n  \"model\": \"flux/schnell\",\n  \"negativePrompt\": \"\",\n  \"sourceImageDataUrl\": \"\"\n}"
             }
           }
         }
@@ -522,6 +680,29 @@
                 { "key": "figureId", "value": "figure-id-here" },
                 { "key": "skinId", "value": "skin-id-here" },
                 { "key": "variantId", "value": "variant-id-here" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Upload skin image",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{baseUrl}}/api/figures/:figureId/skins/:skinId/variants/:variantId/images",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "figures", ":figureId", "skins", ":skinId", "variants", ":variantId", "images"],
+              "variable": [
+                { "key": "figureId", "value": "figure-id-here" },
+                { "key": "skinId", "value": "skin-id-here" },
+                { "key": "variantId", "value": "variant-id-here" }
+              ]
+            },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "image", "type": "file", "src": "" },
+                { "key": "imageId", "value": "", "type": "text" }
               ]
             }
           }
@@ -559,6 +740,35 @@
               "variable": [{ "key": "model3dId", "value": "model3d-id-here" }]
             }
           }
+        },
+        {
+          "name": "Delete 3D model",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/models3d/:model3dId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "models3d", ":model3dId"],
+              "variable": [{ "key": "model3dId", "value": "model3d-id-here" }]
+            }
+          }
+        },
+        {
+          "name": "Animation retarget (SSE)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": {
+              "raw": "{{baseUrl}}/api/models3d/:model3dId/animate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "models3d", ":model3dId", "animate"],
+              "variable": [{ "key": "model3dId", "value": "model3d-id-here" }]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"animations\": [\"preset:walk\", \"preset:idle\"]\n}"
+            }
+          }
         }
       ]
     },
@@ -576,6 +786,21 @@
               "variable": [{ "key": "model3dId", "value": "model3d-id-here" }]
             }
           }
+        },
+        {
+          "name": "Delete animation",
+          "request": {
+            "method": "DELETE",
+            "url": {
+              "raw": "{{baseUrl}}/api/models3d/:model3dId/animations/:animationId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "models3d", ":model3dId", "animations", ":animationId"],
+              "variable": [
+                { "key": "model3dId", "value": "model3d-id-here" },
+                { "key": "animationId", "value": "animation-id-here" }
+              ]
+            }
+          }
         }
       ]
     },
@@ -583,19 +808,58 @@
       "name": "Pipeline",
       "item": [
         {
-          "name": "Run full generation pipeline",
+          "name": "Mesh pipeline (SSE) — upload image",
           "request": {
             "method": "POST",
-            "url": { "raw": "{{baseUrl}}/api/pipeline", "host": ["{{baseUrl}}"], "path": ["api", "pipeline"] },
+            "url": { "raw": "{{baseUrl}}/api/pipeline/mesh", "host": ["{{baseUrl}}"], "path": ["api", "pipeline", "mesh"] },
             "body": {
               "mode": "formdata",
               "formdata": [
                 { "key": "image", "type": "file", "src": "" },
                 { "key": "figureId", "value": "figure-id-here", "type": "text" },
                 { "key": "variantId", "value": "variant-id-here", "type": "text" },
-                { "key": "animations", "value": "walk", "type": "text" },
                 { "key": "modelVersion", "value": "v2.5-20250123", "type": "text" }
               ]
+            }
+          }
+        },
+        {
+          "name": "Mesh pipeline (SSE) — existing skin image",
+          "request": {
+            "method": "POST",
+            "url": { "raw": "{{baseUrl}}/api/pipeline/mesh", "host": ["{{baseUrl}}"], "path": ["api", "pipeline", "mesh"] },
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "imageId", "value": "skin-image-id-here", "type": "text" },
+                { "key": "figureId", "value": "figure-id-here", "type": "text" },
+                { "key": "variantId", "value": "variant-id-here", "type": "text" },
+                { "key": "modelVersion", "value": "v2.5-20250123", "type": "text" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Rig pipeline (SSE)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/pipeline/rig", "host": ["{{baseUrl}}"], "path": ["api", "pipeline", "rig"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model3dId\": \"model3d-id-here\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Animate / retarget pipeline (SSE)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": { "raw": "{{baseUrl}}/api/pipeline/animate", "host": ["{{baseUrl}}"], "path": ["api", "pipeline", "animate"] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"model3dId\": \"model3d-id-here\",\n  \"animations\": [\"preset:walk\", \"preset:idle\"]\n}"
             }
           }
         }

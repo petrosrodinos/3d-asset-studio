@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useRegister } from "@/features/auth/hooks/use-auth.hooks";
+import { LandingNav } from "@/pages/landing/components/LandingNav";
+import { useAuthStore } from "@/store/authStore";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
@@ -17,54 +19,62 @@ export default function RegisterPage() {
     e.preventDefault();
     register.mutate(
       { email, password, displayName },
-      { onSuccess: () => navigate("/login") },
+      {
+        onSuccess: async () => {
+          await useAuthStore.getState().fetchMe();
+          navigate("/forge");
+        },
+      },
     );
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-surface">
-      <div className="w-full max-w-sm p-8 bg-panel border border-border rounded-lg">
-        <h1 className="text-xl font-semibold text-slate-100 mb-6">Create account</h1>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          <Input
-            id="displayName"
-            label="Display name"
-            value={displayName}
-            onChange={(e) => setDisplayName(e.target.value)}
-            placeholder="Your name"
-          />
-          <Input
-            id="email"
-            label="Email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            required
-          />
-          <Input
-            id="password"
-            label="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            required
-          />
-          {register.isError && (
-            <p className="text-xs text-red-400">{(register.error as Error).message}</p>
-          )}
-          <Button type="submit" disabled={register.isPending} className="w-full mt-2">
-            {register.isPending ? <Spinner className="w-3.5 h-3.5" /> : "Create account"}
-          </Button>
-        </form>
-        <p className="mt-4 text-xs text-slate-500 text-center">
-          Have an account?{" "}
-          <Link to="/login" className="text-accent-light hover:underline">
-            Sign in
-          </Link>
-        </p>
-      </div>
+    <div className="landing-mesh flex min-h-svh flex-col text-slate-200">
+      <LandingNav />
+      <main className="flex flex-1 flex-col items-center justify-center px-4 py-10">
+        <div className="w-full max-w-sm p-8 bg-panel border border-border rounded-lg shadow-lg shadow-black/20">
+          <h1 className="text-xl font-semibold text-slate-100 mb-6">Create account</h1>
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Input
+              id="displayName"
+              label="Display name"
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="Your name"
+            />
+            <Input
+              id="email"
+              label="Email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="you@example.com"
+              required
+            />
+            <Input
+              id="password"
+              label="Password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+            {register.isError && (
+              <p className="text-xs text-red-400">{(register.error as Error).message}</p>
+            )}
+            <Button type="submit" disabled={register.isPending} className="w-full mt-2">
+              {register.isPending ? <Spinner className="w-3.5 h-3.5" /> : "Create account"}
+            </Button>
+          </form>
+          <p className="mt-4 text-xs text-slate-500 text-center">
+            Have an account?{" "}
+            <Link to="/login" className="text-accent-light hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </main>
     </div>
   );
 }

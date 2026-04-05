@@ -76,7 +76,7 @@ function TopBarMobileNav({
                   : "text-slate-300 hover:bg-white/5 hover:text-slate-100",
               )}
             >
-              Forge
+              Studio
             </button>
           )}
           <Link
@@ -169,9 +169,12 @@ export function TopBar() {
           </button>
         </>
       )}
-      <span className="text-xs sm:text-sm font-semibold text-accent-light truncate min-w-0 shrink">
-        3D Figures
-      </span>
+      <Link
+        to="/"
+        className="text-xs sm:text-sm font-semibold text-accent-light truncate min-w-0 shrink hover:text-slate-100 transition-colors"
+      >
+        Forge
+      </Link>
 
       <nav className="hidden sm:flex items-center gap-1 shrink-0">
         {user && (
@@ -183,7 +186,7 @@ export function TopBar() {
               isForge ? "active-mode-btn" : "border-transparent text-slate-400 hover:text-slate-200",
             )}
           >
-            Forge
+            Studio
           </button>
         )}
         <Link
@@ -207,7 +210,7 @@ export function TopBar() {
                 to="/forge"
                 className="hidden sm:inline text-xs px-3 py-1.5 rounded border border-border text-slate-300 hover:bg-white/5 transition-colors"
               >
-                Open Forge
+                Open Studio
               </Link>
               <TopBarMobileNav
                 user={user}

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { forwardRef, useImperativeHandle, useState } from "react";
 import { createPortal } from "react-dom";
 import { Plus, Trash2, Pencil } from "lucide-react";
 import { useFigures, useCreateFigure, useUpdateFigure, useDeleteFigure } from "@/features/figures/hooks/use-figures.hooks";
@@ -40,12 +40,19 @@ function figureThumbUrl(fig: Figure | null): string | null {
   return thumb?.gcsUrl ?? thumb?.sourceUrl ?? null;
 }
 
+export type FigureListHandle = {
+  openCreateModal: () => void;
+};
+
 interface FigureListProps {
   /** Desktop collapsed rail: only active thumb + new figure (mobile drawer ignores via parent) */
   collapsed?: boolean;
 }
 
-export function FigureList({ collapsed = false }: FigureListProps) {
+export const FigureList = forwardRef<FigureListHandle, FigureListProps>(function FigureList(
+  { collapsed = false },
+  ref,
+) {
   const { data: figures, isLoading } = useFigures();
   const createFigure = useCreateFigure();
   const updateFigure = useUpdateFigure();
@@ -57,6 +64,13 @@ export function FigureList({ collapsed = false }: FigureListProps) {
   function openCreate() {
     setModal({ mode: "create", name: "", type: FIGURE_TYPES[0].value });
   }
+
+  useImperativeHandle(ref, () => ({
+    openCreateModal: () => {
+      setFigurePanelOpen(true);
+      setModal({ mode: "create", name: "", type: FIGURE_TYPES[0].value });
+    },
+  }));
 
   function openEdit(e: React.MouseEvent, fig: Figure) {
     e.stopPropagation();
@@ -275,4 +289,4 @@ export function FigureList({ collapsed = false }: FigureListProps) {
       />
     </>
   );
-}
+});

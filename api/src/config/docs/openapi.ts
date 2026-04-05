@@ -18,6 +18,23 @@ const errorContent = (description: string) => ({
   },
 });
 
+const insufficientTokensContent = () => ({
+  description: "Insufficient token balance",
+  content: {
+    "application/json": {
+      schema: {
+        type: "object",
+        properties: {
+          error: { type: "string" },
+          required: { type: "number" },
+          balance: { type: "number" },
+        },
+        required: ["error"],
+      },
+    },
+  },
+});
+
 export const OPEN_API_DOCUMENT = {
   openapi: "3.1.0",
   info: {
@@ -41,6 +58,9 @@ export const OPEN_API_DOCUMENT = {
     { name: "Models3D" },
     { name: "Animations" },
     { name: "Pipeline" },
+    { name: "Billing" },
+    { name: "Pricing" },
+    { name: "Health" },
   ],
   components: {
     securitySchemes: {
@@ -67,12 +87,46 @@ export const OPEN_API_DOCUMENT = {
         },
         required: ["id", "email", "role", "tokenBalance"],
       },
-      FigureInput: {
+      FigureCreate: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          type: { type: "string", description: 'Domain type, e.g. "figure" or "obstacle"' },
+          metadata: { type: "object", additionalProperties: true },
+        },
+        required: ["name", "type"],
+      },
+      FigureUpdate: {
         type: "object",
         properties: {
           name: { type: "string" },
           type: { type: "string" },
           metadata: { type: "object", additionalProperties: true },
+        },
+      },
+      VariantCreate: {
+        type: "object",
+        properties: { name: { type: "string", description: "Display name for the new variant (letter A, B, C… assigned by server)" } },
+      },
+      VariantUpsert: {
+        type: "object",
+        properties: {
+          name: { type: "string" },
+          prompt: { type: "string" },
+          negativePrompt: { type: "string" },
+          imageModel: { type: "string", description: "AIML image model id" },
+        },
+      },
+      VariantGenerateImageBody: {
+        type: "object",
+        properties: {
+          prompt: { type: "string" },
+          model: { type: "string" },
+          negativePrompt: { type: "string" },
+          sourceImageDataUrl: {
+            type: "string",
+            description: "Required for image-to-image models: data URL (e.g. data:image/png;base64,...).",
+          },
         },
       },
       GenerateImageInput: {
@@ -128,6 +182,154 @@ export const OPEN_API_DOCUMENT = {
     },
   },
   paths: {
+    "/health": {
+      get: {
+        tags: ["Health"],
+        summary: "Liveness probe",
+        responses: { "200": jsonContent({ type: "object", properties: { ok: { type: "boolean" } } }) },
+      },
+    },
+    "/api/openapi.json": {
+      get: {
+        tags: ["Health"],
+        summary: "OpenAPI document (JSON)",
+        responses: { "200": { description: "OpenAPI 3.1 document", content: { "application/json": { schema: { type: "object", additionalProperties: true } } } } },
+      },
+    },
+    "/api/stripe/webhook": {
+      post: {
+        tags: ["Billing"],
+        summary: "Stripe webhook (raw JSON body)",
+        description:
+          "Called by Stripe only. Send the raw request body with header `Stripe-Signature`. Not for browser clients.",
+        requestBody: {
+          required: true,
+          description: "Stripe event JSON; must be the raw body Stripe signed (`Stripe-Signature` header).",
+          content: { "application/json": { schema: { type: "object", additionalProperties: true } } },
+        },
+        responses: {
+          "200": jsonContent({ type: "object", properties: { received: { type: "boolean" } } }),
+          "400": { description: "Invalid signature or payload" },
+          "500": errorContent("Processing error"),
+        },
+      },
+    },
+    "/api/billing/packs": {
+      get: {
+        tags: ["Billing"],
+        summary: "List purchasable token packs",
+        responses: {
+          "200": jsonContent({
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                name: { type: "string" },
+                tokens: { type: "number" },
+                price: { type: "number" },
+              },
+              required: ["id", "name", "tokens", "price"],
+            },
+          }),
+        },
+      },
+    },
+    "/api/billing/checkout": {
+      post: {
+        tags: ["Billing"],
+        summary: "Create Stripe Checkout session",
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { type: "object", properties: { packId: { type: "string" } }, required: ["packId"] },
+            },
+          },
+        },
+        responses: {
+          "200": jsonContent({ type: "object", properties: { url: { type: "string", description: "Stripe Checkout URL" } }, required: ["url"] }),
+          "400": errorContent("Invalid body"),
+          "401": errorContent("Unauthorized"),
+        },
+      },
+    },
+    "/api/billing/balance": {
+      get: {
+        tags: ["Billing"],
+        summary: "Current token balance",
+        security: [{ cookieAuth: [] }],
+        responses: {
+          "200": jsonContent({ type: "object", properties: { balance: { type: "number" } }, required: ["balance"] }),
+          "401": errorContent("Unauthorized"),
+        },
+      },
+    },
+    "/api/billing/history": {
+      get: {
+        tags: ["Billing"],
+        summary: "Purchase history",
+        security: [{ cookieAuth: [] }],
+        responses: {
+          "200": jsonContent({
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                packId: { type: "string" },
+                tokens: { type: "number" },
+                amountCents: { type: "number" },
+                createdAt: { type: "string", format: "date-time" },
+              },
+            },
+          }),
+          "401": errorContent("Unauthorized"),
+        },
+      },
+    },
+    "/api/billing/usage": {
+      get: {
+        tags: ["Billing"],
+        summary: "Token usage history",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          {
+            name: "limit",
+            in: "query",
+            required: false,
+            schema: { type: "integer", minimum: 1, maximum: 100, default: 50 },
+            description: "Max rows to return",
+          },
+        ],
+        responses: {
+          "200": jsonContent({
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                id: { type: "string" },
+                usageKind: { type: "string" },
+                modelId: { type: "string", nullable: true },
+                operation: { type: "string", nullable: true },
+                tokens: { type: "number" },
+                createdAt: { type: "string", format: "date-time" },
+              },
+            },
+          }),
+          "400": errorContent("Invalid query"),
+          "401": errorContent("Unauthorized"),
+        },
+      },
+    },
+    "/api/pricing/catalog": {
+      get: {
+        tags: ["Pricing"],
+        summary: "Token pricing catalog (packs, operations, model costs)",
+        responses: { "200": jsonContent({ type: "object", additionalProperties: true }) },
+      },
+    },
     "/api/auth/register": {
       post: {
         tags: ["Auth"],
@@ -212,24 +414,42 @@ export const OPEN_API_DOCUMENT = {
       post: {
         tags: ["Images"],
         summary: "Generate image (alias)",
+        security: [{ cookieAuth: [] }],
         requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/GenerateImageInput" } } } },
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error") },
+        responses: {
+          "200": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+        },
       },
     },
     "/api/aiml/generate": {
       post: {
         tags: ["Images"],
         summary: "Generate image",
+        security: [{ cookieAuth: [] }],
         requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/GenerateImageInput" } } } },
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error") },
+        responses: {
+          "200": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+        },
       },
     },
     "/api/generate-and-mesh": {
       post: {
         tags: ["GenerateAndMesh"],
         summary: "Generate image and mesh it in one step",
+        security: [{ cookieAuth: [] }],
         requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/GenerateAndMeshInput" } } } },
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error") },
+        responses: {
+          "200": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+        },
       },
     },
     "/api/tripo/task/{id}": {
@@ -255,36 +475,57 @@ export const OPEN_API_DOCUMENT = {
       post: {
         tags: ["Tripo"],
         summary: "Start mesh task from image URL",
+        security: [{ cookieAuth: [] }],
         requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/MeshFromImageUrlInput" } } } },
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error") },
+        responses: {
+          "200": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+          "500": errorContent("Server error"),
+        },
       },
     },
     "/api/tripo/prerig-check": {
       post: {
         tags: ["Tripo"],
         summary: "Start pre-rig check",
+        security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: { "application/json": { schema: { type: "object", properties: { meshTaskId: { type: "string" } }, required: ["meshTaskId"] } } },
         },
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error") },
+        responses: {
+          "200": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "500": errorContent("Server error"),
+        },
       },
     },
     "/api/tripo/start-rig": {
       post: {
         tags: ["Tripo"],
         summary: "Start rig task",
+        security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: { "application/json": { schema: { type: "object", properties: { meshTaskId: { type: "string" } }, required: ["meshTaskId"] } } },
         },
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error") },
+        responses: {
+          "200": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+          "500": errorContent("Server error"),
+        },
       },
     },
     "/api/tripo/start-retarget": {
       post: {
         tags: ["Tripo"],
         summary: "Start retarget task",
+        security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -297,7 +538,13 @@ export const OPEN_API_DOCUMENT = {
             },
           },
         },
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error") },
+        responses: {
+          "200": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+          "500": errorContent("Server error"),
+        },
       },
     },
     "/api/task/{id}": {
@@ -323,36 +570,57 @@ export const OPEN_API_DOCUMENT = {
       post: {
         tags: ["Tripo"],
         summary: "Start mesh task from image URL (alias)",
+        security: [{ cookieAuth: [] }],
         requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/MeshFromImageUrlInput" } } } },
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error") },
+        responses: {
+          "200": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+          "500": errorContent("Server error"),
+        },
       },
     },
     "/api/prerig-check": {
       post: {
         tags: ["Tripo"],
         summary: "Start pre-rig check (alias)",
+        security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: { "application/json": { schema: { type: "object", properties: { meshTaskId: { type: "string" } }, required: ["meshTaskId"] } } },
         },
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error") },
+        responses: {
+          "200": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "500": errorContent("Server error"),
+        },
       },
     },
     "/api/start-rig": {
       post: {
         tags: ["Tripo"],
         summary: "Start rig task (alias)",
+        security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: { "application/json": { schema: { type: "object", properties: { meshTaskId: { type: "string" } }, required: ["meshTaskId"] } } },
         },
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error") },
+        responses: {
+          "200": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+          "500": errorContent("Server error"),
+        },
       },
     },
     "/api/start-retarget": {
       post: {
         tags: ["Tripo"],
         summary: "Start retarget task (alias)",
+        security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -365,7 +633,13 @@ export const OPEN_API_DOCUMENT = {
             },
           },
         },
-        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error") },
+        responses: {
+          "200": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+          "500": errorContent("Server error"),
+        },
       },
     },
     "/api/balance/aiml": { get: { tags: ["Balance"], summary: "Get AIML balance", responses: { "200": jsonContent({ type: "object", additionalProperties: true }) } } },
@@ -374,6 +648,7 @@ export const OPEN_API_DOCUMENT = {
       post: {
         tags: ["Chat"],
         summary: "Chat SSE endpoint",
+        security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
           content: {
@@ -395,7 +670,12 @@ export const OPEN_API_DOCUMENT = {
             },
           },
         },
-        responses: { "200": { description: "SSE stream (text/event-stream)" } },
+        responses: {
+          "200": { description: "SSE stream (text/event-stream)" },
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+        },
       },
     },
     "/api/figures": {
@@ -409,7 +689,7 @@ export const OPEN_API_DOCUMENT = {
         tags: ["Figures"],
         summary: "Create figure",
         security: [{ cookieAuth: [] }],
-        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/FigureInput" } } } },
+        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/FigureCreate" } } } },
         responses: { "201": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error"), "401": errorContent("Unauthorized") },
       },
     },
@@ -426,7 +706,7 @@ export const OPEN_API_DOCUMENT = {
         summary: "Update figure",
         security: [{ cookieAuth: [] }],
         parameters: [{ name: "id", in: "path", required: true, schema: { type: "string" } }],
-        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/FigureInput" } } } },
+        requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/FigureUpdate" } } } },
         responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "404": errorContent("Not found"), "401": errorContent("Unauthorized") },
       },
       delete: {
@@ -463,7 +743,12 @@ export const OPEN_API_DOCUMENT = {
             },
           },
         },
-        responses: { "201": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error"), "401": errorContent("Unauthorized") },
+        responses: {
+          "201": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+        },
       },
     },
     "/api/figures/ai-variant": {
@@ -500,6 +785,36 @@ export const OPEN_API_DOCUMENT = {
         responses: { "201": jsonContent({ type: "object", additionalProperties: true }), "401": errorContent("Unauthorized") },
       },
     },
+    "/api/figures/{figureId}/skins/{skinId}": {
+      put: {
+        tags: ["Skins"],
+        summary: "Rename skin",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: "figureId", in: "path", required: true, schema: { type: "string" } },
+          { name: "skinId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { type: "object", properties: { name: { type: "string" } }, required: ["name"] },
+            },
+          },
+        },
+        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error"), "401": errorContent("Unauthorized") },
+      },
+      delete: {
+        tags: ["Skins"],
+        summary: "Delete skin",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: "figureId", in: "path", required: true, schema: { type: "string" } },
+          { name: "skinId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "401": errorContent("Unauthorized") },
+      },
+    },
     "/api/figures/{figureId}/skins/{skinId}/set-base": {
       post: {
         tags: ["Skins"],
@@ -511,13 +826,28 @@ export const OPEN_API_DOCUMENT = {
         responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "401": errorContent("Unauthorized") },
       },
     },
-    "/api/figures/{figureId}/skins/{skinId}": {
-      delete: {
-        tags: ["Skins"],
+    "/api/figures/{figureId}/skins/{skinId}/variants": {
+      post: {
+        tags: ["Variants"],
+        summary: "Create variant (server assigns next label A, B, C, …)",
         security: [{ cookieAuth: [] }],
         parameters: [
           { name: "figureId", in: "path", required: true, schema: { type: "string" } },
           { name: "skinId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        requestBody: { required: false, content: { "application/json": { schema: { $ref: "#/components/schemas/VariantCreate" } } } },
+        responses: { "201": jsonContent({ type: "object", additionalProperties: true }), "401": errorContent("Unauthorized") },
+      },
+    },
+    "/api/figures/{figureId}/skins/{skinId}/variants/by-id/{id}": {
+      delete: {
+        tags: ["Variants"],
+        summary: "Delete variant by database id",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: "figureId", in: "path", required: true, schema: { type: "string" } },
+          { name: "skinId", in: "path", required: true, schema: { type: "string" } },
+          { name: "id", in: "path", required: true, schema: { type: "string" } },
         ],
         responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "401": errorContent("Unauthorized") },
       },
@@ -535,14 +865,34 @@ export const OPEN_API_DOCUMENT = {
       },
       put: {
         tags: ["Variants"],
+        summary: "Create or update variant settings (prompt, model, etc.)",
         security: [{ cookieAuth: [] }],
         parameters: [
           { name: "figureId", in: "path", required: true, schema: { type: "string" } },
           { name: "skinId", in: "path", required: true, schema: { type: "string" } },
           { name: "variant", in: "path", required: true, schema: { type: "string" } },
         ],
-        requestBody: { required: false, content: { "application/json": { schema: { type: "object", additionalProperties: true } } } },
+        requestBody: { required: false, content: { "application/json": { schema: { $ref: "#/components/schemas/VariantUpsert" } } } },
         responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "401": errorContent("Unauthorized") },
+      },
+    },
+    "/api/figures/{figureId}/skins/{skinId}/variants/{variant}/generate-image": {
+      post: {
+        tags: ["Variants"],
+        summary: "Generate image for this variant and attach as skin image",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: "figureId", in: "path", required: true, schema: { type: "string" } },
+          { name: "skinId", in: "path", required: true, schema: { type: "string" } },
+          { name: "variant", in: "path", required: true, schema: { type: "string" } },
+        ],
+        requestBody: { required: false, content: { "application/json": { schema: { $ref: "#/components/schemas/VariantGenerateImageBody" } } } },
+        responses: {
+          "201": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+        },
       },
     },
     "/api/figures/{figureId}/skins/{skinId}/variants/{variantId}/images": {
@@ -555,6 +905,37 @@ export const OPEN_API_DOCUMENT = {
           { name: "variantId", in: "path", required: true, schema: { type: "string" } },
         ],
         responses: { "200": jsonContent({ type: "array", items: { type: "object", additionalProperties: true } }), "401": errorContent("Unauthorized") },
+      },
+      post: {
+        tags: ["SkinImages"],
+        summary: "Upload raster for variant (optional replace via imageId)",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: "figureId", in: "path", required: true, schema: { type: "string" } },
+          { name: "skinId", in: "path", required: true, schema: { type: "string" } },
+          { name: "variantId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  image: { type: "string", format: "binary" },
+                  imageId: { type: "string", description: "If set, replace this skin image’s raster (clears linked 3D)." },
+                },
+                required: ["image"],
+              },
+            },
+          },
+        },
+        responses: {
+          "201": jsonContent({ type: "object", additionalProperties: true }),
+          "400": errorContent("Validation error"),
+          "404": errorContent("Not found"),
+          "401": errorContent("Unauthorized"),
+        },
       },
     },
     "/api/figures/{figureId}/skins/{skinId}/variants/{variantId}/images/{imageId}": {
@@ -577,6 +958,40 @@ export const OPEN_API_DOCUMENT = {
         parameters: [{ name: "model3dId", in: "path", required: true, schema: { type: "string" } }],
         responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "404": errorContent("Not found"), "401": errorContent("Unauthorized") },
       },
+      delete: {
+        tags: ["Models3D"],
+        summary: "Delete 3D model record",
+        security: [{ cookieAuth: [] }],
+        parameters: [{ name: "model3dId", in: "path", required: true, schema: { type: "string" } }],
+        responses: { "204": { description: "Deleted" }, "401": errorContent("Unauthorized") },
+      },
+    },
+    "/api/models3d/{model3dId}/animate": {
+      post: {
+        tags: ["Models3D"],
+        summary: "Animation retarget pipeline (SSE)",
+        description: "Same behavior as POST /api/pipeline/animate; debits tokens per animation retarget.",
+        security: [{ cookieAuth: [] }],
+        parameters: [{ name: "model3dId", in: "path", required: true, schema: { type: "string" } }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: { animations: { type: "array", items: { type: "string" }, minItems: 1 } },
+                required: ["animations"],
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "SSE stream (text/event-stream)" },
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+        },
+      },
     },
     "/api/models3d/{model3dId}/animations": {
       get: {
@@ -586,10 +1001,24 @@ export const OPEN_API_DOCUMENT = {
         responses: { "200": jsonContent({ type: "array", items: { type: "object", additionalProperties: true } }), "401": errorContent("Unauthorized") },
       },
     },
-    "/api/pipeline": {
+    "/api/models3d/{model3dId}/animations/{animationId}": {
+      delete: {
+        tags: ["Animations"],
+        summary: "Delete animation record",
+        security: [{ cookieAuth: [] }],
+        parameters: [
+          { name: "model3dId", in: "path", required: true, schema: { type: "string" } },
+          { name: "animationId", in: "path", required: true, schema: { type: "string" } },
+        ],
+        responses: { "204": { description: "Deleted" }, "401": errorContent("Unauthorized") },
+      },
+    },
+    "/api/pipeline/mesh": {
       post: {
         tags: ["Pipeline"],
-        summary: "Run full generation pipeline (multipart/form-data + SSE response)",
+        summary: "Image → mesh pipeline (multipart or imageId + SSE)",
+        description:
+          "Send either an `image` file **or** `imageId` (existing skin image). Do not send both `image` and `imageId`. Debits pipeline tokens.",
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
@@ -598,18 +1027,74 @@ export const OPEN_API_DOCUMENT = {
               schema: {
                 type: "object",
                 properties: {
-                  image: { type: "string", format: "binary" },
+                  image: { type: "string", format: "binary", description: "PNG or JPEG upload (omit if using imageId)" },
+                  imageId: { type: "string", description: "Existing skin image id to mesh (omit if uploading image)" },
                   figureId: { type: "string" },
                   variantId: { type: "string" },
-                  animations: { oneOf: [{ type: "string" }, { type: "array", items: { type: "string" } }] },
-                  modelVersion: { type: "string" },
+                  modelVersion: { type: "string", description: "Tripo image-to-model version" },
                 },
-                required: ["image", "figureId", "variantId"],
+                required: ["figureId", "variantId"],
               },
             },
           },
         },
-        responses: { "200": { description: "SSE stream (text/event-stream)" }, "400": errorContent("Validation error"), "401": errorContent("Unauthorized"), "404": errorContent("Not found") },
+        responses: {
+          "200": { description: "SSE stream (text/event-stream)" },
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+          "404": errorContent("Not found"),
+          "502": errorContent("Upstream error"),
+        },
+      },
+    },
+    "/api/pipeline/rig": {
+      post: {
+        tags: ["Pipeline"],
+        summary: "Rig pipeline for a stored Model3D (SSE)",
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { type: "object", properties: { model3dId: { type: "string" } }, required: ["model3dId"] },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "SSE stream (text/event-stream)" },
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+        },
+      },
+    },
+    "/api/pipeline/animate": {
+      post: {
+        tags: ["Pipeline"],
+        summary: "Animation retarget pipeline (SSE)",
+        security: [{ cookieAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: {
+                type: "object",
+                properties: {
+                  model3dId: { type: "string" },
+                  animations: { type: "array", items: { type: "string" }, minItems: 1 },
+                },
+                required: ["model3dId", "animations"],
+              },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "SSE stream (text/event-stream)" },
+          "400": errorContent("Validation error"),
+          "401": errorContent("Unauthorized"),
+          "402": insufficientTokensContent(),
+        },
       },
     },
   },
