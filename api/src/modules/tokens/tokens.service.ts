@@ -19,6 +19,59 @@ import {
 } from "../../config/models/token-operations";
 import { env } from "../../config/env/env-validation";
 
+const TX_RETRY_ATTEMPTS = 3;
+const TX_RETRY_BASE_MS = 200;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * MongoDB Atlas / network can drop connections mid-transaction (e.g. WinError 10054).
+ * Retrying is safe: an aborted txn rolls back; idempotency keys prevent double rows after success.
+ */
+function isTransientDbError(err: unknown): boolean {
+  const parts: string[] = [];
+  if (err instanceof Error) {
+    parts.push(err.message);
+    if ("cause" in err && err.cause != null) parts.push(String(err.cause));
+  } else {
+    parts.push(String(err));
+  }
+  const s = parts.join(" ").toLowerCase();
+  return (
+    s.includes("transienttransactionerror") ||
+    s.includes("forcibly closed") ||
+    s.includes("10054") ||
+    s.includes("econnreset") ||
+    s.includes("etimedout") ||
+    s.includes("mongonetworkerror") ||
+    s.includes("socket") ||
+    s.includes("connection closed") ||
+    s.includes("p2024") ||
+    s.includes("p2034")
+  );
+}
+
+async function runTransactionWithRetry<T>(
+  run: (tx: Prisma.TransactionClient) => Promise<T>,
+): Promise<T> {
+  let last: unknown;
+  for (let i = 0; i < TX_RETRY_ATTEMPTS; i++) {
+    try {
+      return await prisma.$transaction(run);
+    } catch (e) {
+      last = e;
+      if (i < TX_RETRY_ATTEMPTS - 1 && isTransientDbError(e)) {
+        await sleep(TX_RETRY_BASE_MS * 2 ** i);
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw last;
+}
+
 function mergeJsonMetadata(
   prev: Prisma.JsonValue | null | undefined,
   patch: Prisma.InputJsonValue,
@@ -61,7 +114,7 @@ export async function mergeTokenUsageMetadataByIdempotencyKey(
 ): Promise<void> {
   const key = idempotencyKey.trim();
   if (!key) return;
-  await prisma.$transaction(async (tx) => {
+  await runTransactionWithRetry(async (tx) => {
     const row = await tx.tokenUsage.findUnique({ where: { idempotencyKey: key }, select: { metadata: true } });
     if (!row) return;
     await tx.tokenUsage.update({
@@ -242,7 +295,7 @@ export async function debitForOperation(
     price = Number(m.price);
   }
 
-  await prisma.$transaction((tx) =>
+  await runTransactionWithRetry((tx) =>
     debitWithUsageTx(tx, {
       userId,
       cost,
@@ -275,7 +328,7 @@ export async function debitForImageModel(
 
   const cost = Math.ceil(m.tokens);
 
-  await prisma.$transaction((tx) =>
+  await runTransactionWithRetry((tx) =>
     debitWithUsageTx(tx, {
       userId,
       cost,
@@ -309,7 +362,7 @@ export async function debitForTrippoModelId(
   const cost = trippoWalletDebitFromRow(m);
   if (cost <= 0) return;
 
-  await prisma.$transaction((tx) =>
+  await runTransactionWithRetry((tx) =>
     debitWithUsageTx(tx, {
       userId,
       cost,
@@ -348,7 +401,7 @@ export async function debitImageThenTrippoMesh(
   const kImg = idempotencyKey ? `${idempotencyKey}:image` : null;
   const kMesh = idempotencyKey ? `${idempotencyKey}:trippo` : null;
 
-  await prisma.$transaction(async (tx) => {
+  await runTransactionWithRetry(async (tx) => {
     if (kImg && kMesh) {
       const [e1, e2] = await Promise.all([
         tx.tokenUsage.findUnique({ where: { idempotencyKey: kImg } }),

@@ -30,11 +30,16 @@ export interface UpdateSkinVariantDto {
 }
 
 export interface GenerateSkinImageDto {
-  prompt: string;
+  /** Required unless `fromSketch` (server builds mesh-ready prompts) */
+  prompt?: string;
   negativePrompt?: string;
   model?: string;
   /** Base64 data URL (`data:image/...;base64,...`) for image-to-image models */
   sourceImageDataUrl?: string;
+  /** Sketch → img2i with curated 3D/mesh prompts; requires `sourceImageDataUrl` */
+  fromSketch?: boolean;
+  sketchHint?: string;
+  figureType?: string;
 }
 
 export interface GenerateSkinImageResponse {

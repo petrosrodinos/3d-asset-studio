@@ -20,11 +20,21 @@ import {
 } from "../tokens/tokens.service";
 import { canonicalImageModelId, ImageModels } from "../../config/models/image-models";
 import { buildAimlImageGenerationsBody } from "../../integrations/aimlapi/buildImageGenerationsBody";
+import { buildSketchTo3dPrompts } from "../../config/ai-prompts/figures/sketchToImage.prompts";
 
 const MAX_SOURCE_IMAGE_DATA_URL_LENGTH = 12 * 1024 * 1024;
 
+/** Default img2img model when sketch mode is used and the variant has no i2i model selected */
+const SKETCH_DEFAULT_I2I_MODEL = "flux-2-max-edit";
+
 function imageModelRequiresSourceImage(modelId: string): boolean {
   return Boolean(ImageModels.find((m) => m.id === canonicalImageModelId(modelId))?.is_image_to_image);
+}
+
+function resolveSketchImageModel(overrideModel: string | undefined, variantModel: string | undefined): string {
+  const candidate = canonicalImageModelId((overrideModel ?? variantModel ?? "").trim());
+  if (candidate && imageModelRequiresSourceImage(candidate)) return candidate;
+  return canonicalImageModelId(SKETCH_DEFAULT_I2I_MODEL);
 }
 
 function assertValidSourceImageDataUrl(dataUrl: string) {
@@ -68,24 +78,46 @@ export async function generateImageForVariant(
     model?: string;
     negativePrompt?: string;
     sourceImageDataUrl?: string;
+    /** When true, prompt/negativePrompt are built for mesh-ready img2i from the sketch */
+    fromSketch?: boolean;
+    sketchHint?: string;
+    figureType?: string;
   } = {},
 ) {
   const v = await getVariantRepo(skinId, variant);
   if (!v) throw new Error("Variant not found");
 
-  const model = canonicalImageModelId(
-    (overrides.model ?? v.imageModel ?? IMAGES_CONFIG.DEFAULT_AIML_IMAGE_MODEL).trim(),
-  );
-  const prompt = (overrides.prompt ?? v.prompt ?? "").trim();
-  const neg = (overrides.negativePrompt ?? v.negativePrompt ?? "").trim();
   const sourceTrimmed = overrides.sourceImageDataUrl?.trim();
+  const fromSketch = Boolean(overrides.fromSketch);
 
-  if (!prompt) throw new Error("Prompt is required to generate an image");
+  let model: string;
+  let prompt: string;
+  let neg: string;
 
-  const needsSource = imageModelRequiresSourceImage(model);
-  if (needsSource) {
-    if (!sourceTrimmed) throw new Error("This image model requires a source image");
+  if (fromSketch) {
+    if (!sourceTrimmed) throw new Error("Sketch mode requires sourceImageDataUrl");
     assertValidSourceImageDataUrl(sourceTrimmed);
+    model = resolveSketchImageModel(overrides.model, v.imageModel ?? undefined);
+    const built = buildSketchTo3dPrompts({
+      figureType: overrides.figureType,
+      sketchHint: overrides.sketchHint,
+    });
+    prompt = built.prompt;
+    neg = built.negativePrompt;
+  } else {
+    model = canonicalImageModelId(
+      (overrides.model ?? v.imageModel ?? IMAGES_CONFIG.DEFAULT_AIML_IMAGE_MODEL).trim(),
+    );
+    prompt = (overrides.prompt ?? v.prompt ?? "").trim();
+    neg = (overrides.negativePrompt ?? v.negativePrompt ?? "").trim();
+
+    if (!prompt) throw new Error("Prompt is required to generate an image");
+
+    const needsSource = imageModelRequiresSourceImage(model);
+    if (needsSource) {
+      if (!sourceTrimmed) throw new Error("This image model requires a source image");
+      assertValidSourceImageDataUrl(sourceTrimmed);
+    }
   }
 
   const finalPrompt = neg ? `${prompt}\n\nNegative prompt: ${neg}` : prompt;

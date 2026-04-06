@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Sparkles, X } from "lucide-react";
+import { Pencil, Sparkles, X } from "lucide-react";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
@@ -13,6 +13,7 @@ import { getFixedCostTokens } from "@/features/pricing/utils/pricing-costs.utils
 import { TokenCostPill } from "@/features/pricing/components/TokenCostPill";
 import type { SkinVariant } from "@/interfaces";
 import { fileToDataUrl } from "@/utils/imageFiles";
+import { SketchToImageModal } from "@/pages/forge/components/sketch-to-image-modal";
 
 interface PromptEditorProps {
   variant: SkinVariant;
@@ -37,6 +38,7 @@ export function PromptEditor({
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   const [aiOpen, setAiOpen] = useState(false);
   const [aiDescription, setAiDescription] = useState("");
+  const [sketchOpen, setSketchOpen] = useState(false);
 
   const { data: imageModels = [] } = useImageModels();
   const firstModelId = imageModels[0]?.id;
@@ -159,17 +161,30 @@ export function PromptEditor({
       ) : null}
 
       <div className="flex flex-col gap-2">
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={() => setAiOpen((v) => !v)}
-          className="gap-1.5 self-start"
-        >
-          <Sparkles size={12} />
-          AI Prompt
-          {aiPromptTokenCost != null ? <TokenCostPill tokens={aiPromptTokenCost} /> : null}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setAiOpen((v) => !v)}
+            className="gap-1.5"
+          >
+            <Sparkles size={12} />
+            AI Prompt
+            {aiPromptTokenCost != null ? <TokenCostPill tokens={aiPromptTokenCost} /> : null}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => setSketchOpen(true)}
+            disabled={generateImage.isPending}
+            className="gap-1.5"
+          >
+            <Pencil size={12} />
+            Sketch
+          </Button>
+        </div>
         {aiOpen && (
           <div className="flex flex-col gap-2 rounded-xl border border-accent/25 bg-accent/10 p-3 ring-1 ring-accent/15">
             <div className="flex items-center justify-between gap-2">
@@ -247,6 +262,15 @@ export function PromptEditor({
           {generateImage.isPending ? <Spinner className="w-3 h-3" /> : "Generate Image"}
         </Button>
       </div>
+
+      <SketchToImageModal
+        open={sketchOpen}
+        onClose={() => setSketchOpen(false)}
+        variant={variant}
+        figureId={figureId}
+        figureType={figureType}
+        onImageGenerated={onImageGenerated}
+      />
     </div>
   );
 }
