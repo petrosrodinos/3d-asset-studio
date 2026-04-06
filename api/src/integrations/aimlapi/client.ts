@@ -1,11 +1,62 @@
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from "axios";
+import { env } from "../../config/env/env-validation";
 import { AimlApiError } from "./types";
 
 const BASE_URL = "https://api.aimlapi.com";
 
+function isHtmlPayload(data: unknown): boolean {
+  return typeof data === "string" && (data.includes("<!DOCTYPE") || data.includes("<html"));
+}
+
+function buildAimlClientError(err: AxiosError<AimlApiError | string>): Error {
+  const httpStatus = err.response?.status ?? 0;
+  const raw = err.response?.data;
+  const json = raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as AimlApiError) : null;
+  const requestId = json?.requestId ?? "";
+  let message = json?.message ?? err.message;
+  let clientStatus = httpStatus || 502;
+
+  if (err.code === "ECONNABORTED" || /timeout/i.test(err.message)) {
+    message =
+      "The AI provider request timed out. Try again, or increase AIML_HTTP_TIMEOUT_MS if the model is slow.";
+    clientStatus = 503;
+  } else if (httpStatus === 524 || httpStatus === 504) {
+    message =
+      "The AI provider took too long to respond (upstream timeout). Please try again in a moment.";
+    clientStatus = 503;
+  } else if (httpStatus === 502 || httpStatus === 503) {
+    message = "The AI provider is temporarily unavailable. Please try again.";
+    clientStatus = 503;
+  } else if (isHtmlPayload(raw)) {
+    message =
+      httpStatus === 524
+        ? "The AI provider timed out (Cloudflare 524). Please try again."
+        : `The AI provider returned an error (HTTP ${httpStatus}). Please try again.`;
+    clientStatus = httpStatus === 524 ? 503 : clientStatus >= 400 ? clientStatus : 502;
+  } else if (json?.message) {
+    message = `[AIML ${httpStatus || "error"}] ${json.message}${requestId ? ` (requestId: ${requestId})` : ""}`;
+  }
+
+  const logPayload =
+    typeof raw === "string" && raw.length > 500
+      ? `${raw.slice(0, 500)}… (${raw.length} chars)`
+      : raw;
+
+  const apiError = Object.assign(new Error(message), {
+    status: clientStatus,
+    statusCode: clientStatus,
+    upstreamStatus: httpStatus,
+    requestId,
+    path: json?.path,
+    rawData: logPayload,
+  });
+  return apiError;
+}
+
 export function createAimlHttpClient(apiKey: string): AxiosInstance {
   const client = axios.create({
     baseURL: BASE_URL,
+    timeout: env.AIML_HTTP_TIMEOUT_MS,
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
@@ -24,18 +75,25 @@ export function createAimlHttpClient(apiKey: string): AxiosInstance {
 
   client.interceptors.response.use(
     (res: AxiosResponse) => res,
-    (err: AxiosError<AimlApiError>) => {
-      const data = err.response?.data;
-      const message = data?.message ?? err.message;
-      const statusCode = data?.statusCode ?? err.response?.status ?? 0;
-      const requestId = data?.requestId ?? "";
-      const apiError = Object.assign(
-        new Error(`[${statusCode}] ${message}${requestId ? ` (requestId: ${requestId})` : ""}`),
-        { statusCode, requestId, path: data?.path, rawData: data }
+    (err: AxiosError<AimlApiError | string>) => {
+      const apiError = buildAimlClientError(err);
+      const httpStatus = err.response?.status ?? 0;
+      const raw = err.response?.data;
+      console.error(
+        "[AIML API Error]",
+        JSON.stringify(
+          {
+            status: httpStatus,
+            message: apiError.message,
+            requestId: (apiError as Error & { requestId?: string }).requestId,
+            rawPreview: typeof raw === "string" ? `${raw.slice(0, 200)}…` : raw,
+          },
+          null,
+          2,
+        ),
       );
-      console.error("[AIML API Error]", JSON.stringify({ statusCode, message, requestId, rawData: data }, null, 2));
       throw apiError;
-    }
+    },
   );
 
   return client;

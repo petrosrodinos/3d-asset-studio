@@ -1,5 +1,5 @@
 export const HUMAN_RIG_GUIDANCE = `
-You must write an image prompt that produces a rig-friendly single 3D figure mesh (used for Tripo image->mesh).
+You must write an image prompt that produces a rig-friendly single game 3D figure mesh (used for Tripo image->mesh).
 
 STRICT FRONT-FACING REQUIREMENTS (non-negotiable):
 1) Camera: straight-on / front view, eye-level, no tilt. Neutral “T-pose” or “A-pose”.
@@ -9,6 +9,7 @@ STRICT FRONT-FACING REQUIREMENTS (non-negotiable):
    - Shoulders, elbows, wrists, hands (separate fingers)
    - Hips/pelvis, knees, ankles, feet (separate toes)
    - Spine/torso outline, neck, head (face visible)
+   - under any case you mark the joints with a circle or a line to make them visible
 5) No occlusion: arms/legs must not cross in front of the torso; hands/feet must not be hidden.
 6) For animation/retargeting: limbs should be separate volumes (not melted together).
 
@@ -22,7 +23,7 @@ ADAPTATION:
 `.trim();
 
 export const OBJECT_RIG_GUIDANCE = `
-You must write an image prompt that produces a rig-friendly single 3D object mesh (used for Tripo image->mesh).
+You must write an image prompt that produces a rig-friendly single game 3D object mesh (used for Tripo image->mesh).
 
 STRICT FRONT-FACING REQUIREMENTS (non-negotiable):
 1) Camera: straight-on / front view, eye-level, no tilt.
@@ -48,24 +49,24 @@ Examples of what counts as “rig landmarks” for objects:
 `.trim();
 
 export const AI_VARIANT_SYSTEM_PROMPT =
-  "You are a senior technical prompt engineer for riggable 3D figure generation from images. " +
-  "Given a user description for a figure variant, you must output ONLY JSON with fields: prompt and negativePrompt (and optionally model). " +
-  "Your prompt MUST satisfy the strict front-facing + visible rig landmarks requirements (humans OR objects).";
+   "You are a senior technical prompt engineer for riggable 3D figure generation from images. " +
+   "Given a user description for a figure variant, you must output ONLY JSON with fields: prompt and negativePrompt (and optionally model). " +
+   "Your prompt MUST satisfy the strict front-facing + visible rig landmarks requirements (humans OR objects).";
 
 export interface BuildAiVariantUserPromptInput {
-  variant: string;
-  figureName?: string;
-  figureType: string;
-  skinName?: string;
-  description: string;
-  existingPrompt?: string | null;
-  existingNegPrompt?: string | null;
-  otherVariantPrompt?: string | null;
-  rigGuidance: string;
+   variant: string;
+   figureName?: string;
+   figureType: string;
+   skinName?: string;
+   description: string;
+   existingPrompt?: string | null;
+   existingNegPrompt?: string | null;
+   otherVariantPrompt?: string | null;
+   rigGuidance: string;
 }
 
 export function buildAiVariantUserPrompt(input: BuildAiVariantUserPromptInput): string {
-  return `
+   return `
 Variant name: ${input.variant}
 Figure name: ${input.figureName ?? "unknown"}
 Figure type: ${input.figureType}
@@ -97,6 +98,7 @@ You must return:
    - hair covering face (humans)
    - motion blur / dynamic action poses
    - low quality artifacts
+   - multiple subjects
 
 Keep the surface/style changes aligned with the user description, but DO NOT change the rigging-critical anatomy, pose, or camera.
 

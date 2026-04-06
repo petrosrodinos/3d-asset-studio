@@ -1,3 +1,4 @@
+import type { ChatCompletionRequest } from "../../integrations/aimlapi/types";
 import { prisma } from "../../integrations/db/client";
 import { deleteGcsFiles } from "../../integrations/gcs/gcs.service";
 import { collectGcsKeysFromFigure } from "../../integrations/gcs/collectGcsAssetKeys";
@@ -19,6 +20,7 @@ import { applyNegativePrompt } from "./helpers/negativePrompt.helper";
 import { safeParseJsonObject } from "./helpers/safeJsonObjectParse.helper";
 import { FIGURES_CONFIG } from "./config/figures.config";
 import { IMAGES_CONFIG } from "../images/config/images.config";
+import { listImageModels } from "../images/images.service";
 import { usageMetadataWithProviderCosts } from "../../lib/provider-costs-metadata";
 import {
   assertUserHasTokenBalance,
@@ -35,6 +37,35 @@ import {
 
 /** Sentinel userId for seeded template figures */
 export const SEED_USER_ID = "000000000000000000000000";
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableAimlChatError(err: unknown): boolean {
+  const e = err as { upstreamStatus?: number; code?: string };
+  const u = e.upstreamStatus ?? 0;
+  if (u === 524 || u === 502 || u === 503 || u === 504) return true;
+  return e.code === "ECONNABORTED";
+}
+
+async function aimlChatCompletionWithRetry(body: ChatCompletionRequest) {
+  const maxAttempts = 3;
+  let last: unknown;
+  for (let i = 0; i < maxAttempts; i++) {
+    try {
+      return await getAiml().chatCompletion(body);
+    } catch (e) {
+      last = e;
+      if (i < maxAttempts - 1 && isRetryableAimlChatError(e)) {
+        await sleep(2500 * (i + 1));
+        continue;
+      }
+      throw e;
+    }
+  }
+  throw last;
+}
 
 export async function listFigures(userId: string) {
   return listFiguresRepo(userId);
@@ -133,7 +164,7 @@ export async function generateAiVariant(userId: string, input: GenerateAiVariant
   const ctx: AiVariantContext = input.context ?? {};
   const figureType = (ctx.figureType ?? "figure").toLowerCase();
   const descriptionLower = input.description.toLowerCase();
-  const available = Array.isArray(input.availableModels) ? input.availableModels : [];
+  const available = listImageModels().map((m) => ({ id: m.id, label: m.label }));
 
   const chosenModel =
     (ctx.existingModel && available.some((m) => m.id === ctx.existingModel) ? ctx.existingModel : undefined) ??
@@ -161,7 +192,7 @@ export async function generateAiVariant(userId: string, input: GenerateAiVariant
     rigGuidance,
   });
 
-  const response = await getAiml().chatCompletion({
+  const response = await aimlChatCompletionWithRetry({
     model: agentModel(),
     temperature: 0.2,
     max_tokens: 700,

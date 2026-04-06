@@ -89,7 +89,6 @@ export function PromptEditor({
       {
         description: aiDescription.trim(),
         variant: variantLabel,
-        availableModels: imageModels.map((m) => ({ id: m.id, label: m.label })),
         context: {
           figureType,
           figureName,
@@ -159,6 +158,58 @@ export function PromptEditor({
         />
       ) : null}
 
+      <div className="flex flex-col gap-2">
+        <Button
+          type="button"
+          variant="secondary"
+          size="sm"
+          onClick={() => setAiOpen((v) => !v)}
+          className="gap-1.5 self-start"
+        >
+          <Sparkles size={12} />
+          AI Prompt
+          {aiPromptTokenCost != null ? <TokenCostPill tokens={aiPromptTokenCost} /> : null}
+        </Button>
+        {aiOpen && (
+          <div className="flex flex-col gap-2 rounded-xl border border-accent/25 bg-accent/10 p-3 ring-1 ring-accent/15">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-xs text-slate-300 font-medium">Describe what you want</span>
+              <div className="flex items-center gap-2 shrink-0">
+                {aiPromptTokenCost != null ? <TokenCostPill tokens={aiPromptTokenCost} /> : null}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAiOpen(false);
+                    setAiDescription("");
+                  }}
+                  className="text-slate-500 hover:text-slate-300 transition-colors"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            </div>
+            <textarea
+              autoFocus
+              value={aiDescription}
+              onChange={(e) => setAiDescription(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleAiGenerate();
+              }}
+              rows={3}
+              placeholder={`e.g. "armored warrior with golden trim"`}
+              className="w-full bg-surface border border-border rounded px-2 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-accent/50 resize-y"
+            />
+            <div className="flex flex-wrap gap-2 items-center">
+              <Button size="sm" onClick={handleAiGenerate} disabled={generateAiPrompt.isPending || !aiDescription.trim()}>
+                {generateAiPrompt.isPending ? <Spinner className="w-3 h-3" /> : <Sparkles size={12} />}
+                {generateAiPrompt.isPending ? "Generating…" : "Generate"}
+              </Button>
+              <span className="text-[10px] text-slate-600">⌘↵ to submit</span>
+            </div>
+          </div>
+        )}
+      </div>
+
       <Textarea
         id={`prompt-${variant.id}`}
         label="Prompt"
@@ -166,7 +217,7 @@ export function PromptEditor({
         onChange={(e) => setPrompt(e.target.value)}
         rows={5}
         autoResize
-        placeholder="Describe the character skin…"
+        placeholder='e.g. Stylized hero for a fantasy RPG: young knight in battered plate armor, blue cape, short brown hair, confident stance, full body front view, clean silhouette for 3D modeling, game-ready proportions'
       />
 
       <Textarea
@@ -176,45 +227,10 @@ export function PromptEditor({
         onChange={(e) => setNegPrompt(e.target.value)}
         rows={3}
         autoResize
-        placeholder="Exclude…"
+        placeholder="e.g. blurry, low poly, duplicate limbs, extra fingers, text, watermark, logo, cropped head, multiple characters, muddy textures, dark silhouette only"
       />
 
-      {aiOpen && (
-        <div className="flex flex-col gap-2 rounded-xl border border-accent/25 bg-accent/10 p-3 ring-1 ring-accent/15">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs text-slate-300 font-medium">Describe what you want</span>
-            <div className="flex items-center gap-2 shrink-0">
-              {aiPromptTokenCost != null ? <TokenCostPill tokens={aiPromptTokenCost} /> : null}
-              <button onClick={() => { setAiOpen(false); setAiDescription(""); }} className="text-slate-500 hover:text-slate-300 transition-colors">
-                <X size={12} />
-              </button>
-            </div>
-          </div>
-          <textarea
-            autoFocus
-            value={aiDescription}
-            onChange={(e) => setAiDescription(e.target.value)}
-            onKeyDown={(e) => { if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) handleAiGenerate(); }}
-            rows={3}
-            placeholder={`e.g. "armored warrior with golden trim"`}
-            className="w-full bg-surface border border-border rounded px-2 py-1.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-accent/50 resize-y"
-          />
-          <div className="flex flex-wrap gap-2 items-center">
-            <Button size="sm" onClick={handleAiGenerate} disabled={generateAiPrompt.isPending || !aiDescription.trim()}>
-              {generateAiPrompt.isPending ? <Spinner className="w-3 h-3" /> : <Sparkles size={12} />}
-              {generateAiPrompt.isPending ? "Generating…" : "Generate"}
-            </Button>
-            <span className="text-[10px] text-slate-600">⌘↵ to submit</span>
-          </div>
-        </div>
-      )}
-
       <div className="flex gap-2 flex-wrap">
-        <Button variant="secondary" size="sm" onClick={() => setAiOpen((v) => !v)} className="gap-1.5">
-          <Sparkles size={12} />
-          AI Prompt
-          {aiPromptTokenCost != null ? <TokenCostPill tokens={aiPromptTokenCost} /> : null}
-        </Button>
         <Button variant="secondary" size="sm" onClick={handleSave} disabled={updateVariant.isPending || !model.trim()}>
           {updateVariant.isPending ? <Spinner className="w-3 h-3" /> : "Save"}
         </Button>

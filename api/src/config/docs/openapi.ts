@@ -174,14 +174,6 @@ export const OPEN_API_DOCUMENT = {
           description: { type: "string" },
           variant: { type: "string", description: "Human-readable variant label (e.g. saved display name)" },
           context: { type: "object", additionalProperties: true },
-          availableModels: {
-            type: "array",
-            items: {
-              type: "object",
-              properties: { id: { type: "string" }, label: { type: "string" } },
-              required: ["id"],
-            },
-          },
         },
         required: ["description", "variant"],
       },
@@ -868,7 +860,7 @@ export const OPEN_API_DOCUMENT = {
     "/api/figures/ai-variant": {
       post: {
         tags: ["Figures"],
-        summary: "Generate AI variant prompt",
+        summary: "Generate AI variant prompt (image model list from server catalog)",
         security: [{ cookieAuth: [] }],
         requestBody: { required: true, content: { "application/json": { schema: { $ref: "#/components/schemas/AiVariantInput" } } } },
         responses: { "200": jsonContent({ type: "object", additionalProperties: true }), "400": errorContent("Validation error"), "401": errorContent("Unauthorized") },

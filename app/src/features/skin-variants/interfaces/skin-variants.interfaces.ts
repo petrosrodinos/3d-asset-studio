@@ -9,16 +9,10 @@ export interface GenerateAiPromptContext {
   otherVariantPrompt?: string | null;
 }
 
-export interface AimlModelOption {
-  id: string;
-  label: string;
-}
-
 export interface GenerateAiPromptDto {
   description: string;
   /** Saved display name when set; otherwise a stable fallback such as "Variant A" */
   variant: string;
-  availableModels: AimlModelOption[];
   context?: GenerateAiPromptContext;
 }
 

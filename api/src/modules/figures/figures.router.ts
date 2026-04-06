@@ -82,9 +82,6 @@ router.post("/ai-variant", async (req, res, next) => {
         })
         .partial()
         .optional(),
-      availableModels: z
-        .array(z.object({ id: z.string().min(1), label: z.string().optional() }))
-        .optional(),
     });
 
     const parsed = schema.safeParse(req.body);
