@@ -57,6 +57,7 @@ export function ModelCard({ model }: ModelCardProps) {
   const canRig = model.status === "success" && !!model.meshTaskId && !model.rigTaskId && !!model.gcsPbrModelUrl;
   const canShowViewer = model.status === "success" && !!model.gcsPbrModelUrl;
   const isBusy = model.status === "processing" || model.status === "pending";
+  const meshCreatedAtLabel = new Date(model.createdAt).toLocaleString();
 
   const modelUrl = model.gcsPbrModelUrl ?? "";
 
@@ -101,7 +102,10 @@ export function ModelCard({ model }: ModelCardProps) {
             aria-expanded={open}
           >
             <ChevronRight className={cn("shrink-0 text-slate-500 transition-transform duration-200", open && "rotate-90")} size={16} aria-hidden />
-            <span className="text-xs text-slate-400 font-mono truncate">{model.id.slice(0, 8)}</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs text-slate-400 font-mono truncate">{model.id.slice(0, 8)}</p>
+              <p className="text-[10px] text-slate-500 truncate">Mesh created: {meshCreatedAtLabel}</p>
+            </div>
             <Badge status={rigging || animating ? "processing" : model.status} />
           </button>
           <div className="flex items-center pr-2">

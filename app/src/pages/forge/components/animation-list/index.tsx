@@ -70,7 +70,10 @@ export function AnimationList({ animations, model3dId }: AnimationListProps) {
                       aria-hidden
                     />
                     <span className="min-w-0 flex-1 text-xs font-medium text-slate-200 truncate">
-                      {animationLabel(a.animationKey)}
+                      <span className="block truncate">{animationLabel(a.animationKey)}</span>
+                      <span className="block text-[10px] font-normal text-slate-500 truncate">
+                        Created: {new Date(a.createdAt).toLocaleString()}
+                      </span>
                     </span>
                     <span className="shrink-0 text-[0.6rem] font-mono text-slate-600 truncate max-w-[5.5rem] hidden sm:inline">
                       {a.animationKey}

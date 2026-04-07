@@ -1,27 +1,11 @@
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  ChevronRight,
-  Download,
-  Image as ImageIcon,
-  Box,
-  Loader2,
-  X,
-  Sparkles,
-  Layers,
-} from "lucide-react";
+import { ChevronRight, Download, Image as ImageIcon, Box, Loader2, X, Sparkles, Layers } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/utils/cn";
 import { useFigures } from "@/features/figures/hooks/use-figures.hooks";
 import { useDownloadZip } from "@/features/download/hooks/use-download.hooks";
-import type {
-  DownloadFigureSelection,
-  DownloadImageItem,
-  DownloadModelItem,
-  DownloadSkinSelection,
-  DownloadVariantSelection,
-  DownloadZipRequest,
-} from "@/features/download/interfaces/download.interfaces";
+import type { DownloadFigureSelection, DownloadImageItem, DownloadModelItem, DownloadSkinSelection, DownloadVariantSelection, DownloadZipRequest } from "@/features/download/interfaces/download.interfaces";
 import type { Figure, Skin, SkinImage, SkinVariant } from "@/interfaces";
 
 interface DownloadModalProps {
@@ -46,27 +30,22 @@ function IndeterminateCheckbox({ checked, indeterminate, onChange, className }: 
     if (ref.current) ref.current.indeterminate = indeterminate;
   }, [indeterminate]);
 
-  return (
-    <input
-      ref={ref}
-      type="checkbox"
-      checked={checked}
-      onChange={onChange}
-      className={cn(
-        "h-3.5 w-3.5 shrink-0 cursor-pointer rounded accent-accent",
-        className,
-      )}
-    />
-  );
+  return <input ref={ref} type="checkbox" checked={checked} onChange={onChange} className={cn("h-3.5 w-3.5 shrink-0 cursor-pointer rounded accent-accent", className)} />;
 }
 
 // ---------------------------------------------------------------------------
 // Asset key helpers
 // ---------------------------------------------------------------------------
 
-function imgKey(id: string) { return `img:${id}`; }
-function modelKey(id: string) { return `model:${id}`; }
-function animKey(id: string) { return `anim:${id}`; }
+function imgKey(id: string) {
+  return `img:${id}`;
+}
+function modelKey(id: string) {
+  return `model:${id}`;
+}
+function animKey(id: string) {
+  return `anim:${id}`;
+}
 
 function getImageKeys(img: SkinImage): string[] {
   const keys: string[] = [];
@@ -175,21 +154,9 @@ interface RowProps {
 
 function TreeRow({ depth, icon, label, sublabel, checked, indeterminate, onToggle, expandable, expanded, onExpand, disabled }: RowProps) {
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors",
-        "hover:bg-surface/60",
-        disabled && "opacity-40 pointer-events-none",
-      )}
-      style={{ paddingLeft: `${(depth * 16) + 8}px` }}
-    >
+    <div className={cn("flex items-center gap-2 rounded-md px-2 py-1.5 transition-colors", "hover:bg-surface/60", disabled && "opacity-40 pointer-events-none")} style={{ paddingLeft: `${depth * 16 + 8}px` }}>
       {expandable ? (
-        <button
-          type="button"
-          onClick={onExpand}
-          className="shrink-0 text-slate-500 hover:text-slate-300 transition-colors"
-          aria-label={expanded ? "Collapse" : "Expand"}
-        >
+        <button type="button" onClick={onExpand} className="shrink-0 text-slate-500 hover:text-slate-300 transition-colors" aria-label={expanded ? "Collapse" : "Expand"}>
           <ChevronRight size={12} className={cn("transition-transform duration-150", expanded && "rotate-90")} />
         </button>
       ) : (
@@ -271,21 +238,14 @@ export function DownloadModal({ onClose }: DownloadModalProps) {
             <p className="text-sm font-semibold tracking-tight text-slate-100">Download Assets</p>
             <p className="mt-0.5 text-xs text-slate-500">Select figures, skins, variants and 3D models to include in the ZIP.</p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="shrink-0 rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-surface hover:text-slate-200"
-            aria-label="Close"
-          >
+          <button type="button" onClick={onClose} className="shrink-0 rounded-lg p-1.5 text-slate-500 transition-colors hover:bg-surface hover:text-slate-200" aria-label="Close">
             <X size={16} />
           </button>
         </div>
 
         {/* Toolbar */}
         <div className="flex shrink-0 items-center justify-between border-b border-border/60 bg-panel/60 px-4 py-2">
-          <span className="text-xs text-slate-500">
-            {selectedCount === 0 ? "Nothing selected" : `${selectedCount} asset${selectedCount === 1 ? "" : "s"} selected`}
-          </span>
+          <span className="text-xs text-slate-500">{selectedCount === 0 ? "Nothing selected" : `${selectedCount} asset${selectedCount === 1 ? "" : "s"} selected`}</span>
           <div className="flex items-center gap-1">
             <button type="button" onClick={selectAll} className="rounded px-2 py-0.5 text-[10px] text-slate-400 transition-colors hover:bg-surface hover:text-slate-200">
               All
@@ -313,173 +273,79 @@ export function DownloadModal({ onClose }: DownloadModalProps) {
 
               return (
                 <div key={figure.id}>
-                  <TreeRow
-                    depth={0}
-                    icon={<Box size={13} />}
-                    label={figure.name}
-                    sublabel={figure.type}
-                    checked={figState === "all"}
-                    indeterminate={figState === "some"}
-                    onToggle={() => toggle(figKeys)}
-                    expandable
-                    expanded={figExpanded}
-                    onExpand={() => toggleExpand(`fig:${figure.id}`)}
-                    disabled={figKeys.length === 0}
-                  />
+                  <TreeRow depth={0} icon={<Box size={13} />} label={figure.name} sublabel={figure.type} checked={figState === "all"} indeterminate={figState === "some"} onToggle={() => toggle(figKeys)} expandable expanded={figExpanded} onExpand={() => toggleExpand(`fig:${figure.id}`)} disabled={figKeys.length === 0} />
 
-                  {figExpanded && figure.skins.map((skin) => {
-                    const skinKeys = getSkinKeys(skin);
-                    const skinState = selectionState(skinKeys, selected);
-                    const skinExpanded = expanded.has(`skin:${skin.id}`);
-                    const skinLabel = skin.name ?? "Base";
+                  {figExpanded &&
+                    figure.skins.map((skin) => {
+                      const skinKeys = getSkinKeys(skin);
+                      const skinState = selectionState(skinKeys, selected);
+                      const skinExpanded = expanded.has(`skin:${skin.id}`);
+                      const skinLabel = skin.name ?? "Base";
 
-                    return (
-                      <div key={skin.id}>
-                        <TreeRow
-                          depth={1}
-                          icon={<Layers size={12} />}
-                          label={skinLabel}
-                          sublabel={skin.isBase ? "Base skin" : "Skin"}
-                          checked={skinState === "all"}
-                          indeterminate={skinState === "some"}
-                          onToggle={() => toggle(skinKeys)}
-                          expandable
-                          expanded={skinExpanded}
-                          onExpand={() => toggleExpand(`skin:${skin.id}`)}
-                          disabled={skinKeys.length === 0}
-                        />
+                      return (
+                        <div key={skin.id}>
+                          <TreeRow depth={1} icon={<Layers size={12} />} label={skinLabel} sublabel={skin.isBase ? "Base skin" : "Skin"} checked={skinState === "all"} indeterminate={skinState === "some"} onToggle={() => toggle(skinKeys)} expandable expanded={skinExpanded} onExpand={() => toggleExpand(`skin:${skin.id}`)} disabled={skinKeys.length === 0} />
 
-                        {skinExpanded && skin.variants.map((variant) => {
-                          const variantKeys = getVariantKeys(variant);
-                          const variantState = selectionState(variantKeys, selected);
-                          const variantExpanded = expanded.has(`variant:${variant.id}`);
+                          {skinExpanded &&
+                            skin.variants.map((variant) => {
+                              const variantKeys = getVariantKeys(variant);
+                              const variantState = selectionState(variantKeys, selected);
+                              const variantExpanded = expanded.has(`variant:${variant.id}`);
 
-                          return (
-                            <div key={variant.id}>
-                              <TreeRow
-                                depth={2}
-                                icon={<span className="text-[10px] font-bold text-slate-400">{variant.variant}</span>}
-                                label={`Variant ${variant.variant}`}
-                                sublabel={`${variant.images.length} image${variant.images.length === 1 ? "" : "s"}`}
-                                checked={variantState === "all"}
-                                indeterminate={variantState === "some"}
-                                onToggle={() => toggle(variantKeys)}
-                                expandable
-                                expanded={variantExpanded}
-                                onExpand={() => toggleExpand(`variant:${variant.id}`)}
-                                disabled={variantKeys.length === 0}
-                              />
+                              return (
+                                <div key={variant.id}>
+                                  <TreeRow depth={2} icon={<span className="text-[10px] font-bold text-slate-400">{variant.variant}</span>} label={`Variant ${variant.variant}`} sublabel={`${variant.images.length} image${variant.images.length === 1 ? "" : "s"}`} checked={variantState === "all"} indeterminate={variantState === "some"} onToggle={() => toggle(variantKeys)} expandable expanded={variantExpanded} onExpand={() => toggleExpand(`variant:${variant.id}`)} disabled={variantKeys.length === 0} />
 
-                              {variantExpanded && variant.images.map((img) => {
-                                const imgKeys = getImageKeys(img);
-                                const imgState = selectionState(imgKeys, selected);
-                                const imgUrl = img.gcsUrl ?? img.sourceUrl;
-                                const imgExpanded = expanded.has(`img:${img.id}`);
-                                const hasModels = img.models.length > 0;
+                                  {variantExpanded &&
+                                    variant.images.map((img) => {
+                                      const imgKeys = getImageKeys(img);
+                                      const imgState = selectionState(imgKeys, selected);
+                                      const imgUrl = img.gcsUrl ?? img.sourceUrl;
+                                      const imgExpanded = expanded.has(`img:${img.id}`);
 
-                                return (
-                                  <div key={img.id}>
-                                    <TreeRow
-                                      depth={3}
-                                      icon={<ImageIcon size={11} />}
-                                      label="Image"
-                                      sublabel={img.id.slice(0, 12)}
-                                      checked={imgState === "all"}
-                                      indeterminate={imgState === "some"}
-                                      onToggle={() => toggle(imgKeys)}
-                                      expandable={!!imgUrl || img.models.length > 0}
-                                      expanded={imgExpanded}
-                                      onExpand={() => toggleExpand(`img:${img.id}`)}
-                                      disabled={imgKeys.length === 0}
-                                    />
+                                      return (
+                                        <div key={img.id}>
+                                          <TreeRow depth={3} icon={<ImageIcon size={11} />} label="Image" sublabel={img.id.slice(0, 12)} checked={imgState === "all"} indeterminate={imgState === "some"} onToggle={() => toggle(imgKeys)} expandable={!!imgUrl || img.models.length > 0} expanded={imgExpanded} onExpand={() => toggleExpand(`img:${img.id}`)} disabled={imgKeys.length === 0} />
 
-                                    {imgExpanded && (
-                                      <>
-                                        {/* Reference image file */}
-                                        {imgUrl && (
-                                          <TreeRow
-                                            depth={4}
-                                            icon={<ImageIcon size={10} className="text-sky-400/70" />}
-                                            label="Reference image"
-                                            sublabel=".png / .jpg"
-                                            checked={selected.has(imgKey(img.id))}
-                                            indeterminate={false}
-                                            onToggle={() => toggle([imgKey(img.id)])}
-                                          />
-                                        )}
+                                          {imgExpanded && (
+                                            <>
+                                              {/* Reference image file */}
+                                              {imgUrl && <TreeRow depth={4} icon={<ImageIcon size={10} className="text-sky-400/70" />} label="Reference image" sublabel=".png / .jpg" checked={selected.has(imgKey(img.id))} indeterminate={false} onToggle={() => toggle([imgKey(img.id)])} />}
 
-                                        {/* 3D models grouped under this image */}
-                                        {img.models.map((model) => {
-                                          const animKeys = model.animations.filter((a) => a.gcsGlbUrl).map((a) => animKey(a.id));
-                                          const modelKeys = [
-                                            ...(model.gcsPbrModelUrl ? [modelKey(model.id)] : []),
-                                            ...animKeys,
-                                          ];
-                                          const modelState = selectionState(modelKeys, selected);
-                                          const modelExpanded = expanded.has(`model:${model.id}`);
-                                          const modelExpandable = !!model.gcsPbrModelUrl || animKeys.length > 0;
+                                              {/* 3D models grouped under this image */}
+                                              {img.models.map((model) => {
+                                                const animKeys = model.animations.filter((a) => a.gcsGlbUrl).map((a) => animKey(a.id));
+                                                const modelKeys = [...(model.gcsPbrModelUrl ? [modelKey(model.id)] : []), ...animKeys];
+                                                const modelState = selectionState(modelKeys, selected);
+                                                const modelExpanded = expanded.has(`model:${model.id}`);
+                                                const modelExpandable = !!model.gcsPbrModelUrl || animKeys.length > 0;
 
-                                          return (
-                                            <div key={model.id}>
-                                              <TreeRow
-                                                depth={4}
-                                                icon={<Box size={11} className="text-violet-400/80" />}
-                                                label="3D Model"
-                                                sublabel={model.status}
-                                                checked={modelState === "all"}
-                                                indeterminate={modelState === "some"}
-                                                onToggle={() => toggle(modelKeys)}
-                                                expandable={modelExpandable}
-                                                expanded={modelExpanded}
-                                                onExpand={() => toggleExpand(`model:${model.id}`)}
-                                                disabled={modelKeys.length === 0}
-                                              />
+                                                return (
+                                                  <div key={model.id}>
+                                                    <TreeRow depth={4} icon={<Box size={11} className="text-violet-400/80" />} label="3D Model" sublabel={model.status} checked={modelState === "all"} indeterminate={modelState === "some"} onToggle={() => toggle(modelKeys)} expandable={modelExpandable} expanded={modelExpanded} onExpand={() => toggleExpand(`model:${model.id}`)} disabled={modelKeys.length === 0} />
 
-                                              {/* Mesh + animations — only when model row is expanded */}
-                                              {modelExpanded && (
-                                                <>
-                                                  {model.gcsPbrModelUrl && (
-                                                    <TreeRow
-                                                      depth={5}
-                                                      icon={<Box size={10} className="text-violet-400/60" />}
-                                                      label="Mesh"
-                                                      sublabel=".glb"
-                                                      checked={selected.has(modelKey(model.id))}
-                                                      indeterminate={false}
-                                                      onToggle={() => toggle([modelKey(model.id)])}
-                                                    />
-                                                  )}
+                                                    {/* Mesh + animations — only when model row is expanded */}
+                                                    {modelExpanded && (
+                                                      <>
+                                                        {model.gcsPbrModelUrl && <TreeRow depth={5} icon={<Box size={10} className="text-violet-400/60" />} label="Mesh" sublabel=".glb" checked={selected.has(modelKey(model.id))} indeterminate={false} onToggle={() => toggle([modelKey(model.id)])} />}
 
-                                                  {model.animations.map((anim) => (
-                                                    anim.gcsGlbUrl ? (
-                                                      <TreeRow
-                                                        key={anim.id}
-                                                        depth={5}
-                                                        icon={<Sparkles size={10} className="text-amber-400/70" />}
-                                                        label={anim.animationKey}
-                                                        sublabel=".glb"
-                                                        checked={selected.has(animKey(anim.id))}
-                                                        indeterminate={false}
-                                                        onToggle={() => toggle([animKey(anim.id)])}
-                                                      />
-                                                    ) : null
-                                                  ))}
-                                                </>
-                                              )}
-                                            </div>
-                                          );
-                                        })}
-                                      </>
-                                    )}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
+                                                        {model.animations.map((anim) => (anim.gcsGlbUrl ? <TreeRow key={anim.id} depth={5} icon={<Sparkles size={10} className="text-amber-400/70" />} label={anim.animationKey} sublabel=".glb" checked={selected.has(animKey(anim.id))} indeterminate={false} onToggle={() => toggle([animKey(anim.id)])} /> : null))}
+                                                      </>
+                                                    )}
+                                                  </div>
+                                                );
+                                              })}
+                                            </>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
+                                </div>
+                              );
+                            })}
+                        </div>
+                      );
+                    })}
                 </div>
               );
             })
@@ -488,29 +354,13 @@ export function DownloadModal({ onClose }: DownloadModalProps) {
 
         {/* Footer */}
         <div className="flex shrink-0 items-center justify-between border-t border-border/80 bg-surface/40 px-5 py-3">
-          {error ? (
-            <p className="text-xs text-red-400 truncate max-w-[60%]">{error}</p>
-          ) : (
-            <p className="text-xs text-slate-500">
-              {hasSelection ? `${request.selections.length} figure${request.selections.length === 1 ? "" : "s"} in export` : "Select at least one asset"}
-            </p>
-          )}
+          {error ? <p className="text-xs text-red-400 truncate max-w-[60%]">{error}</p> : <p className="text-xs text-slate-500">{hasSelection ? `${request.selections.length} figure${request.selections.length === 1 ? "" : "s"} in export` : "Select at least one asset"}</p>}
           <div className="flex items-center gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={onClose}>
               Cancel
             </Button>
-            <Button
-              type="button"
-              size="sm"
-              disabled={!hasSelection || downloading}
-              onClick={() => void handleDownload()}
-              className="gap-1.5"
-            >
-              {downloading ? (
-                <Loader2 size={13} className="animate-spin" aria-hidden />
-              ) : (
-                <Download size={13} aria-hidden />
-              )}
+            <Button type="button" size="sm" disabled={!hasSelection || downloading} onClick={() => void handleDownload()} className="gap-1.5">
+              {downloading ? <Loader2 size={13} className="animate-spin" aria-hidden /> : <Download size={13} aria-hidden />}
               {downloading ? "Preparing…" : "Download ZIP"}
             </Button>
           </div>
