@@ -20,6 +20,8 @@ import { env } from "../../config/env/env-validation";
 
 const TX_RETRY_ATTEMPTS = 3;
 const TX_RETRY_BASE_MS = 200;
+const TX_MAX_WAIT_MS = 10_000;
+const TX_TIMEOUT_MS = 20_000;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -58,7 +60,10 @@ async function runTransactionWithRetry<T>(
   let last: unknown;
   for (let i = 0; i < TX_RETRY_ATTEMPTS; i++) {
     try {
-      return await prisma.$transaction(run);
+      return await prisma.$transaction(run, {
+        maxWait: TX_MAX_WAIT_MS,
+        timeout: TX_TIMEOUT_MS,
+      });
     } catch (e) {
       last = e;
       if (i < TX_RETRY_ATTEMPTS - 1 && isTransientDbError(e)) {
@@ -197,8 +202,6 @@ async function debitWithUsageTx(
     throw new InsufficientTokensError(cost, user?.tokenBalance ?? 0);
   }
 
-  const userAfter = await tx.user.findUnique({ where: { id: userId }, select: { tokenBalance: true } });
-
   await tx.tokenUsage.create({
     data: {
       userId,
@@ -210,7 +213,8 @@ async function debitWithUsageTx(
       tokens: cost,
       price,
       markupFactor,
-      balanceAfter: userAfter?.tokenBalance ?? undefined,
+      // Avoid an extra read inside the interactive transaction to reduce timeout risk.
+      balanceAfter: undefined,
       idempotencyKey: persistKey,
       metadata: metadata ?? undefined,
     },

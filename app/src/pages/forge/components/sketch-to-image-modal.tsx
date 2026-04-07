@@ -9,7 +9,7 @@ import { useGenerateImage } from "@/features/skin-variants/hooks/use-skin-varian
 import type { SkinVariant } from "@/interfaces";
 import { cn } from "@/utils/cn";
 
-const CANVAS_PX = 512;
+const CANVAS_PX = 640;
 const BG = "#ffffff";
 
 const COLORS = [
@@ -102,8 +102,14 @@ export function SketchToImageModal({
   const eraserWidth = Math.max(strokeSize * 3, 18);
 
   return (
-    <Modal open={open} onClose={onClose} title="Sketch → 3D-ready image" contentClassName="items-stretch w-full">
-      <div className="flex w-full max-w-lg flex-col gap-3">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Sketch → 3D-ready image"
+      panelClassName="max-w-[620px]"
+      contentClassName="items-stretch"
+    >
+      <div className="flex w-full flex-col gap-3">
         <p className="text-xs text-slate-500 leading-relaxed">
           Draw your idea below. We send it to the image model with a mesh-focused prompt (front view, clean background)
           and save the result to this variant like a normal generation.
@@ -234,7 +240,7 @@ export function SketchToImageModal({
             eraserWidth={eraserWidth}
             style={{
               width: "100%",
-              maxHeight: "min(56vh, 420px)",
+              maxHeight: "min(70vh, 620px)",
               aspectRatio: "1 / 1",
               cursor: tool === "erase" ? "cell" : "crosshair",
               display: "block",
