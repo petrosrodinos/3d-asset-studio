@@ -12,8 +12,18 @@ export const TOKEN_OPERATIONS = [
 
 export type TokenOperation = (typeof TOKEN_OPERATIONS)[number];
 
-/** Tripo steps included in the mesh→rig pipeline gate (before SSE). */
+/** Tripo steps included in the mesh→rig pipeline gate (before SSE). Default mesh step is single-image. */
 export const PIPELINE_TRIPPO_MODEL_IDS = ["image_to_model", "animate_rig"] as const;
+
+export type PipelineMeshTrippoModelId = "image_to_model" | "multiview_to_model";
+
+export type DebitForOperationOptions = {
+  pipelineMeshModelId?: PipelineMeshTrippoModelId;
+};
+
+export function getPipelineDebitTokens(meshModelId: PipelineMeshTrippoModelId): number {
+  return trippoWalletDebitByModelId(meshModelId) + trippoWalletDebitByModelId("animate_rig");
+}
 
 export function getTrippoRowOrThrow(modelId: string) {
   const m = TrippoModels.find((x) => x.id === modelId);
@@ -39,7 +49,7 @@ export function getTokenOperationDebit(operation: TokenOperation): number {
     case "animationRetarget":
       return trippoWalletDebitByModelId("animate_retarget");
     case "pipeline":
-      return PIPELINE_TRIPPO_MODEL_IDS.reduce((sum, id) => sum + trippoWalletDebitByModelId(id), 0);
+      return getPipelineDebitTokens("image_to_model");
     case "chat":
       return CHAT_DEBIT_TOKENS;
     default: {

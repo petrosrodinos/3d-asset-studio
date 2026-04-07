@@ -417,7 +417,7 @@ async function processJob(
     );
     const fileToken = extractTripoUploadToken(upload);
 
-    const imgType = mimeType === "image/jpeg" ? "jpeg" : "png";
+    const imgType = mimeType === "image/jpeg" ? "jpg" : "png";
     const { createTaskResponse: meshCreated } = await tripo.createTask({
       type: "image_to_model",
       file: { type: imgType, file_token: fileToken },

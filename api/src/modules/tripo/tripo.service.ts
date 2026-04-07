@@ -1,5 +1,6 @@
 import axios from "axios";
 import { getTripo } from "../../services";
+import { tripoTaskRasterType } from "../../integrations/trippo/tripoTaskFileType";
 import { extractTripoUploadToken } from "../../integrations/trippo/uploadToken";
 import type { ModelVersion } from "../../integrations/trippo/types";
 import { fetchImageAsBuffer } from "../../lib/image-fetch.util";
@@ -45,15 +46,14 @@ export async function getTask(taskId: string) {
 export async function meshFromImageUrl(imageUrl: string, modelVersion?: ModelVersion) {
   const { buffer, mimeType } = await fetchImageAsBuffer(imageUrl.trim(), TRIPO_CONFIG.PROXY_MAX_BYTES);
   const tripo = getTripo();
-  const ext = mimeType === "image/jpeg" ? "jpeg" : "png";
-  const filename = ext === "jpeg" ? "figure-source.jpg" : "figure-source.png";
+  const filename = mimeType === "image/jpeg" ? "figure-source.jpg" : "figure-source.png";
 
   const upload = await tripo.uploadFile(buffer, filename, mimeType);
   const fileToken = extractTripoUploadToken(upload);
 
   const { createTaskResponse: meshTask, costsMetadata: meshCostsMetadata } = await tripo.createTask({
     type: TRIPO_CONFIG.TRIPO_TASK_TYPES.IMAGE_TO_MODEL,
-    file: { type: ext, file_token: fileToken },
+    file: { type: tripoTaskRasterType(mimeType), file_token: fileToken },
     model_version: modelVersion ?? TRIPO_CONFIG.DEFAULT_TRIPO_MODEL_VERSION,
     texture: true,
     pbr: true,

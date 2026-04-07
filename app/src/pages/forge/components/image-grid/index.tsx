@@ -13,6 +13,11 @@ interface ImageGridProps {
   onDelete: (image: SkinImage) => void;
   /** When set, that image’s delete confirm shows loading */
   deletingImageId?: string | null;
+  /** Ordered ids for multiview mesh (order is sent to the API). */
+  meshPickIds?: string[];
+  onToggleMeshPick?: (image: SkinImage) => void;
+  /** While set, these images show a running state (e.g. multiview job). */
+  runningImageIds?: string[] | null;
 }
 
 export function ImageGrid({
@@ -21,6 +26,9 @@ export function ImageGrid({
   onRunPipeline,
   onDelete,
   deletingImageId = null,
+  meshPickIds = [],
+  onToggleMeshPick,
+  runningImageIds = null,
 }: ImageGridProps) {
   const { selectedImage, setSelectedImage } = useForgeStore();
   const [emblaRef, emblaApi] = useEmblaCarousel({ align: "start", dragFree: true });
@@ -48,19 +56,27 @@ export function ImageGrid({
     <div className="group/carousel relative -mx-1 px-1">
       <div className="overflow-hidden rounded-lg" ref={emblaRef}>
         <div className="flex gap-2">
-          {sorted.map((img) => (
-            <div key={img.id} className="flex-none w-[47%] max-w-52">
-              <ImageCard
-                image={img}
-                isRunning={activeImageId === img.id}
-                onRunPipeline={onRunPipeline}
-                onSelect={setSelectedImage}
-                onDelete={onDelete}
-                selected={selectedImage?.id === img.id}
-                deletePending={deletingImageId === img.id}
-              />
-            </div>
-          ))}
+          {sorted.map((img) => {
+            const pickIdx = meshPickIds.indexOf(img.id);
+            const meshPickOrder = pickIdx >= 0 ? pickIdx + 1 : null;
+            const meshPickBlocked = meshPickIds.length >= 4 && pickIdx < 0;
+            return (
+              <div key={img.id} className="flex-none w-[47%] max-w-52">
+                <ImageCard
+                  image={img}
+                  isRunning={activeImageId === img.id || Boolean(runningImageIds?.includes(img.id))}
+                  onRunPipeline={onRunPipeline}
+                  onSelect={setSelectedImage}
+                  onDelete={onDelete}
+                  selected={selectedImage?.id === img.id}
+                  deletePending={deletingImageId === img.id}
+                  meshPickOrder={meshPickOrder}
+                  onToggleMeshPick={onToggleMeshPick}
+                  meshPickBlocked={meshPickBlocked}
+                />
+              </div>
+            );
+          })}
         </div>
       </div>
 

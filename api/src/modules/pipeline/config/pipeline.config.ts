@@ -25,5 +25,8 @@ export const PIPELINE_CONFIG = {
   DEFAULT_POLL_INTERVAL_MS: 2000,
   MESH_POLL_TIMEOUT_MS: 900_000,
   DEFAULT_POLL_TIMEOUT_MS: 600_000,
+
+  /** Max source rasters: single-image uses 1; Tripo `multiview_to_model` allows 2–4 only. */
+  MAX_MESH_SOURCE_VIEWS: 4,
 } as const;
 

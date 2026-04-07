@@ -1128,7 +1128,7 @@ export const OPEN_API_DOCUMENT = {
         tags: ["Pipeline"],
         summary: "Image → mesh pipeline (multipart or imageId + SSE)",
         description:
-          "Send either an `image` file **or** `imageId` (existing skin image). Do not send both `image` and `imageId`. Debits pipeline tokens.",
+          "Provide **one** of: single `image` file; multiple `images` files (same field name repeated, max 4); `imageId` (one existing skin image); or `imageIds` (JSON array of 2–4 skin image ids) for Tripo multiview. Do not mix file uploads with imageId/imageIds. Multiview uses `multiview_to_model` and debits the multiview pipeline rate. Debits pipeline tokens (mesh + rig).",
         security: [{ cookieAuth: [] }],
         requestBody: {
           required: true,
@@ -1137,11 +1137,20 @@ export const OPEN_API_DOCUMENT = {
               schema: {
                 type: "object",
                 properties: {
-                  image: { type: "string", format: "binary", description: "PNG or JPEG upload (omit if using imageId)" },
-                  imageId: { type: "string", description: "Existing skin image id to mesh (omit if uploading image)" },
+                  image: { type: "string", format: "binary", description: "Single PNG or JPEG (omit if using imageId / imageIds / images)" },
+                  images: {
+                    type: "array",
+                    items: { type: "string", format: "binary" },
+                    description: "Multiple PNG/JPEG parts for multiview (omit if using image / imageId / imageIds)",
+                  },
+                  imageId: { type: "string", description: "Single existing skin image id (omit if uploading or using imageIds)" },
+                  imageIds: {
+                    type: "string",
+                    description: 'JSON array of skin image ids, e.g. ["id1","id2"] for multiview (order matters)',
+                  },
                   figureId: { type: "string" },
                   variantId: { type: "string" },
-                  modelVersion: { type: "string", description: "Tripo image-to-model version" },
+                  modelVersion: { type: "string", description: "Tripo model version (multiview uses standard versions only)" },
                 },
                 required: ["figureId", "variantId"],
               },

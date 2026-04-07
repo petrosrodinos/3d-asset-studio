@@ -11,14 +11,19 @@ export type PipelineSseEventEmitter = (
   data: Record<string, unknown>,
 ) => void;
 
+export type PipelineRasterView = {
+  buffer: Buffer;
+  filename: string;
+  mimeType: "image/png" | "image/jpeg";
+};
+
 export interface RunPipelineOpts {
   figureId: string;
   variantId: string;
-  /** Existing skin image ID — when provided, skips GCS upload and image record creation. */
-  skinImageId?: string;
-  imageBuffer: Buffer;
-  filename: string;
-  mimeType: "image/png" | "image/jpeg";
+  /** Existing skin image id for the primary view (first raster). Omit when sources are new file uploads. */
+  existingPrimarySkinImageId?: string;
+  /** One image → `image_to_model`; two or more → Tripo `multiview_to_model`. */
+  views: PipelineRasterView[];
   modelVersion: string;
 
   emitProgress: PipelineProgressEmitter;

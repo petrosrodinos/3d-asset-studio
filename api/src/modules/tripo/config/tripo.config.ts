@@ -4,6 +4,7 @@ export const TRIPO_CONFIG = {
 
   TRIPO_TASK_TYPES: {
     IMAGE_TO_MODEL: "image_to_model",
+    MULTIVIEW_TO_MODEL: "multiview_to_model",
     ANIMATE_PRERIGCHECK: "animate_prerigcheck",
     ANIMATE_RIG: "animate_rig",
     ANIMATE_RETARGET: "animate_retarget",

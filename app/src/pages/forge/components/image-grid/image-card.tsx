@@ -32,7 +32,7 @@ function rasterPreviewUrl(image: SkinImage): string | null {
   return null;
 }
 
-function canRunPipelineOnImage(image: SkinImage): boolean {
+export function canRunPipelineOnImage(image: SkinImage): boolean {
   if (image.gcsUrl) return true;
   const s = image.sourceUrl ?? "";
   return /^https?:\/\//i.test(s);
@@ -47,9 +47,14 @@ interface ImageCardProps {
   selected?: boolean;
   /** True while this image’s delete request is in flight */
   deletePending?: boolean;
+  /** 1-based order in multiview selection, or null if not selected */
+  meshPickOrder?: number | null;
+  onToggleMeshPick?: (image: SkinImage) => void;
+  /** True when multiview slot cap reached and this image is not selected */
+  meshPickBlocked?: boolean;
 }
 
-export function ImageCard({ image, isRunning, onRunPipeline, onSelect, onDelete, selected, deletePending = false }: ImageCardProps) {
+export function ImageCard({ image, isRunning, onRunPipeline, onSelect, onDelete, selected, deletePending = false, meshPickOrder = null, onToggleMeshPick, meshPickBlocked = false }: ImageCardProps) {
   const status = bestModelStatus(image.models);
   const isProcessing = status === "processing";
   const { data: pricingCosts } = usePricingCosts();
@@ -108,6 +113,12 @@ export function ImageCard({ image, isRunning, onRunPipeline, onSelect, onDelete,
     <>
       <div className={cn("cursor-pointer overflow-hidden rounded-xl border bg-panel/30 ring-1 ring-white/5 transition-all", selected ? "border-accent/50 ring-2 ring-accent/35 shadow-md shadow-accent/10" : "border-border/80 hover:border-accent/25 hover:ring-accent/10")} onClick={() => onSelect(image)}>
         <div className="relative aspect-square w-full bg-surface/80">
+          {onToggleMeshPick ? (
+            <label title={meshPickBlocked ? "Maximum 4 views for multiview (Tripo)" : "Include in multiview mesh (order follows check order)"} className={cn("absolute left-1.5 top-1.5 z-20 flex h-7 min-w-7 items-center justify-center rounded-md border border-border/80 bg-panel/95 px-1 shadow-md ring-1 ring-white/10 backdrop-blur-sm", meshPickBlocked ? "cursor-not-allowed opacity-50" : "cursor-pointer")}>
+              <input type="checkbox" className="sr-only" checked={meshPickOrder != null} disabled={!pipelineAllowed || meshPickBlocked} onChange={() => onToggleMeshPick(image)} onClick={(e) => e.stopPropagation()} />
+              <span className={cn("flex h-5 min-w-5 items-center justify-center rounded text-[10px] font-semibold tabular-nums", meshPickOrder != null ? "bg-accent/90 text-white" : "border border-border/80 bg-surface/80 text-slate-500")}>{meshPickOrder != null ? meshPickOrder : ""}</span>
+            </label>
+          ) : null}
           {previewSrc ? (
             <>
               {!imgLoaded && <Skeleton className="absolute inset-0 z-[1] rounded-none" />}

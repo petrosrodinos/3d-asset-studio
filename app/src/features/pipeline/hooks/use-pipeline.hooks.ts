@@ -12,12 +12,7 @@ export function usePipeline(
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function run(
-    variantId: string,
-    figureId: string,
-    imageId: string,
-    file: File | null,
-  ) {
+  async function run(variantId: string, figureId: string, imageIds: string[], file: File | null) {
     setRunning(true);
     setError(null);
     let firstEvent = true;
@@ -26,7 +21,13 @@ export function usePipeline(
       if (file) form.append("image", file);
       form.append("variantId", variantId);
       form.append("figureId", figureId);
-      if (imageId) form.append("imageId", imageId);
+      if (!file) {
+        if (imageIds.length > 1) {
+          form.append("imageIds", JSON.stringify(imageIds));
+        } else if (imageIds.length === 1) {
+          form.append("imageId", imageIds[0]);
+        }
+      }
 
       const res = await fetch(`${API_BASE_URL}/api/pipeline/mesh`, {
         method: "POST",
@@ -45,7 +46,10 @@ export function usePipeline(
       }
 
       for await (const evt of parseSSE(res.body!)) {
-        if (firstEvent) { firstEvent = false; onModelCreated?.(); }
+        if (firstEvent) {
+          firstEvent = false;
+          onModelCreated?.();
+        }
         const data = JSON.parse(evt.data) as Record<string, unknown>;
         if (evt.event === "complete") {
           onComplete(data as unknown as PipelineResult);
