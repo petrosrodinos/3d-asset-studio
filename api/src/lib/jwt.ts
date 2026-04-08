@@ -4,7 +4,7 @@ import { env } from "../config/env/env-validation";
 export interface AccessPayload { sub: string; email: string; role: string }
 export interface RefreshPayload { sub: string }
 
-export const ACCESS_TTL = 15 * 60;
+export const ACCESS_TTL = 7 * 24 * 60 * 60;
 export const REFRESH_TTL = 7 * 24 * 60 * 60;
 
 export const signAccessToken = (p: AccessPayload) =>

@@ -17,7 +17,7 @@ const schema = z.object({
   GCS_PUBLIC_BASE_URL: z.string().url().optional(),
   JWT_ACCESS_SECRET: z.string().min(5),
   JWT_REFRESH_SECRET: z.string().min(5),
-  JWT_ACCESS_EXPIRES_IN: z.string().default("15m"),
+  JWT_ACCESS_EXPIRES_IN: z.string().default("7d"),
   JWT_REFRESH_EXPIRES_IN: z.string().default("7d"),
   STRIPE_SECRET_KEY: z.string().min(1),
   STRIPE_WEBHOOK_SECRET: z.string().min(1),
