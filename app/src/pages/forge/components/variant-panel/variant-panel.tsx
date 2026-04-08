@@ -127,12 +127,6 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
               </div>
             ) : null}
             {meshError ? <p className="text-xs text-red-400">{meshError}</p> : null}
-            {uploadSkinImage.isPending ? (
-              <div className="flex items-center gap-2 rounded-lg border border-accent/20 bg-accent/10 px-3 py-2 text-xs text-accent-light/95" role="status" aria-live="polite">
-                <Spinner className="h-3.5 w-3.5" />
-                <span>Uploading image…</span>
-              </div>
-            ) : null}
             <ImageUploader onFile={handleUploadFile} disabled={uploadSkinImage.isPending} isUploading={uploadSkinImage.isPending} />
             {variant.images.length > 0 ? (
               <ImageGrid
