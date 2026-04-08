@@ -1,6 +1,5 @@
 import bcrypt from "bcryptjs";
 import * as users from "../users/users.service";
-import { copyTemplateFigures } from "../figures/figures.service";
 import {
   signAccessToken, signRefreshToken, verifyRefreshToken,
   REFRESH_TTL,
@@ -14,8 +13,6 @@ export async function register(email: string, password: string, displayName?: st
   }
   const passwordHash = await bcrypt.hash(password, 12);
   const user = await users.createUser({ email, passwordHash, displayName });
-
-  await copyTemplateFigures(user.id);
 
   return issueTokens(user);
 }
