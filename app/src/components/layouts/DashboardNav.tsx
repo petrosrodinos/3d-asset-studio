@@ -1,6 +1,6 @@
 import type { MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
-import { Coins, Menu, MessageSquare, MoreHorizontal } from "lucide-react";
+import { Box, Coins, Menu, MessageSquare, MoreHorizontal } from "lucide-react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuth } from "@/features/auth/hooks/use-auth.hooks";
 import { useBalance } from "@/features/billing/hooks/use-billing.hooks";
@@ -119,8 +119,9 @@ export function DashboardNav() {
           <MessageSquare size={16} aria-hidden />
         </button>
       )}
-      <Link to="/" className="text-xs sm:text-sm font-semibold text-accent-light truncate min-w-0 shrink hover:text-slate-100 transition-colors">
-        Forge
+      <Link to="/" className="flex items-center gap-1.5 text-xs sm:text-sm font-semibold text-accent-light truncate min-w-0 shrink hover:text-slate-100 transition-colors">
+        <Box size={15} strokeWidth={1.8} className="shrink-0" aria-hidden />
+        <span className="truncate">Forge</span>
       </Link>
 
       <nav className="hidden sm:flex items-center gap-1 shrink-0" aria-label="App">

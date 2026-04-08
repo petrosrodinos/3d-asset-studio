@@ -1,6 +1,6 @@
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { createPortal } from "react-dom";
-import { Box, Download, ImageOff, Plus, Trash2, Pencil } from "lucide-react";
+import { Download, ImageOff, Plus, Trash2, Pencil } from "lucide-react";
 import { useFigures, useCreateFigure, useUpdateFigure, useDeleteFigure } from "@/features/figures/hooks/use-figures.hooks";
 import { useForgeStore } from "@/store/forgeStore";
 import { cn } from "@/utils/cn";
@@ -166,9 +166,6 @@ export const FigureList = forwardRef<FigureListHandle, FigureListProps>(function
           <>
             <div className="flex shrink-0 items-center justify-between border-b border-border/80 bg-surface/35 px-3 py-2.5">
               <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-500">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/12 text-accent-light ring-1 ring-accent/20">
-                  <Box className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
-                </span>
                 Figures
               </span>
               <div className="flex items-center gap-0.5">
