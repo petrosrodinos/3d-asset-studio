@@ -1,9 +1,13 @@
 /** Keep `index.html` meta tags aligned with `LANDING_SEO` for crawlers that do not execute JS. */
 export const LANDING_SEO = {
-  title: "Forge | AI 3D Game Asset Generator — Characters, Rigs & Batch Workflows",
+  title: "Forge | AI 3D Game Assets — Sketch to 3D, Characters, Rigs & Batch Workflows",
   description:
-    "Generate AI 3D game assets, meshes, and character rigs in one workflow. AI character generator with prompt enhancement, auto rigging AI, preset animations, skins, variants, and batch creation for Unity, Unreal, and indie teams.",
+    "Draw a sketch and let AI turn it into a polished image, then generate rigged 3D game assets in one workflow. AI character generator with sketch-to-image, prompt enhancement, auto rigging AI, preset animations, skins, variants, and batch creation for Unity, Unreal, and indie teams.",
   keywords: [
+    "sketch to 3D",
+    "drawing to 3D model",
+    "AI sketch to image",
+    "concept art to 3D",
     "AI 3D game assets",
     "AI character generator",
     "auto rigging AI",
@@ -28,7 +32,7 @@ export const LANDING_HERO_BADGE = "AI game asset studio";
 export const LANDING_HERO_TITLE = "AI 3D Game Asset Studio for real-time games";
 
 export const LANDING_HERO_SUBTITLE =
-  "Turn prompts or images into rigged characters, preset animations, and export-ready meshes—built for indie studios, Unity and Unreal teams, modders, and 3D artists who need volume without losing quality.";
+  "Turn prompts, reference photos, or a quick sketch into 3D characters, preset animations, and export-ready meshes—built for indie studios, Unity and Unreal teams, modders, and 3D artists who need volume without losing quality.";
 
 export const LANDING_CTA_PRIMARY = "Generate assets now";
 
@@ -41,8 +45,11 @@ export const LANDING_NAV_DASHBOARD = "Dashboard";
 /** Navbar "Pricing" → full rates page, scrolled to token packs (id `token-packs` on `/pricing`). */
 export const PRICING_NAV_PATH = "/pricing#token-packs";
 
+/** Navbar "Features" scrolls here first (sketch-to-3d, then the `#features` grid below). */
+export const LANDING_FEATURES_NAV_HASH = "#sketch-to-3d" as const;
+
 export const LANDING_NAV_ANCHORS = [
-  { href: "#features", label: "Features" },
+  { href: LANDING_FEATURES_NAV_HASH, label: "Features" },
   { href: "#pricing", label: "Plans" },
   { href: "#use-cases", label: "Use cases" },
   { href: "#how-it-works", label: "How it works" },
@@ -51,7 +58,10 @@ export const LANDING_NAV_ANCHORS = [
 export const LANDING_PACKS_TITLE = "Pricing";
 
 export const LANDING_PACKS_SUBTITLE =
-  "Pick a pack to start with — create an account and pay securely through Stripe.";
+  "Pick a pack when you need more tokens — create an account and pay securely through Stripe at checkout.";
+
+/** Shown next to token packs on the landing page and pricing page. */
+export const LANDING_PACKS_SIGNUP_BONUS = "100 free tokens on signup";
 
 /** Base URL for batch-exported hero GLBs (`app/public/3d-samples/generated-by-figure-type/...`). */
 export const LANDING_HERO_GENERATED_GLBS_BASE = "/3d-samples/generated-by-figure-type";
@@ -128,7 +138,46 @@ export const LANDING_3D_SAMPLES = [
 
 
 export const LANDING_FOOTER_TAGLINE =
-  "AI 3D game assets, auto rigging, and batch-ready exports—dark-mode native workspace for shipping characters faster.";
+  "Sketch to 3D, AI game assets, auto rigging, and batch-ready exports—dark-mode native workspace for shipping characters faster.";
+
+export const LANDING_SKETCH_TO_3D = {
+  id: "sketch-to-3d",
+  kicker: "Sketch to 3D",
+  title: "Draw it once. AI paints it. Forge builds the 3D.",
+  lead: "Start from a napkin scribble or a clean line drawing—add a short note if you want a specific style. Our AI interprets your sketch into a full-color reference image.",
+  bullets: [
+    {
+      title: "No reference photo required",
+      body: "When you only have a silhouette in mind, sketching is faster than hunting stock or blocking in greybox—especially for stylized games and jam timelines.",
+    },
+    {
+      title: "Stay inside one studio",
+      body: "Generate the image, pick the pass you like, and move straight to 3D without exporting layers between five different apps.",
+    },
+    {
+      title: "Same path to engines",
+      body: "Rigging, preset animations, variants, and GLB-oriented workflows behave the same whether your input was text, an upload, or a drawing.",
+    },
+  ],
+  keywordsLine: "Sketch to image · AI reference · image to 3D · rigged GLB",
+  steps: [
+    {
+      src: "/showcase/step-1.jpg",
+      alt: "Hand-drawn character sketch used as input for AI image generation in Forge",
+      caption: "1 · Your sketch",
+    },
+    {
+      src: "/showcase/step-2.jpg",
+      alt: "AI-generated full-color character artwork produced from the sketch in Forge",
+      caption: "2 · AI-generated image",
+    },
+  ],
+  glb: {
+    src: "/showcase/step-3.glb",
+    caption: "3 · Interactive 3D mesh — drag to rotate",
+    alt: "Interactive 3D preview of the character mesh in GLB format, matching sketch and AI image steps above",
+  },
+} as const;
 
 export const LANDING_FEATURE_SECTIONS = [
   {
@@ -136,6 +185,11 @@ export const LANDING_FEATURE_SECTIONS = [
     title: "AI creation",
     subtitle: "Faster ideation for AI 3D game assets without bouncing between disconnected tools.",
     items: [
+      {
+        title: "Sketch to image to 3D",
+        body: "Rough out a pose or costume in the built-in canvas; AI fills in lighting, materials, and detail so you can approve a look before mesh generation spends your budget.",
+        keywords: "sketch to 3D, drawing to 3D, AI sketch interpretation",
+      },
       {
         title: "AI image generation for game assets",
         body: "Block in silhouettes, materials, and read direction early so your team approves look-and-feel before you commit topology time.",
@@ -203,6 +257,10 @@ export const LANDING_FEATURE_SECTIONS = [
 
 export const LANDING_USE_CASES = [
   {
+    title: "Sketch-first ideation",
+    body: "Thumbnail a roster on paper or stylus, promote the winners to AI-painted references, then lock the ones that read best in-engine.",
+  },
+  {
     title: "Indie game characters",
     body: "Ship a readable hero and enemy set without hiring a full character team on day one.",
   },
@@ -226,8 +284,8 @@ export const LANDING_USE_CASES = [
 
 export const LANDING_HOW_IT_WORKS = [
   {
-    title: "Describe your character",
-    body: "Start from a short brief or reference image—call out role, era, silhouette, and any hard constraints for your AI character generator pass.",
+    title: "Describe, sketch, or upload",
+    body: "Start from a short brief, a reference image, or a quick sketch in the canvas—call out role, era, silhouette, and any hard constraints for your AI character generator pass.",
   },
   {
     title: "AI enhances the prompt",
@@ -246,7 +304,7 @@ export const LANDING_HOW_IT_WORKS = [
 
 export const LANDING_MID_CTA = {
   title: "Ready to build 3D characters for your game?",
-  body: "Create a free account, describe your character in plain language or upload a reference image, then preview meshes, rigs, and animations in the studio. Adjust prompts until it looks right, and export when you are ready to drop it into your engine.",
+  body: "Create a free account, describe your character in plain language, upload a reference image, or sketch an idea and let AI paint it—then preview meshes, rigs, and animations in the studio. Adjust prompts until it looks right, and export when you are ready to drop it into your engine.",
   primary: "Generate assets now",
   secondary: "View pricing",
 } as const;

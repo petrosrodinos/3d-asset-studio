@@ -6,6 +6,7 @@ import { LandingFooter } from "@/pages/landing/components/LandingFooter";
 import { LandingHead } from "@/pages/landing/components/LandingHead";
 import { LandingUseCases } from "@/pages/landing/components/LandingUseCases";
 import { LandingHowItWorks } from "@/pages/landing/components/LandingHowItWorks";
+import { LandingSketchTo3d } from "@/pages/landing/components/LandingSketchTo3d";
 import { LandingMidCta } from "@/pages/landing/components/LandingMidCta";
 import { LandingTokenPacks } from "@/pages/landing/components/LandingTokenPacks";
 import { cn } from "@/utils/cn";
@@ -70,6 +71,7 @@ export default function LandingPage() {
             <LandingHeroVisual />
           </div>
         </section>
+        <LandingSketchTo3d />
         <LandingFeatureSections />
         <LandingTokenPacks />
         <LandingUseCases />

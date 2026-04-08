@@ -9,7 +9,7 @@ import { BILLING_PACK_QUERY_PARAM } from "@/features/billing/constants";
 import { useCheckout, usePacks } from "@/features/billing/hooks/use-billing.hooks";
 import { usePricingCatalog } from "@/features/pricing/hooks/use-pricing.hooks";
 import type { PricingImageModelDto } from "@/features/pricing/interfaces/pricing.interfaces";
-import { LANDING_PACKS_SUBTITLE, LANDING_PACKS_TITLE } from "@/pages/landing/constants";
+import { LANDING_PACKS_SIGNUP_BONUS, LANDING_PACKS_SUBTITLE, LANDING_PACKS_TITLE } from "@/pages/landing/constants";
 import { cn } from "@/utils/cn";
 
 const usd = (amount: number) => new Intl.NumberFormat("en-US", { style: "currency", currency: "EUR", maximumFractionDigits: 3 }).format(amount);
@@ -124,7 +124,7 @@ export default function PricingPage() {
     );
   }
 
-  const { rates, trippoModels } = data;
+  const { trippoModels } = data;
 
   return (
     <div className="relative flex min-h-0 min-w-0 flex-1 overflow-y-auto overflow-x-hidden bg-surface">
@@ -135,13 +135,6 @@ export default function PricingPage() {
           background: "radial-gradient(ellipse 80% 60% at 15% -10%, rgba(124,58,237,0.22), transparent 55%), radial-gradient(ellipse 70% 50% at 85% 0%, rgba(14,165,233,0.08), transparent 50%), radial-gradient(ellipse 50% 40% at 50% 20%, rgba(167,139,250,0.06), transparent 60%)",
         }}
       />
-      <div
-        className="pointer-events-none absolute inset-0 opacity-[0.035]"
-        aria-hidden
-        style={{
-          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-        }}
-      />
 
       <div className="relative max-w-6xl mx-auto min-w-0 px-4 sm:px-6 py-10 pb-16 space-y-14">
         <header className="space-y-4">
@@ -150,23 +143,21 @@ export default function PricingPage() {
           <p className="text-slate-400 text-sm max-w-2xl leading-relaxed">Every action debits wallet tokens. Top up with packs, then spend on image models, mesh/rig steps, and chat. Listed EUR figures are indicative provider cost; packs are charged in EUR at checkout.</p>
         </header>
 
-        <section className="rounded-2xl border border-border/80 bg-panel/80 backdrop-blur-sm px-5 py-6 sm:px-7 sm:py-7 shadow-[0_0_0_1px_rgba(124,58,237,0.06)]" style={{ animation: "msgIn 0.45s ease-out both" }}>
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-4">How tokens work</h2>
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div className="space-y-1">
-              <p className="text-2xl font-mono font-semibold tabular-nums text-accent-light">{rates.tokensPerEur}</p>
-              <p className="text-xs text-slate-500">tokens per 1 EUR</p>
-            </div>
-          </div>
-        </section>
-
-        <section id="token-packs" className="relative -mx-4 scroll-mt-14 border-t border-border/60 bg-surface/20 px-4 py-12 sm:-mx-6 sm:px-6 sm:py-16" aria-labelledby="pricing-token-packs-heading">
+        <section id="token-packs" className="relative -mx-4 scroll-mt-10 border-t border-border/60 bg-surface/20 px-4 py-12 sm:-mx-6 sm:px-6 sm:py-16" aria-labelledby="pricing-token-packs-heading">
           <div className="max-w-2xl">
             <p className={cn("font-mono text-xs font-medium uppercase tracking-widest text-accent-light/90")}>Pricing</p>
             <h2 id="pricing-token-packs-heading" className="mt-3 text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">
               {LANDING_PACKS_TITLE}
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-slate-400 sm:text-base">{LANDING_PACKS_SUBTITLE}</p>
+            <p
+              className={cn(
+                "mt-4 inline-flex max-w-full items-center gap-2 rounded-lg border border-accent/35 bg-accent/10 px-3 py-2",
+                "font-sans text-sm font-medium text-accent-light",
+              )}
+            >
+              {LANDING_PACKS_SIGNUP_BONUS}
+            </p>
           </div>
           <div className="mt-10">
             <TokenPacksGrid packs={packsQuery.data} isLoading={packsQuery.isLoading} onPackAction={handlePackAction} busyPackId={checkoutMutation.isPending ? (checkoutMutation.variables ?? null) : null} isActionLocked={checkoutMutation.isPending} primaryCtaLabel={user ? undefined : "Get started"} />

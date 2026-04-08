@@ -3,7 +3,8 @@ import { useAuth } from "@/features/auth/hooks/use-auth.hooks";
 import { useCheckout, usePacks } from "@/features/billing/hooks/use-billing.hooks";
 import { TokenPacksGrid } from "@/features/billing/components/TokenPacksGrid";
 import { BILLING_PACK_QUERY_PARAM } from "@/features/billing/constants";
-import { LANDING_PACKS_SUBTITLE, LANDING_PACKS_TITLE } from "@/pages/landing/constants";
+import { LANDING_PACKS_SIGNUP_BONUS, LANDING_PACKS_SUBTITLE, LANDING_PACKS_TITLE } from "@/pages/landing/constants";
+import { cn } from "@/utils/cn";
 
 export function LandingTokenPacks() {
   const navigate = useNavigate();
@@ -27,6 +28,14 @@ export function LandingTokenPacks() {
             {LANDING_PACKS_TITLE}
           </h2>
           <p className="mt-3 text-sm leading-relaxed text-slate-400 sm:text-base">{LANDING_PACKS_SUBTITLE}</p>
+          <p
+            className={cn(
+              "mt-4 inline-flex max-w-full items-center gap-2 rounded-lg border border-accent/35 bg-accent/10 px-3 py-2",
+              "font-sans text-sm font-medium text-accent-light",
+            )}
+          >
+            {LANDING_PACKS_SIGNUP_BONUS}
+          </p>
         </div>
         <div className="mt-10">
           <TokenPacksGrid packs={packsQuery.data} isLoading={packsQuery.isLoading} onPackAction={handlePackAction} busyPackId={checkoutMutation.isPending ? (checkoutMutation.variables ?? null) : null} isActionLocked={checkoutMutation.isPending} primaryCtaLabel={user ? undefined : "Get started"} />

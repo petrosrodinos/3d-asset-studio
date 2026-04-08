@@ -15,8 +15,8 @@ export function LandingHowItWorks() {
           How it works
         </h2>
         <p className="mt-3 max-w-3xl text-sm leading-relaxed text-slate-400 sm:text-base">
-          Four steps from brief to rigged, animated geometry—optimized for AI character generator workflows
-          that need review gates, not black-box surprises.
+          Four steps from text, sketch, or reference image to rigged, animated geometry—optimized for AI character
+          generator workflows that need review gates, not black-box surprises.
         </p>
         <ol className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
           {LANDING_HOW_IT_WORKS.map((step, index) => (

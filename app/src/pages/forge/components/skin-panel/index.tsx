@@ -4,8 +4,12 @@ import { Button } from "@/components/ui/Button";
 import { VariantPanel } from "@/pages/forge/components/skin-panel/variant-panel";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { cn } from "@/utils/cn";
-import { useCreateVariant, useDeleteVariant } from "@/features/skin-variants/hooks/use-skin-variants.hooks";
+import { useCreateVariant, useDeleteVariant, useUpdateVariant } from "@/features/skin-variants/hooks/use-skin-variants.hooks";
 import type { Skin, SkinVariant } from "@/interfaces";
+
+function variantTabLabel(v: SkinVariant): string {
+  return v.name?.trim() ? v.name.trim() : `Variant ${v.variant}`;
+}
 
 interface SkinPanelProps {
   skin: Skin;
@@ -19,10 +23,12 @@ export function SkinPanel({ skin, figureId, figureType, figureName }: SkinPanelP
     skin.variants[0]?.id ?? null,
   );
   const [pendingDelete, setPendingDelete] = useState<SkinVariant | null>(null);
+  const [variantNameDraft, setVariantNameDraft] = useState("");
   const autoAddedForSkin = useRef<string | null>(null);
 
   const createVariant = useCreateVariant();
   const deleteVariant = useDeleteVariant();
+  const updateVariant = useUpdateVariant();
 
   useEffect(() => {
     if (skin.variants.length === 0 && autoAddedForSkin.current !== skin.id) {
@@ -37,6 +43,27 @@ export function SkinPanel({ skin, figureId, figureType, figureName }: SkinPanelP
 
   const activeVariant =
     skin.variants.find((v) => v.id === activeVariantId) ?? skin.variants[0] ?? null;
+
+  useEffect(() => {
+    if (!activeVariant) {
+      setVariantNameDraft("");
+      return;
+    }
+    setVariantNameDraft(activeVariant.name ?? "");
+  }, [activeVariant?.id]);
+
+  function commitVariantName() {
+    if (!activeVariant) return;
+    const trimmed = variantNameDraft.trim();
+    const current = activeVariant.name ?? "";
+    if (trimmed === current) return;
+    updateVariant.mutate({
+      figureId,
+      skinId: skin.id,
+      variantId: activeVariant.id,
+      dto: { name: trimmed || null },
+    });
+  }
 
   function handleAddVariant() {
     const seed =
@@ -93,18 +120,36 @@ export function SkinPanel({ skin, figureId, figureType, figureName }: SkinPanelP
           <div className="flex min-w-0 flex-1 items-end gap-0 overflow-x-auto">
             {skin.variants.map((v) => (
               <div key={v.id} className="group/var flex shrink-0 items-center">
-                <button
-                  type="button"
-                  onClick={() => setActiveVariantId(v.id)}
-                  className={cn(
-                    "-mb-px border-b-2 px-2.5 py-2 text-xs whitespace-nowrap transition-colors",
-                    activeVariant?.id === v.id
-                      ? "border-accent-light/90 text-slate-100"
-                      : "border-transparent text-slate-500 hover:text-slate-300",
-                  )}
-                >
-                  {v.name ?? v.variant}
-                </button>
+                {activeVariant?.id === v.id ? (
+                  <input
+                    type="text"
+                    value={variantNameDraft}
+                    onChange={(e) => setVariantNameDraft(e.target.value)}
+                    onBlur={() => commitVariantName()}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                    disabled={updateVariant.isPending}
+                    placeholder={`Variant ${v.variant}`}
+                    aria-label="Variant name"
+                    className={cn(
+                      "-mb-px min-w-[4.5rem] max-w-[11rem] border-b-2 bg-transparent px-2.5 py-2 text-xs text-slate-100 outline-none transition-colors placeholder:text-slate-600",
+                      "border-accent-light/90 focus:border-accent-light",
+                    )}
+                  />
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setActiveVariantId(v.id)}
+                    className={cn(
+                      "-mb-px border-b-2 px-2.5 py-2 text-xs whitespace-nowrap transition-colors",
+                      "border-transparent text-slate-500 hover:text-slate-300",
+                    )}
+                  >
+                    {variantTabLabel(v)}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={(e) => {

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LANDING_BRAND, LANDING_FOOTER_TAGLINE, PRICING_NAV_PATH } from "@/pages/landing/constants";
+import { LANDING_BRAND, LANDING_FEATURES_NAV_HASH, LANDING_FOOTER_TAGLINE, PRICING_NAV_PATH } from "@/pages/landing/constants";
 
 export function LandingFooter() {
   return (
@@ -10,7 +10,7 @@ export function LandingFooter() {
           <p className="mt-1 max-w-md text-xs leading-relaxed text-slate-500">{LANDING_FOOTER_TAGLINE}</p>
         </div>
         <div className="flex flex-wrap gap-x-6 gap-y-2 text-xs">
-          <a href="#features" className="text-slate-500 transition-colors hover:text-accent-light">
+          <a href={LANDING_FEATURES_NAV_HASH} className="text-slate-500 transition-colors hover:text-accent-light">
             Features
           </a>
           <a href="#use-cases" className="text-slate-500 transition-colors hover:text-accent-light">
