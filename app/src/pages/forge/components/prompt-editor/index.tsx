@@ -3,7 +3,6 @@ import { Pencil, Sparkles, X } from "lucide-react";
 import { Textarea } from "@/components/ui/Textarea";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
-import { SingleImagePicker } from "@/components/SingleImagePicker";
 import { useGenerateAiPrompt, useUpdateVariant, useGenerateImage } from "@/features/skin-variants/hooks/use-skin-variants.hooks";
 import { useImageModels } from "@/features/image-models/hooks/use-image-models.hooks";
 import { ImageModelSelect } from "@/features/image-models/components/ImageModelSelect";
@@ -14,6 +13,13 @@ import { TokenCostPill } from "@/features/pricing/components/TokenCostPill";
 import type { SkinVariant } from "@/interfaces";
 import { fileToDataUrl } from "@/utils/imageFiles";
 import { SketchToImageModal } from "@/pages/forge/components/sketch-to-image-modal";
+import { useForgeStore } from "@/store/forgeStore";
+import {
+  imageUrlToDataUrl,
+  SourceImageSelector,
+  type ExistingImageOption,
+  type SourceMode,
+} from "@/pages/forge/components/source-image-selector";
 
 interface PromptEditorProps {
   variant: SkinVariant;
@@ -36,9 +42,14 @@ export function PromptEditor({
   const [negPrompt, setNegPrompt] = useState(variant.negativePrompt ?? "");
   const [model, setModel] = useState(variant.imageModel ?? "");
   const [sourceFile, setSourceFile] = useState<File | null>(null);
+  const [sourceMode, setSourceMode] = useState<SourceMode>("upload");
+  const [skinFilter, setSkinFilter] = useState<string>("all");
+  const [variantFilter, setVariantFilter] = useState<string>("all");
+  const [selectedExistingImageId, setSelectedExistingImageId] = useState<string>("");
   const [aiOpen, setAiOpen] = useState(false);
   const [aiDescription, setAiDescription] = useState("");
   const [sketchOpen, setSketchOpen] = useState(false);
+  const { activeFigure } = useForgeStore();
 
   const { data: imageModels = [] } = useImageModels();
   const firstModelId = imageModels[0]?.id;
@@ -49,6 +60,47 @@ export function PromptEditor({
     [imageModels, model],
   );
   const needsSourceImage = Boolean(selectedModelMeta?.isImageToImage);
+  const allExistingImages = useMemo<ExistingImageOption[]>(() => {
+    if (!activeFigure) return [];
+    return activeFigure.skins.flatMap((skin) =>
+      skin.variants.flatMap((v) =>
+        v.images.map((img) => ({
+          imageId: img.id,
+          imageUrl: img.gcsUrl ?? img.sourceUrl,
+          createdAt: img.createdAt,
+          variantId: v.id,
+          variantName: v.name ?? `Variant ${v.variant}`,
+          skinId: skin.id,
+          skinName: skin.name ?? "Skin",
+        })),
+      ),
+    );
+  }, [activeFigure]);
+  const existingImageOptions = useMemo(() => {
+    return allExistingImages
+      .filter((img) => (skinFilter === "all" ? true : img.skinId === skinFilter))
+      .filter((img) => (variantFilter === "all" ? true : img.variantId === variantFilter))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [allExistingImages, skinFilter, variantFilter]);
+  const selectedExistingImage = useMemo(
+    () => existingImageOptions.find((img) => img.imageId === selectedExistingImageId) ?? null,
+    [existingImageOptions, selectedExistingImageId],
+  );
+  const skinFilterOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    allExistingImages.forEach((img) => {
+      map.set(img.skinId, img.skinName);
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [allExistingImages]);
+  const variantFilterOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    allExistingImages.forEach((img) => {
+      if (skinFilter !== "all" && img.skinId !== skinFilter) return;
+      map.set(img.variantId, img.variantName);
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [allExistingImages, skinFilter]);
   const generateAiPrompt = useGenerateAiPrompt();
   const updateVariant = useUpdateVariant();
   const generateImage = useGenerateImage();
@@ -78,11 +130,23 @@ export function PromptEditor({
 
   useEffect(() => {
     setSourceFile(null);
+    setSourceMode("upload");
+    setSkinFilter("all");
+    setVariantFilter("all");
+    setSelectedExistingImageId("");
   }, [variant.id]);
 
   useEffect(() => {
-    if (!needsSourceImage) setSourceFile(null);
+    if (!needsSourceImage) {
+      setSourceFile(null);
+      setSelectedExistingImageId("");
+      setSourceMode("upload");
+    }
   }, [needsSourceImage]);
+  useEffect(() => {
+    setVariantFilter("all");
+    setSelectedExistingImageId("");
+  }, [skinFilter]);
 
   function handleAiGenerate() {
     if (!aiDescription.trim()) return;
@@ -123,8 +187,13 @@ export function PromptEditor({
 
   async function handleGenerateImage() {
     let sourceImageDataUrl: string | undefined;
-    if (needsSourceImage && sourceFile) {
-      sourceImageDataUrl = await fileToDataUrl(sourceFile);
+    if (needsSourceImage) {
+      if (sourceMode === "upload" && sourceFile) {
+        sourceImageDataUrl = await fileToDataUrl(sourceFile);
+      }
+      if (sourceMode === "existing" && selectedExistingImage) {
+        sourceImageDataUrl = await imageUrlToDataUrl(selectedExistingImage.imageUrl);
+      }
     }
     generateImage.mutate(
       {
@@ -152,10 +221,22 @@ export function PromptEditor({
       </div>
 
       {needsSourceImage ? (
-        <SingleImagePicker
-          id={`source-image-${variant.id}`}
-          value={sourceFile}
-          onChange={setSourceFile}
+        <SourceImageSelector
+          pickerId={`source-image-${variant.id}`}
+          sourceMode={sourceMode}
+          onSourceModeChange={setSourceMode}
+          sourceFile={sourceFile}
+          onSourceFileChange={setSourceFile}
+          skinFilter={skinFilter}
+          onSkinFilterChange={setSkinFilter}
+          variantFilter={variantFilter}
+          onVariantFilterChange={setVariantFilter}
+          skinFilterOptions={skinFilterOptions}
+          variantFilterOptions={variantFilterOptions}
+          existingImageOptions={existingImageOptions}
+          selectedExistingImageId={selectedExistingImageId}
+          onSelectedExistingImageIdChange={setSelectedExistingImageId}
+          selectedExistingImage={selectedExistingImage}
           disabled={generateImage.isPending}
         />
       ) : null}
@@ -256,7 +337,7 @@ export function PromptEditor({
             generateImage.isPending ||
             !prompt.trim() ||
             !model.trim() ||
-            (needsSourceImage && !sourceFile)
+            (needsSourceImage && (sourceMode === "upload" ? !sourceFile : !selectedExistingImage))
           }
         >
           {generateImage.isPending ? <Spinner className="w-3 h-3" /> : "Generate Image"}

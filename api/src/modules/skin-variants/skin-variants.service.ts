@@ -26,6 +26,24 @@ const MAX_SOURCE_IMAGE_DATA_URL_LENGTH = 12 * 1024 * 1024;
 
 /** Default img2img model when sketch mode is used and the variant has no i2i model selected */
 const SKETCH_DEFAULT_I2I_MODEL = "flux-2-max-edit";
+const AIML_IMAGE_GENERATION_MAX_ATTEMPTS = 2;
+
+function isRetryableAimlImageError(err: unknown): boolean {
+  const maybe = err as { message?: string; upstreamStatus?: number; status?: number; code?: string } | undefined;
+  const msg = String(maybe?.message ?? "").toLowerCase();
+  const upstreamStatus = Number(maybe?.upstreamStatus ?? 0);
+  const status = Number(maybe?.status ?? 0);
+  const code = String(maybe?.code ?? "").toUpperCase();
+  if (msg.includes("stream has been aborted")) return true;
+  if (msg.includes("timeout")) return true;
+  if (code === "ECONNABORTED" || code === "ECONNRESET" || code === "ETIMEDOUT") return true;
+  if (upstreamStatus === 0) return true;
+  return upstreamStatus === 502 || upstreamStatus === 503 || upstreamStatus === 504 || status === 503;
+}
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 function imageModelRequiresSourceImage(modelId: string): boolean {
   return Boolean(ImageModels.find((m) => m.id === canonicalImageModelId(modelId))?.is_image_to_image);
@@ -124,16 +142,37 @@ export async function generateImageForVariant(
 
   await assertUserHasTokenBalance(userId, getDebitTokensForImageModel(model));
 
-  const { data: generated, costsMetadata } = await getAiml().generateImage(
-    sourceTrimmed
-      ? buildAimlImageGenerationsBody({
-          internalModelId: model,
-          prompt,
-          negativePrompt: neg,
-          sourceImageDataUrl: sourceTrimmed,
-        })
-      : { model, prompt: finalPrompt },
-  );
+  const aimlBody = sourceTrimmed
+    ? buildAimlImageGenerationsBody({
+        internalModelId: model,
+        prompt,
+        negativePrompt: neg,
+        sourceImageDataUrl: sourceTrimmed,
+      })
+    : { model, prompt: finalPrompt };
+
+  let generated: Awaited<ReturnType<ReturnType<typeof getAiml>["generateImage"]>>["data"] | null = null;
+  let costsMetadata: Awaited<ReturnType<ReturnType<typeof getAiml>["generateImage"]>>["costsMetadata"] | null = null;
+  let lastErr: unknown = null;
+
+  for (let attempt = 1; attempt <= AIML_IMAGE_GENERATION_MAX_ATTEMPTS; attempt += 1) {
+    try {
+      const result = await getAiml().generateImage(aimlBody);
+      generated = result.data;
+      costsMetadata = result.costsMetadata;
+      lastErr = null;
+      break;
+    } catch (err) {
+      lastErr = err;
+      const canRetry = attempt < AIML_IMAGE_GENERATION_MAX_ATTEMPTS && isRetryableAimlImageError(err);
+      if (!canRetry) break;
+      await sleep(800);
+    }
+  }
+
+  if (lastErr || !generated || !costsMetadata) {
+    throw lastErr instanceof Error ? lastErr : new Error("Image generation failed");
+  }
 
   const first = generated.data?.[0];
   const imageUrl =

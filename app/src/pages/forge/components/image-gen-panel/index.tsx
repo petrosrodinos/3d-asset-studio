@@ -3,17 +3,26 @@ import { useForgeStore } from "@/store/forgeStore";
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Spinner";
 import { Textarea } from "@/components/ui/Textarea";
-import { SingleImagePicker } from "@/components/SingleImagePicker";
 import { ImageModelSelect } from "@/features/image-models/components/ImageModelSelect";
 import { useImageModels } from "@/features/image-models/hooks/use-image-models.hooks";
 import { useGenerateImage } from "@/features/skin-variants/hooks/use-skin-variants.hooks";
 import { fileToDataUrl } from "@/utils/imageFiles";
+import {
+  imageUrlToDataUrl,
+  SourceImageSelector,
+  type ExistingImageOption,
+  type SourceMode,
+} from "@/pages/forge/components/source-image-selector";
 
 export function ImageGenPanel() {
   const { activeFigure, activeVariant } = useForgeStore();
   const [prompt, setPrompt] = useState("");
   const [model, setModel] = useState("");
   const [sourceFile, setSourceFile] = useState<File | null>(null);
+  const [sourceMode, setSourceMode] = useState<SourceMode>("upload");
+  const [skinFilter, setSkinFilter] = useState<string>("all");
+  const [variantFilter, setVariantFilter] = useState<string>("all");
+  const [selectedExistingImageId, setSelectedExistingImageId] = useState<string>("");
 
   const { data: imageModels = [] } = useImageModels();
   const selectedModelMeta = useMemo(
@@ -23,20 +32,83 @@ export function ImageGenPanel() {
   const needsSourceImage = Boolean(selectedModelMeta?.isImageToImage);
 
   const generateImage = useGenerateImage();
+  const allExistingImages = useMemo<ExistingImageOption[]>(() => {
+    if (!activeFigure) return [];
+    return activeFigure.skins.flatMap((skin) =>
+      skin.variants.flatMap((variant) =>
+        variant.images.map((image) => ({
+          imageId: image.id,
+          imageUrl: image.gcsUrl ?? image.sourceUrl,
+          createdAt: image.createdAt,
+          variantId: variant.id,
+          variantName: variant.name ?? `Variant ${variant.variant}`,
+          skinId: skin.id,
+          skinName: skin.name ?? "Skin",
+        })),
+      ),
+    );
+  }, [activeFigure]);
+  const existingImageOptions = useMemo(() => {
+    return allExistingImages
+      .filter((img) => (skinFilter === "all" ? true : img.skinId === skinFilter))
+      .filter((img) => (variantFilter === "all" ? true : img.variantId === variantFilter))
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  }, [allExistingImages, skinFilter, variantFilter]);
+  const selectedExistingImage = useMemo(
+    () => existingImageOptions.find((img) => img.imageId === selectedExistingImageId) ?? null,
+    [existingImageOptions, selectedExistingImageId],
+  );
+  const skinFilterOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    allExistingImages.forEach((img) => {
+      map.set(img.skinId, img.skinName);
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [allExistingImages]);
+  const variantFilterOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    allExistingImages.forEach((img) => {
+      if (skinFilter !== "all" && img.skinId !== skinFilter) return;
+      map.set(img.variantId, img.variantName);
+    });
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [allExistingImages, skinFilter]);
+  const sourceIsValid = needsSourceImage
+    ? sourceMode === "upload"
+      ? Boolean(sourceFile)
+      : Boolean(selectedExistingImage)
+    : true;
 
   useEffect(() => {
     setSourceFile(null);
+    setSelectedExistingImageId("");
+    setSourceMode("upload");
+    setSkinFilter("all");
+    setVariantFilter("all");
   }, [activeVariant?.id]);
 
   useEffect(() => {
-    if (!needsSourceImage) setSourceFile(null);
+    if (!needsSourceImage) {
+      setSourceFile(null);
+      setSelectedExistingImageId("");
+      setSourceMode("upload");
+    }
   }, [needsSourceImage]);
+  useEffect(() => {
+    setVariantFilter("all");
+    setSelectedExistingImageId("");
+  }, [skinFilter]);
 
   async function handleGenerate() {
     if (!activeVariant || !activeFigure) return;
     let sourceImageDataUrl: string | undefined;
-    if (needsSourceImage && sourceFile) {
-      sourceImageDataUrl = await fileToDataUrl(sourceFile);
+    if (needsSourceImage) {
+      if (sourceMode === "upload" && sourceFile) {
+        sourceImageDataUrl = await fileToDataUrl(sourceFile);
+      }
+      if (sourceMode === "existing" && selectedExistingImage) {
+        sourceImageDataUrl = await imageUrlToDataUrl(selectedExistingImage.imageUrl);
+      }
     }
     generateImage.mutate({
       figureId: activeFigure.id,
@@ -66,10 +138,22 @@ export function ImageGenPanel() {
           </div>
 
           {needsSourceImage ? (
-            <SingleImagePicker
-              id="image-gen-source"
-              value={sourceFile}
-              onChange={setSourceFile}
+            <SourceImageSelector
+              pickerId="image-gen-source"
+              sourceMode={sourceMode}
+              onSourceModeChange={setSourceMode}
+              sourceFile={sourceFile}
+              onSourceFileChange={setSourceFile}
+              skinFilter={skinFilter}
+              onSkinFilterChange={setSkinFilter}
+              variantFilter={variantFilter}
+              onVariantFilterChange={setVariantFilter}
+              skinFilterOptions={skinFilterOptions}
+              variantFilterOptions={variantFilterOptions}
+              existingImageOptions={existingImageOptions}
+              selectedExistingImageId={selectedExistingImageId}
+              onSelectedExistingImageIdChange={setSelectedExistingImageId}
+              selectedExistingImage={selectedExistingImage}
               disabled={generateImage.isPending}
             />
           ) : null}
@@ -88,7 +172,7 @@ export function ImageGenPanel() {
               generateImage.isPending ||
               !prompt.trim() ||
               !model.trim() ||
-              (needsSourceImage && !sourceFile)
+              !sourceIsValid
             }
           >
             {generateImage.isPending ? <Spinner className="w-3.5 h-3.5" /> : "Generate Image"}
