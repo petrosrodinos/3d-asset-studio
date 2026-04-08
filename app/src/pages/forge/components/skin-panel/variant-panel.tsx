@@ -26,6 +26,7 @@ interface VariantPanelProps {
 }
 
 export function VariantPanel({ variant, figureId, figureType, figureName, skinName }: VariantPanelProps) {
+  const isDev = import.meta.env.VITE_NODE_ENV === "development";
   const qc = useQueryClient();
   const { selectedImage, setSelectedImage } = useForgeStore();
   const [meshPickIds, setMeshPickIds] = useState<string[]>([]);
@@ -120,7 +121,7 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
             <div className="mb-3 space-y-1.5">
               <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Images</p>
               <p className="text-xs text-slate-500 leading-relaxed">Your uploads and generated images for this variant. Use Generate 3D to create mesh, then rig/animate from the Models section.</p>
-              {variant.images.length > 0 ? (
+            {isDev && variant.images.length > 0 ? (
                 <div className="flex flex-wrap items-center justify-end gap-2">
                   {meshCost != null ? <TokenCostPill tokens={meshCost} /> : null}
                   <Button variant="secondary" size="sm" className="gap-1.5" disabled={!meshToolbarAllowed || runningImageIds.length > 0} onClick={handleGenerate3dFromSelection}>
@@ -139,7 +140,23 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
               ) : null}
             </div>
             <ImageUploader onFile={handleUploadFile} disabled={uploadSkinImage.isPending} isUploading={uploadSkinImage.isPending} />
-            <div className="mt-3">{variant.images.length > 0 ? <ImageGrid images={variant.images} onDelete={handleDeleteImage} onGenerate3d={handleGenerate3d} meshPickIds={meshPickIds} onToggleMeshPick={toggleMeshPick} deletingImageId={deletingImageId} generatingImageIds={runningImageIds} /> : <p className="rounded-lg border border-dashed border-border/80 bg-surface/30 px-3 py-6 text-center text-xs text-slate-500">Upload or generate to add images to this variant.</p>}</div>
+            <div className="mt-3">
+              {variant.images.length > 0 ? (
+                <ImageGrid
+                  images={variant.images}
+                  onDelete={handleDeleteImage}
+                  onGenerate3d={handleGenerate3d}
+                  meshPickIds={isDev ? meshPickIds : []}
+                  onToggleMeshPick={isDev ? toggleMeshPick : undefined}
+                  deletingImageId={deletingImageId}
+                  generatingImageIds={runningImageIds}
+                />
+              ) : (
+                <p className="rounded-lg border border-dashed border-border/80 bg-surface/30 px-3 py-6 text-center text-xs text-slate-500">
+                  Upload or generate to add images to this variant.
+                </p>
+              )}
+            </div>
           </section>
 
           {activeModels.length > 0 ? (

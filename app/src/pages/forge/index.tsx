@@ -51,6 +51,7 @@ function ForgeSkeleton() {
 }
 
 export default function ForgePage() {
+  const isDev = import.meta.env.VITE_NODE_ENV === "development";
   const { data: figures, isLoading } = useFigures();
   const {
     activeFigure,
@@ -244,14 +245,16 @@ export default function ForgePage() {
           )}
         </div>
 
-        <button
-          type="button"
-          onClick={() => setChatPanelOpen(!chatPanelOpen)}
-          className="absolute right-0 top-1/2 z-10 hidden h-9 w-5 -translate-y-1/2 items-center justify-center rounded-l-md border border-border/80 bg-panel/95 text-slate-400 shadow-sm ring-1 ring-white/5 transition-colors hover:bg-surface hover:text-slate-200 md:flex"
-          aria-label={chatPanelOpen ? "Collapse chat panel" : "Expand chat panel"}
-        >
-          {chatPanelOpen ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
-        </button>
+        {isDev && (
+          <button
+            type="button"
+            onClick={() => setChatPanelOpen(!chatPanelOpen)}
+            className="absolute right-0 top-1/2 z-10 hidden h-9 w-5 -translate-y-1/2 items-center justify-center rounded-l-md border border-border/80 bg-panel/95 text-slate-400 shadow-sm ring-1 ring-white/5 transition-colors hover:bg-surface hover:text-slate-200 md:flex"
+            aria-label={chatPanelOpen ? "Collapse chat panel" : "Expand chat panel"}
+          >
+            {chatPanelOpen ? <ChevronRight size={12} /> : <ChevronLeft size={12} />}
+          </button>
+        )}
 
         <aside
           className={cn(

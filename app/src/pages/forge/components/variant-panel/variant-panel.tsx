@@ -26,6 +26,7 @@ interface VariantPanelProps {
 }
 
 export function VariantPanel({ variant, figureId, figureType, figureName, skinName }: VariantPanelProps) {
+  const isDev = import.meta.env.VITE_NODE_ENV === "development";
   const qc = useQueryClient();
   const { selectedImage, setSelectedImage } = useForgeStore();
   const [meshPickIds, setMeshPickIds] = useState<string[]>([]);
@@ -115,7 +116,7 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
           <div className="flex flex-col gap-2 border-b border-border px-4 py-4 md:border-0 md:p-0">
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Images</p>
             <p className="text-xs text-slate-500 leading-relaxed">Upload or generate reference images for this variant. Use Generate 3D to create mesh, then rig/animate from the Models section.</p>
-            {variant.images.length > 0 ? (
+            {isDev && variant.images.length > 0 ? (
               <div className="flex flex-wrap items-center justify-end gap-2">
                 {meshCost != null ? <TokenCostPill tokens={meshCost} /> : null}
                 <Button variant="secondary" size="sm" className="gap-1.5" disabled={!meshToolbarAllowed || runningImageIds.length > 0} onClick={handleGenerate3dFromSelection}>
@@ -133,7 +134,19 @@ export function VariantPanel({ variant, figureId, figureType, figureName, skinNa
               </div>
             ) : null}
             <ImageUploader onFile={handleUploadFile} disabled={uploadSkinImage.isPending} isUploading={uploadSkinImage.isPending} />
-            {variant.images.length > 0 ? <ImageGrid images={variant.images} onDelete={handleDeleteImage} onGenerate3d={handleGenerate3d} meshPickIds={meshPickIds} onToggleMeshPick={toggleMeshPick} deletingImageId={deletingImageId} generatingImageIds={runningImageIds} /> : <p className="text-xs text-slate-500">Upload to add images to this variant.</p>}
+            {variant.images.length > 0 ? (
+              <ImageGrid
+                images={variant.images}
+                onDelete={handleDeleteImage}
+                onGenerate3d={handleGenerate3d}
+                meshPickIds={isDev ? meshPickIds : []}
+                onToggleMeshPick={isDev ? toggleMeshPick : undefined}
+                deletingImageId={deletingImageId}
+                generatingImageIds={runningImageIds}
+              />
+            ) : (
+              <p className="text-xs text-slate-500">Upload to add images to this variant.</p>
+            )}
           </div>
 
           {activeModels.length > 0 ? (
