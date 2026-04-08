@@ -9,6 +9,14 @@ export interface AdminMetricsDto {
   tokenUsagePriceOriginalTotal: number;
   /** Σ (price − priceOriginal); equals `tokenUsagePriceTotal − tokenUsagePriceOriginalTotal` up to float rounding. */
   tokenUsageMarginTotal: number;
+  /** Number of generated image records. */
+  generatedImagesCount: number;
+  /** Number of generated mesh records (Model3D rows). */
+  generatedMeshesCount: number;
+  /** Number of mesh records that have started rigging. */
+  generatedRigsCount: number;
+  /** Number of generated animation records. */
+  generatedAnimationsCount: number;
 }
 
 export interface AdminUserRowDto {

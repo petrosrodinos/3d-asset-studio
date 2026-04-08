@@ -1,7 +1,7 @@
 import type { MouseEvent, RefObject } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X } from "lucide-react";
+import { Box, Menu, X } from "lucide-react";
 import { useAuth } from "@/features/auth/hooks/use-auth.hooks";
 import { Spinner } from "@/components/ui/Spinner";
 import { cn } from "@/utils/cn";
@@ -126,7 +126,7 @@ export function MarketingNav() {
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-2 px-3 sm:gap-4 sm:px-6">
         <Link
           to="/#hero"
-          className="min-w-0 shrink-0 font-sans text-sm font-semibold tracking-tight text-accent-light transition-colors hover:text-slate-100"
+          className="min-w-0 shrink-0 flex items-center gap-1.5 font-sans text-sm font-semibold tracking-tight text-accent-light transition-colors hover:text-slate-100"
           onClick={(e) => {
             closeMobile();
             if (path === "/") {
@@ -136,7 +136,8 @@ export function MarketingNav() {
             }
           }}
         >
-          {LANDING_BRAND}
+          <Box size={15} strokeWidth={1.8} className="shrink-0" aria-hidden />
+          <span className="truncate">{LANDING_BRAND}</span>
         </Link>
 
         <nav className="hidden items-center justify-end gap-1 md:flex md:gap-2" aria-label="Marketing">

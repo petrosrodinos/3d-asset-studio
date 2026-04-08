@@ -5,18 +5,25 @@ import { figureWithAllAssetsInclude } from "../figures/repositories/figures.repo
 import type { AdminMetricsDto, AdminUserRowDto, AdminUserUpdateInput } from "./admin.types";
 
 export async function getAdminMetrics(): Promise<AdminMetricsDto> {
-  const purchases = await prisma.tokenPurchase.findMany({
-    select: { amountCents: true, stripeFeeCents: true },
-  });
+  const [purchases, usages, generatedImagesCount, generatedMeshesCount, generatedRigsCount, generatedAnimationsCount] =
+    await Promise.all([
+      prisma.tokenPurchase.findMany({
+        select: { amountCents: true, stripeFeeCents: true },
+      }),
+      prisma.tokenUsage.findMany({
+        select: { price: true, priceOriginal: true },
+      }),
+      prisma.skinImage.count(),
+      prisma.model3D.count(),
+      prisma.model3D.count({ where: { rigTaskId: { not: null } } }),
+      prisma.animation.count(),
+    ]);
+
   const totalStripeFeeCents = purchases.reduce((sum, p) => sum + (p.stripeFeeCents ?? 0), 0);
   const netPurchaseCents = purchases.reduce(
     (sum, p) => sum + p.amountCents - (p.stripeFeeCents ?? 0),
     0,
   );
-
-  const usages = await prisma.tokenUsage.findMany({
-    select: { price: true, priceOriginal: true },
-  });
   let tokenUsagePriceTotal = 0;
   let tokenUsagePriceOriginalTotal = 0;
   for (const u of usages) {
@@ -31,6 +38,10 @@ export async function getAdminMetrics(): Promise<AdminMetricsDto> {
     tokenUsagePriceTotal,
     tokenUsagePriceOriginalTotal,
     tokenUsageMarginTotal,
+    generatedImagesCount,
+    generatedMeshesCount,
+    generatedRigsCount,
+    generatedAnimationsCount,
   };
 }
 

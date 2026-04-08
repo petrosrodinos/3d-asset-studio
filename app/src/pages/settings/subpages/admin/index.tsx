@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Shield, Trash2 } from "lucide-react";
+import { Pencil, Shield, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/features/auth/hooks/use-auth.hooks";
 import {
@@ -17,6 +17,8 @@ import { formatEur } from "@/features/billing/utils/format";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { Input } from "@/components/ui/Input";
+import { Modal } from "@/components/ui/Modal";
+import { OptionsMenu } from "@/components/ui/OptionsMenu";
 import { cn } from "@/utils/cn";
 
 function formatUsdLedger(value: number): string {
@@ -47,7 +49,10 @@ export default function SettingsAdminPage() {
   const deleteUser = useDeleteAdminUser();
   const updateUser = useUpdateAdminUser();
   const [userPendingDelete, setUserPendingDelete] = useState<AdminUserRowDto | null>(null);
-  const [draftsByUserId, setDraftsByUserId] = useState<Record<string, AdminUserDraft>>({});
+  const [activeTab, setActiveTab] = useState<"users" | "generations">("users");
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<AdminUserDraft | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   const confirmRemoveUser = () => {
     if (!userPendingDelete) return;
@@ -63,28 +68,23 @@ export default function SettingsAdminPage() {
     });
   };
 
-  const setDraft = (userId: string, next: Partial<AdminUserDraft>) => {
-    setDraftsByUserId((prev) => {
-      const current = prev[userId];
-      return {
-        ...prev,
-        [userId]: {
-          ...(current ?? { email: "", displayName: "", role: "USER", tokenBalance: "0" }),
-          ...next,
-        },
-      };
-    });
+  const selectedUser = usersQuery.data?.find((u) => u.id === selectedUserId) ?? null;
+
+  const openUserEditor = (row: AdminUserRowDto) => {
+    setSelectedUserId(row.id);
+    setEditDraft(rowToDraft(row));
+    setEditModalOpen(true);
   };
 
-  const saveUser = (row: AdminUserRowDto) => {
-    const draft = draftsByUserId[row.id] ?? rowToDraft(row);
-    const email = draft.email.trim();
+  const saveSelectedUser = () => {
+    if (!selectedUser || !editDraft) return;
+    const email = editDraft.email.trim();
     if (!email) {
       toast.error("Email is required");
       return;
     }
 
-    const tokenBalance = Number(draft.tokenBalance);
+    const tokenBalance = Number(editDraft.tokenBalance);
     if (!Number.isInteger(tokenBalance) || tokenBalance < 0) {
       toast.error("Tokens must be a non-negative integer");
       return;
@@ -92,21 +92,17 @@ export default function SettingsAdminPage() {
 
     const body: AdminUserUpdateInput = {
       email,
-      displayName: draft.displayName.trim() ? draft.displayName.trim() : null,
-      role: draft.role,
+      displayName: editDraft.displayName.trim() ? editDraft.displayName.trim() : null,
+      role: editDraft.role,
       tokenBalance,
     };
 
     updateUser.mutate(
-      { userId: row.id, body },
+      { userId: selectedUser.id, body },
       {
         onSuccess: () => {
           toast.success(`Updated ${body.email}`);
-          setDraftsByUserId((prev) => {
-            const next = { ...prev };
-            delete next[row.id];
-            return next;
-          });
+          setEditModalOpen(false);
         },
         onError: (err) => {
           toast.error(err instanceof Error ? err.message : "Could not update user");
@@ -160,141 +156,148 @@ export default function SettingsAdminPage() {
         </section>
 
         <section className="space-y-4">
-          <div>
-            <h2 className="text-sm font-semibold tracking-tight text-slate-100">Users</h2>
-            <p className="text-sm text-slate-500 mt-0.5">All accounts (newest first).</p>
+          <div className="inline-flex rounded-lg border border-border bg-surface/30 p-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab("users")}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                activeTab === "users" ? "bg-violet-500/20 text-violet-200" : "text-slate-400 hover:text-slate-200",
+              )}
+            >
+              Users
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("generations")}
+              className={cn(
+                "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                activeTab === "generations" ? "bg-violet-500/20 text-violet-200" : "text-slate-400 hover:text-slate-200",
+              )}
+            >
+              Generations
+            </button>
           </div>
 
-          <div className="overflow-x-auto rounded-xl border border-border bg-panel/40 ring-1 ring-white/5">
-            <table className="w-full text-sm text-left min-w-[720px]">
-              <thead>
-                <tr className="border-b border-border bg-surface/70 text-slate-500">
-                  <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">User ID</th>
-                  <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Email</th>
-                  <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Display name</th>
-                  <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Role</th>
-                  <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Tokens</th>
-                  <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Joined</th>
-                  <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/70">
-                {usersQuery.isLoading ? (
-                  <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-slate-500">
-                      Loading users…
-                    </td>
-                  </tr>
-                ) : usersQuery.isError ? (
-                  <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-red-400/90">
-                      Could not load users.
-                    </td>
-                  </tr>
-                ) : (usersQuery.data?.length ?? 0) === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="px-5 py-8 text-center text-slate-500">
-                      No users found.
-                    </td>
-                  </tr>
-                ) : (
-                  usersQuery.data!.map((row, i) => (
-                    <tr
-                      key={row.id}
-                      className={cn(
-                        "transition-colors hover:bg-surface/50",
-                        i % 2 === 1 ? "bg-surface/25" : "bg-transparent",
-                      )}
-                    >
-                      <td className="px-5 py-3.5 text-slate-500 font-mono text-xs break-all max-w-[8rem] md:max-w-none">
-                        {row.id}
-                      </td>
-                      {(() => {
-                        const draft = draftsByUserId[row.id] ?? rowToDraft(row);
-                        const isDirty =
-                          draft.email.trim() !== row.email ||
-                          draft.displayName.trim() !== (row.displayName ?? "") ||
-                          draft.role !== row.role ||
-                          Number(draft.tokenBalance) !== row.tokenBalance;
+          {activeTab === "users" ? (
+            <>
+              <div>
+                <h2 className="text-sm font-semibold tracking-tight text-slate-100">Users</h2>
+                <p className="text-sm text-slate-500 mt-0.5">All accounts (newest first).</p>
+              </div>
 
-                        return (
-                          <>
-                            <td className="px-5 py-3.5 text-slate-200 min-w-[14rem]">
-                              <Input
-                                value={draft.email}
-                                onChange={(e) => setDraft(row.id, { email: e.target.value })}
-                                placeholder="Email"
-                                className="h-8"
-                              />
-                            </td>
-                            <td className="px-5 py-3.5 text-slate-400 min-w-[10rem]">
-                              <Input
-                                value={draft.displayName}
-                                onChange={(e) => setDraft(row.id, { displayName: e.target.value })}
-                                placeholder="Display name"
-                                className="h-8"
-                              />
-                            </td>
-                            <td className="px-5 py-3.5">
-                              <select
-                                value={draft.role}
-                                onChange={(e) => setDraft(row.id, { role: e.target.value as "USER" | "ADMIN" })}
-                                className="h-8 bg-panel border border-border rounded px-2 text-xs text-slate-200 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
-                              >
-                                <option value="USER">USER</option>
-                                <option value="ADMIN">ADMIN</option>
-                              </select>
-                            </td>
-                            <td className="px-5 py-3.5 font-mono tabular-nums text-slate-300 min-w-[7rem]">
-                              <Input
-                                type="number"
-                                min={0}
-                                step={1}
-                                value={draft.tokenBalance}
-                                onChange={(e) => setDraft(row.id, { tokenBalance: e.target.value })}
-                                className="h-8"
-                              />
-                            </td>
-                            <td className="px-5 py-3.5 text-slate-500 whitespace-nowrap">
-                              {new Date(row.createdAt).toLocaleString()}
-                            </td>
-                            <td className="px-5 py-3.5 text-right">
-                              <div className="inline-flex items-center gap-1.5">
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="secondary"
-                                  disabled={!isDirty || updateUser.isPending}
-                                  onClick={() => saveUser(row)}
-                                >
-                                  Save
-                                </Button>
-                                {user?.id === row.id ? (
-                                  <span className="text-xs text-slate-600">—</span>
-                                ) : (
-                                  <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-red-400/90 hover:text-red-300 hover:bg-red-500/10"
-                                    aria-label={`Remove user ${row.email}`}
-                                    onClick={() => setUserPendingDelete(row)}
-                                  >
-                                    <Trash2 className="h-4 w-4" aria-hidden />
-                                  </Button>
-                                )}
-                              </div>
-                            </td>
-                          </>
-                        );
-                      })()}
+              <div className="overflow-x-auto rounded-xl border border-border bg-panel/40 ring-1 ring-white/5">
+                <table className="w-full text-sm text-left min-w-[720px]">
+                  <thead>
+                    <tr className="border-b border-border bg-surface/70 text-slate-500">
+                      <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">User ID</th>
+                      <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Email</th>
+                      <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Display name</th>
+                      <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Role</th>
+                      <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Tokens</th>
+                      <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider">Joined</th>
+                      <th className="px-5 py-3.5 font-medium text-xs uppercase tracking-wider text-right">Actions</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody className="divide-y divide-border/70">
+                    {usersQuery.isLoading ? (
+                      <tr>
+                        <td colSpan={7} className="px-5 py-8 text-center text-slate-500">
+                          Loading users…
+                        </td>
+                      </tr>
+                    ) : usersQuery.isError ? (
+                      <tr>
+                        <td colSpan={7} className="px-5 py-8 text-center text-red-400/90">
+                          Could not load users.
+                        </td>
+                      </tr>
+                    ) : (usersQuery.data?.length ?? 0) === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="px-5 py-8 text-center text-slate-500">
+                          No users found.
+                        </td>
+                      </tr>
+                    ) : (
+                      usersQuery.data!.map((row, i) => (
+                        <tr
+                          key={row.id}
+                          className={cn(
+                            "transition-colors hover:bg-surface/50",
+                            i % 2 === 1 ? "bg-surface/25" : "bg-transparent",
+                          )}
+                        >
+                          <td className="px-5 py-3.5 text-slate-500 font-mono text-xs break-all max-w-[8rem] md:max-w-none">
+                            {row.id}
+                          </td>
+                          <td className="px-5 py-3.5 text-slate-200">{row.email}</td>
+                          <td className="px-5 py-3.5 text-slate-400">{row.displayName ?? "—"}</td>
+                          <td className="px-5 py-3.5">
+                            <span
+                              className={cn(
+                                "inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium",
+                                row.role === "ADMIN"
+                                  ? "bg-violet-500/15 text-violet-300 ring-1 ring-violet-500/25"
+                                  : "bg-surface text-slate-400 ring-1 ring-border",
+                              )}
+                            >
+                              {row.role}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3.5 font-mono tabular-nums text-slate-300">{row.tokenBalance}</td>
+                          <td className="px-5 py-3.5 text-slate-500 whitespace-nowrap">
+                            {new Date(row.createdAt).toLocaleString()}
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <OptionsMenu
+                              menuLabel={`User actions for ${row.email}`}
+                              items={[
+                                {
+                                  id: "edit",
+                                  label: "Edit",
+                                  icon: Pencil,
+                                  onSelect: () => openUserEditor(row),
+                                },
+                                {
+                                  id: "remove",
+                                  label: "Remove",
+                                  icon: Trash2,
+                                  destructive: true,
+                                  disabled: user?.id === row.id,
+                                  onSelect: () => setUserPendingDelete(row),
+                                },
+                              ]}
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <GenerationsTab loading={metricsQuery.isLoading} error={metricsQuery.isError} data={metricsQuery.data} />
+          )}
         </section>
+
+        <Modal
+          open={editModalOpen}
+          onClose={() => {
+            if (!updateUser.isPending) setEditModalOpen(false);
+          }}
+          title="Edit user"
+          panelClassName="max-w-xl"
+          contentClassName="items-start"
+        >
+          <EditUserForm
+            user={selectedUser}
+            draft={editDraft}
+            saving={updateUser.isPending}
+            onDraftChange={setEditDraft}
+            onSave={saveSelectedUser}
+          />
+        </Modal>
 
         <ConfirmDialog
           open={userPendingDelete != null}
@@ -313,6 +316,120 @@ export default function SettingsAdminPage() {
           }}
           onConfirm={confirmRemoveUser}
         />
+      </div>
+    </div>
+  );
+}
+
+function GenerationsTab({
+  loading,
+  error,
+  data,
+}: {
+  loading: boolean;
+  error: boolean;
+  data: AdminMetricsDto | undefined;
+}) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <h2 className="text-sm font-semibold tracking-tight text-slate-100">Generations</h2>
+        <p className="text-sm text-slate-500 mt-0.5">Total generated assets in the workspace.</p>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <CountCard title="Generated images" value={loading || error || !data ? null : data.generatedImagesCount} />
+        <CountCard title="Generated meshes" value={loading || error || !data ? null : data.generatedMeshesCount} />
+        <CountCard title="Generated rigs" value={loading || error || !data ? null : data.generatedRigsCount} />
+        <CountCard title="Generated animations" value={loading || error || !data ? null : data.generatedAnimationsCount} />
+      </div>
+    </div>
+  );
+}
+
+function CountCard({ title, value }: { title: string; value: number | null }) {
+  return (
+    <div className="rounded-xl border border-border bg-panel/80 ring-1 ring-white/5 p-4">
+      <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</p>
+      <p className="mt-3 text-2xl font-semibold tabular-nums tracking-tight text-slate-100">
+        {value == null ? "…" : value.toLocaleString()}
+      </p>
+    </div>
+  );
+}
+
+function EditUserForm({
+  user,
+  draft,
+  saving,
+  onDraftChange,
+  onSave,
+}: {
+  user: AdminUserRowDto | null;
+  draft: AdminUserDraft | null;
+  saving: boolean;
+  onDraftChange: (draft: AdminUserDraft) => void;
+  onSave: () => void;
+}) {
+  if (!user || !draft) {
+    return (
+      <div className="w-full rounded-xl border border-border bg-panel/40 ring-1 ring-white/5 p-5">
+        <p className="text-sm text-slate-400">No user selected.</p>
+      </div>
+    );
+  }
+
+  const isDirty =
+    draft.email.trim() !== user.email ||
+    draft.displayName.trim() !== (user.displayName ?? "") ||
+    draft.role !== user.role ||
+    Number(draft.tokenBalance) !== user.tokenBalance;
+
+  return (
+    <div className="w-full space-y-4">
+      <div>
+        <h2 className="text-sm font-semibold tracking-tight text-slate-100">Edit {user.email}</h2>
+        <p className="text-sm text-slate-500 mt-0.5">{user.id}</p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Input
+          label="Email"
+          value={draft.email}
+          onChange={(e) => onDraftChange({ ...draft, email: e.target.value })}
+          placeholder="Email"
+        />
+        <Input
+          label="Display name"
+          value={draft.displayName}
+          onChange={(e) => onDraftChange({ ...draft, displayName: e.target.value })}
+          placeholder="Display name"
+        />
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-slate-400 font-medium">Role</label>
+          <select
+            value={draft.role}
+            onChange={(e) => onDraftChange({ ...draft, role: e.target.value as "USER" | "ADMIN" })}
+            className="h-10 bg-panel border border-border rounded px-3 text-sm text-slate-200 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20"
+          >
+            <option value="USER">USER</option>
+            <option value="ADMIN">ADMIN</option>
+          </select>
+        </div>
+        <Input
+          label="Token balance"
+          type="number"
+          min={0}
+          step={1}
+          value={draft.tokenBalance}
+          onChange={(e) => onDraftChange({ ...draft, tokenBalance: e.target.value })}
+          placeholder="0"
+        />
+      </div>
+
+      <div className="flex justify-end">
+        <Button type="button" variant="secondary" onClick={onSave} disabled={!isDirty || saving}>
+          {saving ? "Saving..." : "Save changes"}
+        </Button>
       </div>
     </div>
   );

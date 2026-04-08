@@ -4,6 +4,10 @@ export interface AdminMetricsDto {
   tokenUsagePriceTotal: number;
   tokenUsagePriceOriginalTotal: number;
   tokenUsageMarginTotal: number;
+  generatedImagesCount: number;
+  generatedMeshesCount: number;
+  generatedRigsCount: number;
+  generatedAnimationsCount: number;
 }
 
 export interface AdminUserRowDto {
