@@ -1,0 +1,182 @@
+{
+  "bomber": {
+    "generate": false,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "canyon": {
+    "generate": false,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "cave": {
+    "generate": false,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "chariot": {
+    "generate": true,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "dutches": {
+    "generate": true,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "hoplite": {
+    "generate": true,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "lake": {
+    "generate": false,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "monarch": {
+    "generate": true,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "mystery-box": {
+    "generate": false,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "necromancer": {
+    "generate": false,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "paladin": {
+    "generate": false,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "river": {
+    "generate": false,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "tower": {
+    "generate": false,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "tree": {
+    "generate": false,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  },
+  "warlock": {
+    "generate": false,
+    "themes": {
+      "black": true,
+      "white": true
+    },
+    "variants": {
+      "default": true,
+      "fantasy": false,
+      "scifi": false
+    }
+  }
+}
