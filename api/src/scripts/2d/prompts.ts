@@ -1,27 +1,23 @@
 export const boardPiecePrompt = {
     base: `
   High-quality 2D digital board game token icon, centered composition, 
-  circular medallion with metallic rim and glossy enamel surface, 
-  stylized emblem in the middle, soft studio lighting, subtle reflections, 
-  smooth gradients, clean vector-like shading, slightly beveled edges, 
-  polished game UI style, soft shadow beneath, minimalistic isolated background, 
-  symmetrical layout, modern mobile strategy game asset, ultra clean, 
-  high resolution, consistent thickness outlines, gentle ambient occlusion
+  circular medallion with metallic rim, 
+  stylized emblem in the middle, 
+  smooth gradients, slightly beveled edges, 
+  polished game UI style, symmetrical layout, modern mobile strategy game asset, ultra clean, 
+  high resolution, consistent thickness outlines, gentle ambient occlusion, white background, no shadows
   `.trim(),
 
     themes: {
         white: `
-  bright white enamel surface, light neutral background, 
-  silver or light gold metallic rim, soft highlights, 
-  subtle cool shadows, clean bright palette, 
-  high-key lighting, premium polished look
+  bright white enamel surface,
+  silver or light gold metallic rim, soft highlights, clean bright palette, 
+  high-key lighting, premium polished look, no shadows
   `.trim(),
 
         black: `
-  deep black enamel surface, dark neutral background, 
-  dark chrome or muted gold metallic rim, 
-  stronger contrast reflections, subtle rim lighting, 
-  low-key lighting, premium polished look
+  deep black enamel surface,dark chrome rim, subtle rim lighting, 
+  low-key lighting, premium polished look, no shadows
   `.trim()
     },
 
