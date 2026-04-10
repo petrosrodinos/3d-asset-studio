@@ -1,5 +1,5 @@
 {
-  "name": "3d-asset-studio-api",
+  "name": "forge-api",
   "version": "1.0.0",
   "description": "Tripo 3D Generation API client",
   "main": "dist/index.js",

@@ -63,6 +63,10 @@ function imageMimeFromFilename(filename: string): "image/png" | "image/jpeg" {
   return "image/png";
 }
 
+function escapeRegex(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 async function ensureMinImageDimensions(
   input: Buffer,
   minSize = 64,
@@ -212,13 +216,6 @@ function extractCostFromMetadata(costsMetadata: unknown): number | null {
 }
 
 function pickBestImageToImageModelPreferOpenAi(): { id: string; price_original: number } {
-  // Prefer OpenAI's best model explicitly when available.
-  // Some catalog rows are not marked as image-to-image even though edits work in practice.
-  const gptImage1 = ImageModels.find((m) => m.available && m.id === "gpt-image-1");
-  if (gptImage1) {
-    return { id: gptImage1.id, price_original: gptImage1.price_original };
-  }
-
   const openAiI2i = ImageModels.filter(
     (m) => m.available && m.is_image_to_image && m.provider.toLowerCase() === "openai",
   );
@@ -259,9 +256,14 @@ async function readSourceImageDataUrl(figureDir: string): Promise<{ dataUrl: str
     .filter((name) => /\.(png|jpg|jpeg)$/i.test(name))
     .sort((a, b) => a.localeCompare(b));
 
-  const preferred = files.find((name) => /-original\.(png|jpg|jpeg)$/i.test(name));
+  const figureName = path.basename(figureDir);
+  const exactOriginalRe = new RegExp(`^${escapeRegex(figureName)}-original\\.(png|jpg|jpeg)$`, "i");
+  const preferred = files.find((name) => exactOriginalRe.test(name))
+    ?? files.find((name) => /-original\.(png|jpg|jpeg)$/i.test(name));
   if (!preferred) {
-    throw new Error(`Missing original source image in ${figureDir}. Expected a file ending with "-original.(png|jpg|jpeg)"`);
+    throw new Error(
+      `Missing original source image in ${figureDir}. Expected "${figureName}-original.(png|jpg|jpeg)"`,
+    );
   }
 
   const abs = path.join(figureDir, preferred);
