@@ -36,6 +36,8 @@ export interface GenerateSkinImageDto {
   model?: string;
   /** Base64 data URL (`data:image/...;base64,...`) for image-to-image models */
   sourceImageDataUrl?: string;
+  /** Optional source image upscale preset, e.g. `64x64`. */
+  upscalePreset?: string;
   /** Sketch → img2i with curated 3D/mesh prompts; requires `sourceImageDataUrl` */
   fromSketch?: boolean;
   sketchHint?: string;

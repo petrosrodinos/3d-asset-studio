@@ -31,6 +31,8 @@ interface PromptEditorProps {
   onImageGenerated?: () => void;
 }
 
+const UPSCALE_PRESETS = ["none", "64x64", "128x128", "256x256", "512x512"] as const;
+
 export function PromptEditor({
   variant,
   figureId,
@@ -48,6 +50,7 @@ export function PromptEditor({
   const [skinFilter, setSkinFilter] = useState<string>("all");
   const [variantFilter, setVariantFilter] = useState<string>("all");
   const [selectedExistingImageId, setSelectedExistingImageId] = useState<string>("");
+  const [upscalePreset, setUpscalePreset] = useState<(typeof UPSCALE_PRESETS)[number]>("none");
   const [aiOpen, setAiOpen] = useState(false);
   const [aiDescription, setAiDescription] = useState("");
   const [sketchOpen, setSketchOpen] = useState(false);
@@ -137,6 +140,7 @@ export function PromptEditor({
     setVariantFilter("all");
     setSelectedExistingImageId("");
     setSourceSelectionError(null);
+    setUpscalePreset("none");
   }, [variant.id]);
 
   useEffect(() => {
@@ -219,6 +223,7 @@ export function PromptEditor({
           negativePrompt: negPrompt,
           model,
           ...(sourceImageDataUrl ? { sourceImageDataUrl } : {}),
+          ...(upscalePreset !== "none" ? { upscalePreset } : {}),
         },
       },
       { onSuccess: () => onImageGenerated?.() },
@@ -255,6 +260,24 @@ export function PromptEditor({
             disabled={generateImage.isPending}
           />
           {sourceSelectionError ? <p className="text-xs text-red-400">{sourceSelectionError}</p> : null}
+          <div className="flex flex-col gap-1">
+            <label htmlFor={`source-upscale-preset-${variant.id}`} className="text-xs text-slate-400 font-medium">
+              Source image upscale
+            </label>
+            <select
+              id={`source-upscale-preset-${variant.id}`}
+              value={upscalePreset}
+              onChange={(e) => setUpscalePreset(e.target.value as (typeof UPSCALE_PRESETS)[number])}
+              disabled={generateImage.isPending}
+              className="h-9 rounded-md border border-border bg-panel px-2 text-xs text-slate-200"
+            >
+              <option value="none">No upscale</option>
+              <option value="64x64">64x64</option>
+              <option value="128x128">128x128</option>
+              <option value="256x256">256x256</option>
+              <option value="512x512">512x512</option>
+            </select>
+          </div>
         </>
       ) : null}
 

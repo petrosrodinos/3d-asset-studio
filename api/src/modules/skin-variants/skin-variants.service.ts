@@ -21,8 +21,11 @@ import {
 import { canonicalImageModelId, ImageModels } from "../../config/models/image-models";
 import { buildAimlImageGenerationsBody } from "../../integrations/aimlapi/buildImageGenerationsBody";
 import { buildSketchTo3dPrompts } from "../../config/ai-prompts/figures/sketchToImage.prompts";
+import { Jimp } from "jimp";
 
 const MAX_SOURCE_IMAGE_DATA_URL_LENGTH = 12 * 1024 * 1024;
+const SOURCE_IMAGE_UPSCALE_PRESETS = ["64x64", "128x128", "256x256", "512x512"] as const;
+type SourceImageUpscalePreset = (typeof SOURCE_IMAGE_UPSCALE_PRESETS)[number];
 
 /** Default img2img model when sketch mode is used and the variant has no i2i model selected */
 const SKETCH_DEFAULT_I2I_MODEL = "flux-2-max-edit";
@@ -64,6 +67,33 @@ function assertValidSourceImageDataUrl(dataUrl: string) {
   }
 }
 
+function parseSourceImageUpscalePreset(value: string | undefined): SourceImageUpscalePreset | undefined {
+  if (!value) return undefined;
+  const preset = value.trim();
+  if (SOURCE_IMAGE_UPSCALE_PRESETS.includes(preset as SourceImageUpscalePreset)) {
+    return preset as SourceImageUpscalePreset;
+  }
+  throw new Error(`Invalid upscalePreset: ${preset}`);
+}
+
+async function upscaleSourceImageDataUrl(dataUrl: string, preset: SourceImageUpscalePreset): Promise<string> {
+  const m = /^data:(image\/[^;]+);base64,(.+)$/is.exec(dataUrl.trim());
+  if (!m) throw new Error("sourceImageDataUrl must be a base64 data URL for an image");
+  const mime = m[1]!;
+  const rawB64 = m[2]!.replace(/\s+/g, "");
+  const [w, h] = preset.split("x").map((n) => Number(n));
+  if (!Number.isFinite(w) || !Number.isFinite(h) || w <= 0 || h <= 0) {
+    throw new Error("Invalid upscale preset");
+  }
+
+  const inputBuffer = Buffer.from(rawB64, "base64");
+  const image = await Jimp.read(inputBuffer);
+  image.resize({ w, h });
+
+  const outputBuffer = await image.getBuffer("image/png");
+  return `data:${mime.toLowerCase()};base64,${outputBuffer.toString("base64")}`;
+}
+
 export async function upsertVariant(skinId: string, input: UpsertVariantInput) {
   return upsertVariantRepo(skinId, input);
 }
@@ -96,6 +126,7 @@ export async function generateImageForVariant(
     model?: string;
     negativePrompt?: string;
     sourceImageDataUrl?: string;
+    upscalePreset?: string;
     /** When true, prompt/negativePrompt are built for mesh-ready img2i from the sketch */
     fromSketch?: boolean;
     sketchHint?: string;
@@ -106,6 +137,8 @@ export async function generateImageForVariant(
   if (!v) throw new Error("Variant not found");
 
   const sourceTrimmed = overrides.sourceImageDataUrl?.trim();
+  const upscalePreset = parseSourceImageUpscalePreset(overrides.upscalePreset);
+  let processedSourceImageDataUrl = sourceTrimmed;
   const fromSketch = Boolean(overrides.fromSketch);
 
   let model: string;
@@ -113,8 +146,11 @@ export async function generateImageForVariant(
   let neg: string;
 
   if (fromSketch) {
-    if (!sourceTrimmed) throw new Error("Sketch mode requires sourceImageDataUrl");
-    assertValidSourceImageDataUrl(sourceTrimmed);
+    if (!processedSourceImageDataUrl) throw new Error("Sketch mode requires sourceImageDataUrl");
+    assertValidSourceImageDataUrl(processedSourceImageDataUrl);
+    if (upscalePreset) {
+      processedSourceImageDataUrl = await upscaleSourceImageDataUrl(processedSourceImageDataUrl, upscalePreset);
+    }
     model = resolveSketchImageModel(overrides.model, v.imageModel ?? undefined);
     const built = buildSketchTo3dPrompts({
       figureType: overrides.figureType,
@@ -133,8 +169,11 @@ export async function generateImageForVariant(
 
     const needsSource = imageModelRequiresSourceImage(model);
     if (needsSource) {
-      if (!sourceTrimmed) throw new Error("This image model requires a source image");
-      assertValidSourceImageDataUrl(sourceTrimmed);
+      if (!processedSourceImageDataUrl) throw new Error("This image model requires a source image");
+      assertValidSourceImageDataUrl(processedSourceImageDataUrl);
+      if (upscalePreset) {
+        processedSourceImageDataUrl = await upscaleSourceImageDataUrl(processedSourceImageDataUrl, upscalePreset);
+      }
     }
   }
 
@@ -142,12 +181,12 @@ export async function generateImageForVariant(
 
   await assertUserHasTokenBalance(userId, getDebitTokensForImageModel(model));
 
-  const aimlBody = sourceTrimmed
+  const aimlBody = processedSourceImageDataUrl
     ? buildAimlImageGenerationsBody({
         internalModelId: model,
         prompt,
         negativePrompt: neg,
-        sourceImageDataUrl: sourceTrimmed,
+        sourceImageDataUrl: processedSourceImageDataUrl,
       })
     : { model, prompt: finalPrompt };
 
