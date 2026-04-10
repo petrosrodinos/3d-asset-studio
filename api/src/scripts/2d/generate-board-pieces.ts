@@ -2,6 +2,7 @@ import "dotenv/config";
 import path from "path";
 import { mkdir, readdir, readFile, writeFile } from "fs/promises";
 import { Jimp } from "jimp";
+import { removeBackground } from "@imgly/background-removal-node";
 
 import { build2dPrompt } from "./prompt-generation";
 import { AimlApiService } from "../../integrations/aimlapi/AimlApiService";
@@ -85,6 +86,18 @@ async function ensureMinImageDimensions(
   image.resize({ w: outW, h: outH });
   const out = await image.getBuffer("image/png");
   return { buffer: out, wasResized: true };
+}
+
+async function removeImageBackground(input: Buffer): Promise<Buffer> {
+  const outBlob = await removeBackground(input, {
+    model: "small",
+    output: {
+      format: "image/png",
+      quality: 1,
+    },
+  });
+  const outArrayBuffer = await outBlob.arrayBuffer();
+  return Buffer.from(outArrayBuffer);
 }
 
 function parseNumberLoose(value: unknown): number | null {
@@ -243,7 +256,8 @@ async function generateImageJob(
   if (!imageUrl) throw new Error(`No image data returned for ${job.outputFileName}`);
 
   const { buffer } = await fetchImageAsBuffer(imageUrl);
-  await writeFile(job.outputPath, buffer);
+  const noBgBuffer = await removeImageBackground(buffer);
+  await writeFile(job.outputPath, noBgBuffer);
 
   const actualCost = extractCostFromMetadata(costsMetadata);
   const cost = actualCost != null ? actualCost : COST_FALLBACK_TO_CATALOG ? modelCatalogCost : 0;

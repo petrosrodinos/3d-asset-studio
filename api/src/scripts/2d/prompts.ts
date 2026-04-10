@@ -10,13 +10,13 @@ export const boardPiecePrompt = {
 
     themes: {
         white: `
-  bright white enamel surface,
-  silver or light gold metallic rim, soft highlights, clean bright palette, 
+  white enamel surface,
+  silver metallic rim, soft highlights, clean white palette, 
   high-key lighting, premium polished look, no shadows
   `.trim(),
 
         black: `
-  deep black enamel surface,dark chrome rim, subtle rim lighting, 
+  deep black enamel surface,dark chrome rim, 
   low-key lighting, premium polished look, no shadows
   `.trim()
     },
